@@ -46,12 +46,12 @@ language sql
 stable
 security definer
 set search_path = ''
-as $
+as $$
   select exists (
     select 1 from public.profiles p
     where p.id = (select auth.uid()) and p.role = 'admin'
   );
-$;
+$$;
 revoke all on function private.is_admin() from public, anon, authenticated;
 grant execute on function private.is_admin() to anon, authenticated;
 
@@ -61,7 +61,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 begin
   insert into public.profiles (id, email, display_name, role)
   values (
