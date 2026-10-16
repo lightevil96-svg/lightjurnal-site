@@ -56,7 +56,7 @@ revoke all on function private.is_admin() from public, anon, authenticated;
 grant execute on function private.is_admin() to anon, authenticated;
 
 -- New sign-ups always receive the 'user' role. Never trust role from user metadata.
-create or replace function public.handle_new_user()
+create or replace function private.handle_new_user()
 returns trigger
 language plpgsql
 security definer
@@ -78,8 +78,8 @@ $$;
 drop trigger if exists on_auth_user_created_lightjurnal on auth.users;
 create trigger on_auth_user_created_lightjurnal
 after insert on auth.users
-for each row execute procedure public.handle_new_user();
-revoke all on function public.handle_new_user() from public, anon, authenticated;
+for each row execute procedure private.handle_new_user();
+revoke all on function private.handle_new_user() from public, anon, authenticated;
 
 alter table public.profiles enable row level security;
 alter table public.journals enable row level security;
