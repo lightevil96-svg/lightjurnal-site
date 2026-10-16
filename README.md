@@ -10,10 +10,17 @@ Website jurnal dan arsip tugas kuliah untuk **lightjurnal.my.id**. Dibangun deng
 - Halaman ruang kerja untuk menyiapkan metadata dan mengekspor JSON/Markdown
 - Domain khusus melalui file \`CNAME\`
 
-## Penting: cara kerja admin dan komentar
-Repository ini memakai hosting statis. Halaman \`admin.html\` **bukan CMS yang aman dengan login**; draf disimpan di browser/perangkat yang sedang digunakan dan tidak otomatis tampil pada pengunjung lain. Jangan menyimpan rahasia di halaman tersebut. Untuk menerbitkan karya, unggah PDF ke folder \`documents/\` di repository, lalu tambahkan metadata karya ke array \`DEMO_ARTICLES\` di \`script.js\` dan commit perubahan. Koleksi halaman utama dimulai dalam keadaan kosong agar hanya karya yang benar-benar kamu tambahkan yang akan tampil.
+## Login, unggah jurnal, dan moderasi
 
-Komentar pembaca menggunakan Utterances, yang menyimpan diskusi sebagai GitHub Issues. Pastikan fitur Issues aktif di Settings repository; pembaca harus masuk dengan akun GitHub dan komentar bersifat publik. Jika ruang komentar menampilkan pesan konfigurasi, periksa apakah Issues diaktifkan dan repository dapat diakses oleh Utterances.
+Login pengguna, penyimpanan PDF privat, status peninjauan, serta panel admin sekarang disiapkan dengan Supabase. GitHub Pages hanya menyajikan antarmuka; kontrol akses berada pada Supabase Auth, Row Level Security (RLS), dan Storage policies.
+
+Ikuti **[SUPABASE-SETUP.md](SUPABASE-SETUP.md)** untuk membuat project, menjalankan `supabase-setup.sql`, mengisi URL serta anon/publishable key pada `supabase-config.js`, dan menetapkan akun admin pertama. Jangan pernah menaruh service_role/secret key di frontend.
+
+Alur karya:
+- Pengguna mendaftar/masuk melalui `login.html`, lalu mengirim PDF dari `dashboard.html`.
+- Setiap kiriman berstatus `pending`; dokumen tetap di bucket privat sampai disetujui admin.
+- Admin masuk melalui `admin.html` untuk menyetujui, menolak dengan catatan, menarik publikasi, atau menghapus kiriman.
+- Halaman utama hanya memuat jurnal berstatus `approved`.
 
 ## Publikasi melalui GitHub Pages
 1. Buka **Settings → Pages** pada repository ini.
@@ -29,30 +36,18 @@ Komentar pembaca menggunakan Utterances, yang menyimpan diskusi sebagai GitHub I
 
 DNS dan pengaturan Pages harus dikonfigurasi di akun/domain masing-masing; commit file saja tidak otomatis membuat situs online.
 
-## Menambah karya
-Tambahkan objek ke array \`DEMO_ARTICLES\` di \`script.js\`, dengan struktur:
+## Konfigurasi dan batas unggahan
 
-\`\`\`js
-{
-  id: "jurnal-001",
-  title: "Judul jurnal atau tugas",
-  category: "Pendidikan",
-  date: "2026-10-16",
-  author: "Nama penulis",
-  description: "Ringkasan singkat isi karya.",
-  tags: ["metodologi", "kuliah"],
-  type: "Jurnal",
-  file: "documents/nama-berkas.pdf",
-  url: "",
-  featured: "Judul pendek"
-}
-\`\`\`
-
-Kategori yang tersedia: \`Pendidikan\`, \`Teknologi\`, \`Sosial\`, \`Kesehatan\`, dan \`Lainnya\`. Unggah hanya berkas yang boleh dipublikasikan dan tidak berisi data pribadi.
+PDF dibatasi 25 MB. Pengaturan produksi tidak aktif sampai project Supabase dibuat, SQL diterapkan, dan `supabase-config.js` diisi. Tanpa backend terkonfigurasi, formulir tidak menyimpan unggahan sebagai jurnal publik. Koleksi publik hanya menampilkan karya yang sudah disetujui admin.
 
 ## Berkas
-- \`index.html\` — halaman utama
-- \`style.css\` — desain responsif dan tema
-- \`script.js\` — data contoh, pencarian, filter, dan mode tema
-- \`admin.html\`, \`admin.js\` — alat bantu metadata lokal
-- \`CNAME\` — domain kustom
+
+- `index.html` — koleksi jurnal publik
+- `login.html`, `auth.js` — pendaftaran dan login pengguna
+- `dashboard.html`, `dashboard.js` — unggah PDF dan pelacakan status
+- `admin.html`, `admin.js` — login admin dan antrean moderasi
+- `style.css`, `portal.css` — tampilan responsif
+- `supabase-config.js` — konfigurasi publik frontend
+- `supabase-setup.sql` — tabel, RLS, bucket, dan policies
+- `SUPABASE-SETUP.md` — petunjuk konfigurasi backend
+- `CNAME` — domain khusus
