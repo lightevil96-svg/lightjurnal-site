@@ -7,8 +7,11 @@
   const PAGE_SIZE = 10;
   const SEARCH_DEBOUNCE_MS = 450;
   const CACHE_TTL = 5 * 60 * 1000;
-  const config = window.LIGHTJURNAL_YOUTUBE_CONFIG || {};
-  const apiKey = String(config.apiKey || "").trim();
+  const config = window.LIGHTJURNAL_CONFIG || {};
+  const supabaseUrl = String(config.url || "").replace(/\/$/, "");
+  const supabaseAnonKey = String(config.anonKey || "").trim();
+  const searchEndpoint = supabaseUrl ? supabaseUrl + "/functions/v1/youtube-search" : "";
+  const searchReady = /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(supabaseUrl) && supabaseAnonKey.length > 20 && !supabaseAnonKey.includes("PASTE_SUPABASE");
   let nextPageToken = "";
   let lastQuery = "";
   let searchTimer = 0;
@@ -35,7 +38,7 @@
     volumeLabel: $("#music-volume-label"), playPause: $("#music-play-pause"), previous: $("#music-previous"),
     next: $("#music-next"), queue: $("#music-queue"), history: $("#music-history"),
     mini: $("#music-mini-player"), miniThumb: $("#music-mini-thumb"), miniTitle: $("#music-mini-title"),
-    miniState: $("#music-mini-state"), miniPlay: $("#music-mini-play")
+    miniState: $("#music-mini-state"), miniPlay: $("#music-mini-play"), videoToggle: $("#music-video-toggle")
   };
 
   function escapeHTML(value) {
@@ -117,8 +120,8 @@
   async function searchVideos(query, pageToken = "", append = false) {
     const trimmed = query.trim();
     if (!trimmed) { setFeedback("Masukkan judul lagu, nama penyanyi, atau kata kunci musik."); return; }
-    if (!apiKey || apiKey === "YOUR_YOUTUBE_DATA_API_KEY") {
-      setFeedback("Pencarian belum aktif karena API key belum diisi. Buka youtube-config.js di GitHub, masukkan YouTube Data API key, lalu simpan perubahan.", "error");
+    if (!searchReady) {
+      setFeedback("Layanan pencarian aman belum dikonfigurasi. Aktifkan Supabase Edge Function sesuai petunjuk README, lalu coba lagi.", "error");
       ui.results.replaceChildren();
       ui.count.textContent = "0 video";
       ui.loadMore.hidden = true;
@@ -136,18 +139,18 @@
     setSearching(true);
     setFeedback("Sedang mencari video musik…");
     try {
-      const params = new URLSearchParams({
-        key: apiKey, part: "snippet", type: "video", q: trimmed,
-        maxResults: String(PAGE_SIZE), safeSearch: "moderate", regionCode: "ID", relevanceLanguage: "id", videoEmbeddable: "true",
-        videoSyndicated: "true", fields: "nextPageToken,items(id/videoId,snippet(title,description,channelTitle,publishedAt,thumbnails))"
-      });
-      if (pageToken) params.set("pageToken", pageToken);
+      const requestBody = { q: trimmed, pageToken: pageToken || "", maxResults: PAGE_SIZE };
       const cacheKey = trimmed + (pageToken ? "|"+pageToken : "");
       const cached = !append ? getCache(cacheKey) : null;
       let payload;
       if (cached) payload = cached.payload;
       else {
-        const response = await fetch("https://www.googleapis.com/youtube/v3/search?" + params.toString(), { signal: requestController.signal });
+        const response = await fetch(searchEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "apikey": supabaseAnonKey },
+          body: JSON.stringify(requestBody),
+          signal: requestController.signal
+        });
         payload = await response.json();
         if (!response.ok || payload.error) {
           const apiError = payload.error || {};
@@ -186,7 +189,8 @@
     return '<article class="music-result-card" data-video-id="' + escapeHTML(video.videoId) + '">' +
       '<div class="music-result-thumb">' + thumbMarkup(video, "medium") + '<span>YouTube</span></div>' +
       '<div class="music-result-info"><h3>' + escapeHTML(video.title) + '</h3><p>' + escapeHTML(video.channelTitle) + '</p>' +
-      '<div class="music-result-actions"><button type="button" class="music-result-play" data-play-video="' + escapeHTML(video.videoId) + '">▶ Putar</button>' +
+      '<div class="music-result-actions"><button type="button" class="music-result-play" data-play-video="' + escapeHTML(video.videoId) + '">▶ Putar musik</button>' +
+      '<button type="button" data-watch-video="' + escapeHTML(video.videoId) + '">🎬 Tonton video</button>' +
       '<button type="button" data-queue-video="' + escapeHTML(video.videoId) + '">＋ Antrean</button><a class="music-result-external" href="' + escapeHTML(video.url) + '" target="_blank" rel="noopener noreferrer">YouTube ↗</a></div></div></article>';
   }
   function videoFromResultId(id) {
@@ -336,8 +340,17 @@
       }
     });
   }
-  function playVideo(video, { addToHistory = true } = {}) {
+  function setVideoExpanded(expanded) {
+    const frame = $("#music-player-frame");
+    if (!frame || !ui.videoToggle) return;
+    frame.classList.toggle("is-video-expanded", Boolean(expanded));
+    ui.videoToggle.textContent = expanded ? "Mode musik ringkas ↓" : "Tonton video besar ↗";
+    ui.videoToggle.setAttribute("aria-pressed", String(Boolean(expanded)));
+  }
+
+  function playVideo(video, { addToHistory = true, watchVideo = false } = {}) {
     if (!video) return;
+    setVideoExpanded(watchVideo);
     currentVideo = video;
     playbackStatus = "Memuat video…";
     updateCurrentUI(video);
@@ -451,8 +464,12 @@
     }));
     ui.results.addEventListener("click", event => {
       const playButton = event.target.closest("[data-play-video]");
+      const watchButton = event.target.closest("[data-watch-video]");
       const queueButton = event.target.closest("[data-queue-video]");
-      if (playButton) {
+      if (watchButton) {
+        const video = videoFromResultId(watchButton.dataset.watchVideo);
+        if (video) playVideo(video, { watchVideo: true });
+      } else if (playButton) {
         const video = videoFromResultId(playButton.dataset.playVideo);
         if (video) playVideo(video);
       } else if (queueButton) {
@@ -479,6 +496,10 @@
     $("#music-clear-history").addEventListener("click", () => { history = []; saveState(); renderHistory(); });
     ui.playPause.addEventListener("click", togglePlayPause);
     ui.miniPlay.addEventListener("click", togglePlayPause);
+    ui.videoToggle.addEventListener("click", () => {
+      const frame = $("#music-player-frame");
+      setVideoExpanded(!frame.classList.contains("is-video-expanded"));
+    });
     ui.next.addEventListener("click", playNext);
     ui.previous.addEventListener("click", playPrevious);
     $("#music-mini-open").addEventListener("click", () => $("#music-player-frame").scrollIntoView({ behavior: "smooth", block: "center" }));
@@ -500,8 +521,8 @@
       if (progressTimer) window.clearInterval(progressTimer);
       if (requestController) requestController.abort();
     });
-    if (!apiKey || apiKey === "YOUR_YOUTUBE_DATA_API_KEY") {
-      setFeedback("Ruang musik siap digunakan setelah YouTube Data API key dikonfigurasi. Petunjuk ada di file youtube-config.js.", "error");
+    if (!searchReady) {
+      setFeedback("Ruang musik siap digunakan setelah layanan pencarian aman diaktifkan di Supabase. Petunjuk ada di README.", "error");
     }
   }
   document.addEventListener("DOMContentLoaded", init);
