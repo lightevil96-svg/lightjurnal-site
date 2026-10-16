@@ -36,28 +36,32 @@ create index if not exists journals_user_created_at_idx
 
 -- SECURITY DEFINER avoids recursive RLS checks when policies ask whether the
 -- currently authenticated account is an administrator.
-create or replace function public.is_admin()
+create schema if not exists private;
+revoke all on schema private from public;
+grant usage on schema private to anon, authenticated;
+
+create or replace function private.is_admin()
 returns boolean
 language sql
 stable
 security definer
-set search_path = public
-as $$
+set search_path = ''
+as $
   select exists (
     select 1 from public.profiles p
-    where p.id = auth.uid() and p.role = 'admin'
+    where p.id = (select auth.uid()) and p.role = 'admin'
   );
-$$;
-revoke all on function public.is_admin() from public;
-grant execute on function public.is_admin() to anon, authenticated;
+$;
+revoke all on function private.is_admin() from public, anon, authenticated;
+grant execute on function private.is_admin() to anon, authenticated;
 
 -- New sign-ups always receive the 'user' role. Never trust role from user metadata.
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
-as $$
+set search_path = ''
+as $
 begin
   insert into public.profiles (id, email, display_name, role)
   values (
@@ -75,6 +79,7 @@ drop trigger if exists on_auth_user_created_lightjurnal on auth.users;
 create trigger on_auth_user_created_lightjurnal
 after insert on auth.users
 for each row execute procedure public.handle_new_user();
+revoke all on function public.handle_new_user() from public, anon, authenticated;
 
 alter table public.profiles enable row level security;
 alter table public.journals enable row level security;
@@ -87,13 +92,13 @@ drop policy if exists "Read own profile or admin profiles" on public.profiles;
 create policy "Read own profile or admin profiles"
 on public.profiles for select
 to authenticated
-using (id = auth.uid() or public.is_admin());
+using (id = auth.uid() or private.is_admin());
 
 drop policy if exists "Public read approved or owner or admin" on public.journals;
 create policy "Public read approved or owner or admin"
 on public.journals for select
 to anon, authenticated
-using (status = 'approved' or user_id = auth.uid() or public.is_admin());
+using (status = 'approved' or user_id = auth.uid() or private.is_admin());
 
 drop policy if exists "Authenticated users submit their own pending journals" on public.journals;
 create policy "Authenticated users submit their own pending journals"
@@ -111,14 +116,14 @@ drop policy if exists "Only admins update journal records" on public.journals;
 create policy "Only admins update journal records"
 on public.journals for update
 to authenticated
-using (public.is_admin())
-with check (public.is_admin());
+using (private.is_admin())
+with check (private.is_admin());
 
 drop policy if exists "Only admins delete journal records" on public.journals;
 create policy "Only admins delete journal records"
 on public.journals for delete
 to authenticated
-using (public.is_admin());
+using (private.is_admin());
 
 -- Every submitted PDF stays private until a moderator approves the journal.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -135,7 +140,7 @@ to anon, authenticated
 using (
   bucket_id = 'journal-pdfs'
   and (
-    public.is_admin()
+    private.is_admin()
     or exists (
       select 1 from public.journals j
       where j.file_path = name and j.status = 'approved'
@@ -164,13 +169,16 @@ to authenticated
 using (
   bucket_id = 'journal-pdfs'
   and (
-    public.is_admin()
+    private.is_admin()
     or (
       (storage.foldername(name))[1] = auth.uid()::text
       and not exists (select 1 from public.journals j where j.file_path = name)
     )
   )
 );
+
+-- Remove the earlier public helper if the first draft of this setup was applied.
+drop function if exists public.is_admin();
 
 -- After signing up with your intended admin account, run the one-time promotion
 -- statement from SUPABASE-SETUP.md. Do not enable public profile writes.
