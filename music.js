@@ -138,7 +138,7 @@
     try {
       const params = new URLSearchParams({
         key: apiKey, part: "snippet", type: "video", q: trimmed,
-        maxResults: String(PAGE_SIZE), safeSearch: "moderate", videoEmbeddable: "true",
+        maxResults: String(PAGE_SIZE), safeSearch: "moderate", regionCode: "ID", relevanceLanguage: "id", videoEmbeddable: "true",
         videoSyndicated: "true", fields: "nextPageToken,items(id/videoId,snippet(title,description,channelTitle,publishedAt,thumbnails))"
       });
       if (pageToken) params.set("pageToken", pageToken);
@@ -247,6 +247,7 @@
     ui.miniThumb.innerHTML = thumbMarkup(video, "default");
     ui.miniTitle.textContent = title;
     ui.mini.hidden = false;
+    document.body.classList.add("music-has-active-player");
     ui.playerPlaceholder.hidden = true;
     ui.playPause.disabled = false;
     ui.miniPlay.disabled = false;
