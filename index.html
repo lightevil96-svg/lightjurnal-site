@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8fc">
+  <meta name="description" content="LightJurnal — ruang rapi untuk menyimpan, membaca, dan membagikan jurnal serta artikel tugas kuliah.">
+  <title>LightJurnal — Ruang Karya Akademik</title>
+  <link rel="canonical" href="https://lightjurnal.my.id/">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script>try{if(localStorage.getItem('lj-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
+</head>
+<body>
+  <a class="skip-link" href="#konten">Lewati ke konten</a>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="./" aria-label="LightJurnal beranda"><span class="brand-mark">L<span>J</span></span><span class="brand-copy">light<span>jurnal</span><small>RUANG KARYA AKADEMIK</small></span></a>
+      <nav class="desktop-nav" aria-label="Navigasi utama">
+        <a class="nav-link active" href="#beranda">Beranda</a>
+        <a class="nav-link" href="#artikel">Koleksi jurnal</a>
+        <a class="nav-link" href="#tentang">Tentang</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-btn" id="theme-toggle" aria-label="Aktifkan mode gelap" title="Ganti tema"><span id="theme-icon">☾</span></button>
+        <a class="button button-dark nav-submit" href="admin.html">＋ Unggah karya</a>
+        <button class="menu-toggle icon-btn" id="menu-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
+      </div>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Navigasi mobile" hidden>
+      <a href="#beranda">Beranda</a><a href="#artikel">Koleksi jurnal</a><a href="#tentang">Tentang</a><a href="admin.html">Unggah karya</a>
+    </nav>
+  </header>
+
+  <main id="konten">
+    <section class="hero section-shell" id="beranda">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="eyebrow-dot"></span> CATATAN, RISET, DAN GAGASAN</div>
+        <h1>Ide baik layak<br>punya <span>ruang.</span></h1>
+        <p class="hero-lead">Tempat sederhana untuk mengarsipkan jurnal, artikel, dan tugas kuliah—agar karya yang sudah kamu susun mudah ditemukan kembali.</p>
+        <div class="hero-actions"><a class="button button-primary" href="#artikel">Jelajahi koleksi <span aria-hidden="true">↗</span></a><a class="text-link" href="admin.html">Kelola karya <span aria-hidden="true">→</span></a></div>
+        <div class="hero-note"><span class="avatar-stack"><i>L</i><i>J</i><i>+</i></span><span>Dibuat untuk perjalanan akademikmu</span></div>
+      </div>
+      <div class="hero-art" aria-label="Ilustrasi tumpukan dokumen akademik">
+        <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
+        <div class="paper paper-back"><div class="paper-topline"></div><div class="paper-line short"></div><div class="paper-line"></div><div class="paper-line"></div><div class="paper-line mid"></div><div class="paper-chart"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="paper paper-front"><div class="paper-label">LIGHTJURNAL / VOL. 01</div><div class="paper-heading">Menata gagasan,<br><em>merawat pengetahuan.</em></div><div class="paper-rule"></div><div class="paper-line"></div><div class="paper-line"></div><div class="paper-line short"></div><div class="paper-footer"><span>CATATAN AKADEMIK</span><span>2026</span></div></div>
+        <div class="floating-chip chip-top"><span>✳</span> Ide jadi arsip</div><div class="floating-chip chip-bottom"><span class="chip-dot"></span> Tersusun rapi</div>
+      </div>
+    </section>
+
+    <section class="search-band section-shell" aria-label="Cari artikel">
+      <div class="search-intro"><span class="section-kicker">TEMUKAN REFERENSI</span><h2>Apa yang sedang kamu cari?</h2></div>
+      <form id="search-form" class="search-box" role="search"><span class="search-icon" aria-hidden="true">⌕</span><input id="search-input" type="search" placeholder="Cari judul, topik, tag, atau mata kuliah..." autocomplete="off" aria-label="Cari jurnal dan artikel"><button type="submit" class="search-submit">Cari</button></form>
+      <div class="quick-tags"><span>Populer:</span><button class="quick-tag" data-query="pendidikan">Pendidikan</button><button class="quick-tag" data-query="teknologi">Teknologi</button><button class="quick-tag" data-query="sosial">Sosial</button><button class="quick-tag" data-query="kesehatan">Kesehatan</button></div>
+    </section>
+
+    <section class="collection section-shell" id="artikel">
+      <div class="section-heading"><div><span class="section-kicker">PERPUSTAKAAN PRIBADI</span><h2>Koleksi <span>terbaru.</span></h2><p>Dokumen dan tulisan yang kamu simpan, dalam satu tempat.</p></div><div class="collection-meta"><span class="count-pill" id="result-count">0 karya</span><label class="sort-label" for="sort-select">Urutkan <select id="sort-select"><option value="newest">Terbaru</option><option value="oldest">Terlama</option><option value="az">Judul A–Z</option></select></label></div></div>
+      <div class="filter-row"><div class="category-filters" id="category-filters" aria-label="Filter kategori"><button class="filter-chip selected" data-category="Semua">Semua karya</button><button class="filter-chip" data-category="Pendidikan">Pendidikan</button><button class="filter-chip" data-category="Teknologi">Teknologi</button><button class="filter-chip" data-category="Sosial">Sosial</button><button class="filter-chip" data-category="Kesehatan">Kesehatan</button><button class="filter-chip" data-category="Lainnya">Lainnya</button></div></div>
+      <div class="article-grid" id="article-grid" aria-live="polite"></div>
+      <div class="empty-state" id="empty-state" hidden><div class="empty-icon">⌕</div><h3 id="empty-title">Belum ada karya di sini</h3><p id="empty-copy">Mulai dengan menambahkan jurnal atau tugas kuliah pertamamu.</p><a class="button button-primary" href="admin.html">＋ Tambah karya</a></div>
+      <div class="collection-footer"><span id="collection-footnote">Contoh tampilan koleksi LightJurnal</span><a class="text-link" href="admin.html">Tambahkan karya baru <span>↗</span></a></div>
+    </section>
+
+    <section class="quote-section"><div class="quote-inner"><span class="quote-mark">“</span><blockquote>Menulis adalah cara kita memberi bentuk pada pikiran, dan mengarsipkan adalah cara kita menjaga agar pikiran itu tetap bisa ditemukan.</blockquote><div class="quote-credit"><span class="quote-line"></span> CATATAN LIGHTJURNAL</div></div><div class="quote-decoration">LJ.</div></section>
+
+    <section class="about section-shell" id="tentang"><div class="about-icon">✳</div><div class="about-copy"><span class="section-kicker">TENTANG LIGHTJURNAL</span><h2>Ruang belajar yang tumbuh <span>bersamamu.</span></h2><p>LightJurnal dibuat sebagai arsip digital untuk jurnal, artikel, rangkuman, dan tugas kuliah. Susun berdasarkan kategori dan tag supaya setiap ide lebih mudah ditemukan saat dibutuhkan.</p></div><div class="about-stats"><div><strong>01</strong><span>Arsip terorganisir</span></div><div><strong>02</strong><span>Pencarian praktis</span></div><div><strong>03</strong><span>Akses lintas perangkat</span></div></div></section>
+  </main>
+  <footer class="site-footer"><div class="footer-top"><a class="brand footer-brand" href="./"><span class="brand-mark">L<span>J</span></span><span class="brand-copy">light<span>jurnal</span><small>RUANG KARYA AKADEMIK</small></span></a><p>Tempat menyimpan proses, bukan hanya hasil.</p><a href="admin.html" class="footer-admin">Ruang pengelola ↗</a></div><div class="footer-bottom"><span>© <span id="year"></span> LightJurnal. Dibuat untuk perjalanan akademik.</span><span>Belajar · Menulis · Bertumbuh</span></div></footer>
+  <script src="script.js" defer></script>
+</body>
+</html>
