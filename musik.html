@@ -60,7 +60,7 @@
 
       <aside class="music-side-column">
         <section class="music-player-card" aria-label="Pemutar YouTube">
-          <div class="music-section-heading player-heading"><div><span class="section-kicker">SEDANG DIPUTAR</span><h2>Now playing</h2></div><span class="music-live-dot" id="music-live-dot"></span></div>
+          <div class="music-section-heading player-heading"><div><span class="section-kicker">SEDANG DIPUTAR</span><h2>Now playing</h2><p class="music-mode-note">Mode musik aktif · video dapat diperbesar kapan saja</p></div><div class="music-player-heading-actions"><button type="button" id="music-video-toggle" aria-pressed="false">Tonton video besar ↗</button><span class="music-live-dot" id="music-live-dot"></span></div></div>
           <div class="music-player-frame" id="music-player-frame"><div id="youtube-player"></div><div class="music-player-placeholder" id="music-player-placeholder"><span>♫</span><strong>Musikmu dimulai di sini</strong><p>Pilih video dari hasil pencarian. Pemutar YouTube akan muncul di area ini.</p></div></div>
           <div class="music-now-playing"><div class="music-now-thumb" id="music-now-thumb"><span>♪</span></div><div class="music-now-meta"><strong id="music-now-title">Belum ada lagu dipilih</strong><span id="music-now-channel">Pilih hasil pencarian untuk mulai</span><span class="music-playback-state" id="music-playback-state">Siap diputar</span></div></div>
           <div class="music-progress"><span id="music-current-time">0:00</span><input id="music-progress-range" type="range" min="0" max="1000" value="0" aria-label="Posisi pemutaran" disabled><span id="music-duration">0:00</span></div>
@@ -91,6 +91,7 @@
     <button id="music-mini-open" type="button" aria-label="Buka pemutar">↗</button>
   </div>
 
+  <script src="supabase-config.js"></script>
   <script src="youtube-config.js"></script>
   <script src="music.js" defer></script>
 </body>
