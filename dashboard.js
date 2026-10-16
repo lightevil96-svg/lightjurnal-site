@@ -1,5 +1,5 @@
 const $ = (selector, root = document) => root.querySelector(selector);
-const MAX_PDF_BYTES = 25 * 1024 * 1024;
+const MAX_PDF_BYTES = 25_000_000;
 let currentUser = null;
 let profileName = "";
 
