@@ -102,3 +102,23 @@
 
 body.music-has-active-player{padding-bottom:105px}
 @media(max-width:580px){body.music-has-active-player{padding-bottom:95px}}
+
+
+/* Music-first layout: keep the official YouTube player visible in compact mode. */
+.music-player-heading-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+#music-video-toggle{border:1px solid var(--line);background:var(--surface-soft);color:var(--ink);border-radius:10px;padding:8px 10px;font:inherit;font-size:10px;font-weight:800;cursor:pointer}
+#music-video-toggle:hover{border-color:var(--primary);color:var(--primary)}
+.music-mode-note{font-size:10px;color:var(--muted);line-height:1.55;margin:6px 0 0}
+.music-player-frame{width:100%;min-width:200px;min-height:200px;max-height:260px;aspect-ratio:1/1;overflow:hidden;position:relative;margin-inline:auto}
+.music-player-frame.is-video-expanded{max-height:none;aspect-ratio:16/9;min-height:200px}
+#youtube-player{width:100%;height:100%;min-width:200px;min-height:200px}
+#youtube-player iframe{width:100%!important;height:100%!important}
+.music-player-placeholder{min-width:200px;min-height:200px}
+.music-result-actions{flex-wrap:wrap}
+@media(max-width:580px){
+  .music-player-heading-actions{gap:7px}
+  #music-video-toggle{padding:7px 8px;font-size:9px;max-width:138px}
+  .music-mode-note{max-width:210px}
+  .music-player-frame{min-height:200px;max-height:250px}
+  .music-player-frame.is-video-expanded{max-height:none}
+}
