@@ -209,6 +209,7 @@ function bindProfileEditor() {
       profileBio = bio;
       profileAvatarUrl = nextAvatar || "";
       removeAvatarRequested = false;
+      if (avatarPreviewObjectUrl) URL.revokeObjectURL(avatarPreviewObjectUrl);
       avatarPreviewObjectUrl = "";
       renderProfilePreview();
       $("#user-email").textContent = profileName + " · " + (currentUser.email || "");
