@@ -1,7 +1,12 @@
 const $ = (selector, root = document) => root.querySelector(selector);
 const MAX_PDF_BYTES = 25_000_000;
+const MAX_AVATAR_BYTES = 2_000_000;
 let currentUser = null;
 let profileName = "";
+let profileBio = "";
+let profileAvatarUrl = "";
+let removeAvatarRequested = false;
+let avatarPreviewObjectUrl = "";
 
 function escapeHTML(value) {
   return String(value ?? "").replace(/[&<>"']/g, (character) => ({
@@ -25,6 +30,42 @@ function dateLabel(value) {
   return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("id-ID", {
     dateStyle: "medium", timeStyle: "short"
   }).format(date);
+}
+
+function initials(value) {
+  const words = String(value || "LightJurnal").trim().split(/\s+/).filter(Boolean);
+  return words.slice(0, 2).map((word) => word[0]).join("").toLocaleUpperCase("id") || "LJ";
+}
+
+function renderProfilePreview(name = profileName, bio = profileBio, avatar = profileAvatarUrl) {
+  const safeName = name.trim() || (currentUser?.email || "Pengguna LightJurnal").split("@")[0];
+  $("#profile-preview-name").textContent = safeName;
+  $("#profile-preview-bio").textContent = bio.trim() || "Ceritakan sedikit tentang dirimu dan minat akademikmu.";
+  $("#profile-preview-email").textContent = currentUser?.email || "";
+  $("#profile-avatar-initials").textContent = initials(safeName);
+  const img = $("#profile-avatar-image");
+  const holder = $("#profile-avatar-preview");
+  if (avatar) {
+    img.src = avatar;
+    img.hidden = false;
+    $("#profile-avatar-initials").hidden = true;
+    holder.classList.add("has-photo");
+  } else {
+    img.removeAttribute("src");
+    img.hidden = true;
+    $("#profile-avatar-initials").hidden = false;
+    holder.classList.remove("has-photo");
+  }
+}
+
+function setCategory(category) {
+  const field = $("#category");
+  if (field) field.value = category;
+  document.querySelectorAll(".category-option").forEach((button) => {
+    const selected = button.dataset.category === category;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-checked", String(selected));
+  });
 }
 
 async function loadMyJournals() {
@@ -82,6 +123,117 @@ async function loadMyJournals() {
   showMessage($("#list-message"), "");
 }
 
+function bindProfileEditor() {
+  const form = $("#profile-form");
+  const nameInput = $("#profile-display-name");
+  const bioInput = $("#profile-bio");
+  const fileInput = $("#profile-avatar-file");
+  const saveButton = $("#profile-save");
+
+  nameInput.value = profileName;
+  bioInput.value = profileBio;
+  renderProfilePreview();
+  nameInput.addEventListener("input", () => renderProfilePreview(nameInput.value, bioInput.value, avatarPreviewObjectUrl || (removeAvatarRequested ? "" : profileAvatarUrl)));
+  bioInput.addEventListener("input", () => renderProfilePreview(nameInput.value, bioInput.value, avatarPreviewObjectUrl || (removeAvatarRequested ? "" : profileAvatarUrl)));
+
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      fileInput.value = "";
+      showMessage($("#profile-message"), "Pilih gambar JPG, PNG, atau WebP.", "error");
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      fileInput.value = "";
+      showMessage($("#profile-message"), "Foto profil melebihi batas 2 MB.", "error");
+      return;
+    }
+    if (avatarPreviewObjectUrl) URL.revokeObjectURL(avatarPreviewObjectUrl);
+    avatarPreviewObjectUrl = URL.createObjectURL(file);
+    removeAvatarRequested = false;
+    renderProfilePreview(nameInput.value, bioInput.value, avatarPreviewObjectUrl);
+    showMessage($("#profile-message"), "Foto siap digunakan. Tekan Simpan profil untuk menerapkan perubahan.");
+  });
+
+  $("#remove-profile-avatar").addEventListener("click", () => {
+    fileInput.value = "";
+    if (avatarPreviewObjectUrl) URL.revokeObjectURL(avatarPreviewObjectUrl);
+    avatarPreviewObjectUrl = "";
+    removeAvatarRequested = true;
+    renderProfilePreview(nameInput.value, bioInput.value, "");
+    showMessage($("#profile-message"), "Avatar inisial dipilih. Simpan profil untuk menerapkan perubahan.");
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const name = nameInput.value.trim();
+    const bio = bioInput.value.trim();
+    const file = fileInput.files?.[0];
+    if (name.length < 2) {
+      showMessage($("#profile-message"), "Nama tampilan minimal 2 karakter.", "error");
+      return;
+    }
+    if (bio.length > 240) {
+      showMessage($("#profile-message"), "Bio maksimal 240 karakter.", "error");
+      return;
+    }
+    if (file && (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > MAX_AVATAR_BYTES)) {
+      showMessage($("#profile-message"), "Foto harus berupa JPG, PNG, atau WebP dengan ukuran maksimal 2 MB.", "error");
+      return;
+    }
+
+    saveButton.disabled = true;
+    showMessage($("#profile-message"), "Menyimpan profil…");
+    let uploadedPath = "";
+    const previousAvatar = profileAvatarUrl;
+    let nextAvatar = removeAvatarRequested ? null : profileAvatarUrl;
+    try {
+      if (file) {
+        const extension = ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" })[file.type];
+        const fileId = window.crypto?.randomUUID ? window.crypto.randomUUID() : Date.now() + "-" + Math.random().toString(16).slice(2);
+        uploadedPath = currentUser.id + "/" + fileId + "." + extension;
+        const { error: uploadError } = await window.ljSupabase.storage.from("profile-avatars")
+          .upload(uploadedPath, file, { contentType: file.type, cacheControl: "3600", upsert: false });
+        if (uploadError) throw uploadError;
+        const { data: publicData } = window.ljSupabase.storage.from("profile-avatars").getPublicUrl(uploadedPath);
+        nextAvatar = publicData?.publicUrl || null;
+      }
+
+      const { error } = await window.ljSupabase.from("profiles")
+        .update({ display_name: name, bio, avatar_url: nextAvatar })
+        .eq("id", currentUser.id);
+      if (error) throw error;
+
+      profileName = name;
+      profileBio = bio;
+      profileAvatarUrl = nextAvatar || "";
+      removeAvatarRequested = false;
+      avatarPreviewObjectUrl = "";
+      renderProfilePreview();
+      $("#user-email").textContent = profileName + " · " + (currentUser.email || "");
+      $("#author-name").value = $("#author-name").value.trim() || profileName;
+
+      if (previousAvatar && previousAvatar !== profileAvatarUrl) {
+        const marker = "/storage/v1/object/public/profile-avatars/";
+        const position = previousAvatar.indexOf(marker);
+        if (position >= 0) {
+          const previousPath = previousAvatar.slice(position + marker.length);
+          if (previousPath.startsWith(currentUser.id + "/")) {
+            await window.ljSupabase.storage.from("profile-avatars").remove([previousPath]);
+          }
+        }
+      }
+      showMessage($("#profile-message"), "Profil berhasil diperbarui.", "success");
+    } catch (error) {
+      if (uploadedPath) await window.ljSupabase.storage.from("profile-avatars").remove([uploadedPath]);
+      showMessage($("#profile-message"), error?.message || "Profil belum dapat disimpan. Periksa koneksi dan kebijakan Supabase.", "error");
+    } finally {
+      saveButton.disabled = false;
+    }
+  });
+}
+
 async function initDashboard() {
   if ($("#year")) $("#year").textContent = new Date().getFullYear();
 
@@ -102,6 +254,7 @@ async function initDashboard() {
   if (!window.ljSupabaseConfigured || !window.ljSupabase) {
     $("#config-warning").hidden = false;
     $("#upload-submit").disabled = true;
+    $("#profile-save").disabled = true;
     $("#my-journals").innerHTML = '<div class="portal-empty">Backend belum aktif. Selesaikan konfigurasi Supabase terlebih dahulu.</div>';
     return;
   }
@@ -113,11 +266,17 @@ async function initDashboard() {
     return;
   }
 
-  $("#user-email").textContent = currentUser.email || "Akun LightJurnal";
-  const { data: profile } = await window.ljSupabase
-    .from("profiles").select("display_name").eq("id", currentUser.id).maybeSingle();
+  const { data: profile, error: profileError } = await window.ljSupabase
+    .from("profiles").select("display_name,bio,avatar_url").eq("id", currentUser.id).maybeSingle();
+  if (profileError) {
+    showMessage($("#profile-message"), "Tidak dapat membaca profil. Jalankan supabase-social-profile-migration.sql di Supabase SQL Editor.", "error");
+  }
   profileName = (profile?.display_name || "").trim();
+  profileBio = profile?.bio || "";
+  profileAvatarUrl = profile?.avatar_url || "";
+  $("#user-email").textContent = (profileName || (currentUser.email || "Akun LightJurnal").split("@")[0]) + " · " + (currentUser.email || "");
   $("#author-name").value = profileName || (currentUser.email || "").split("@")[0];
+  bindProfileEditor();
 
   window.ljSupabase.auth.onAuthStateChange((event) => {
     if (event === "SIGNED_OUT") window.location.replace("login.html");
@@ -132,6 +291,20 @@ async function initDashboard() {
     } else {
       window.location.replace("login.html");
     }
+  });
+
+  document.querySelectorAll(".category-option").forEach((button) => {
+    button.addEventListener("click", () => setCategory(button.dataset.category || "Lainnya"));
+    button.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+      event.preventDefault();
+      const buttons = [...document.querySelectorAll(".category-option")];
+      const current = buttons.indexOf(button);
+      const delta = event.key === "ArrowRight" ? 1 : -1;
+      const next = buttons[(current + delta + buttons.length) % buttons.length];
+      setCategory(next.dataset.category || "Lainnya");
+      next.focus();
+    });
   });
 
   $("#refresh-list")?.addEventListener("click", () => loadMyJournals());
@@ -195,6 +368,7 @@ async function initDashboard() {
 
       $("#upload-form").reset();
       $("#author-name").value = profileName || (currentUser.email || "").split("@")[0];
+      setCategory("Teknologi");
       showMessage(message, "Jurnal berhasil dikirim dan sekarang menunggu peninjauan admin.", "success");
       await loadMyJournals();
     } catch (error) {
