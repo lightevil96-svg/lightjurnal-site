@@ -143,3 +143,30 @@ body { min-width:0; }
 .discussion-compose .portal-message.success{background:color-mix(in srgb,#35a76d 12%,var(--surface));color:color-mix(in srgb,#16804b 88%,var(--ink))}
 .account-link{max-width:170px;overflow:hidden;text-overflow:ellipsis}
 
+
+/* Correct visibility for hidden account gates/forms, including components with display:flex/block. */
+[hidden]{display:none!important}
+
+/* Account portal header: keep all actions visible on narrow Android screens. */
+.account-header .nav-wrap{gap:12px}
+.account-header .nav-actions{gap:8px;min-width:0}
+#profil{scroll-margin-top:112px}
+.account-header .nav-actions .button{white-space:nowrap}
+@media(max-width:680px){
+ .account-header .nav-wrap{height:auto;min-height:70px;padding-top:9px;padding-bottom:9px;align-items:center;gap:8px}
+ .account-header .brand{gap:7px;min-width:0}
+ .account-header .brand-mark{flex:0 0 36px}
+ .account-header .brand-copy{font-size:17px;letter-spacing:-.8px}
+ .account-header .brand-copy small{font-size:7px;letter-spacing:.6px;white-space:nowrap}
+ .account-header .nav-actions{display:flex;flex:1;max-width:57%;flex-wrap:wrap;justify-content:flex-end;gap:5px}
+ .account-header .nav-actions .icon-btn{flex:0 0 36px;width:36px;height:36px;border-radius:11px;font-size:16px}
+ .account-header .nav-actions .button{padding:8px 9px;font-size:10px;line-height:1.3;border-radius:10px;min-height:34px}
+ #profil{scroll-margin-top:104px}
+}
+@media(max-width:380px){
+ .account-header .brand-copy{font-size:15px}
+ .account-header .brand-copy small{font-size:6px;letter-spacing:.45px}
+ .account-header .nav-actions{max-width:59%}
+ .account-header .nav-actions .button{padding:7px 8px;font-size:9px}
+}
+
