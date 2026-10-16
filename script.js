@@ -307,17 +307,21 @@ async function loadAccountContext() {
     discussionProfile = data || { display_name: discussionUser.user_metadata?.display_name || "" };
   }
   showAuthState();
-  window.ljSupabase.auth.onAuthStateChange(async (event, session) => {
+  window.ljSupabase.auth.onAuthStateChange((event, session) => {
     if (event === "SIGNED_OUT" || event === "SIGNED_IN" || event === "USER_UPDATED") {
       discussionUser = session?.user || null;
       discussionProfile = null;
-      if (discussionUser) {
-        const { data } = await window.ljSupabase.from("profiles")
-          .select("display_name,avatar_url").eq("id", discussionUser.id).maybeSingle();
-        discussionProfile = data || null;
-      }
       showAuthState();
-      await loadGlobalDiscussion();
+      // Keep data requests outside the Supabase auth callback to avoid lock contention.
+      window.setTimeout(async () => {
+        if (discussionUser) {
+          const { data } = await window.ljSupabase.from("profiles")
+            .select("display_name,avatar_url").eq("id", discussionUser.id).maybeSingle();
+          discussionProfile = data || null;
+        }
+        showAuthState();
+        await loadGlobalDiscussion();
+      }, 0);
     }
   });
 }
