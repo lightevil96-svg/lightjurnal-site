@@ -47,10 +47,21 @@ serve(async (request) => {
   if (request.method !== "POST") return json({ error: { message: "Metode tidak diizinkan." } }, 405, origin || "https://lightjurnal.my.id");
   if (!allowedOrigins.has(origin)) return json({ error: { message: "Origin tidak diizinkan." } }, 403, "https://lightjurnal.my.id");
 
-  // This key is a public browser key, never the Google API key.
-  const publicKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
+  // Accept the currently configured public Supabase key(s), never a Google secret.
   const suppliedKey = request.headers.get("apikey") || "";
-  if (publicKey && suppliedKey !== publicKey) {
+  const acceptedPublicKeys = new Set<string>();
+  const legacyAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+  if (legacyAnonKey) acceptedPublicKeys.add(legacyAnonKey);
+  try {
+    const publishableKeys = JSON.parse(Deno.env.get("SUPABASE_PUBLISHABLE_KEYS") || "{}");
+    for (const value of Object.values(publishableKeys)) {
+      if (typeof value === "string" && value) acceptedPublicKeys.add(value);
+    }
+  } catch {
+    // If the injected publishable-key map is unavailable, origin restrictions
+    // and per-isolate rate-limits still apply.
+  }
+  if (acceptedPublicKeys.size > 0 && !acceptedPublicKeys.has(suppliedKey)) {
     return json({ error: { message: "Kunci aplikasi tidak valid." } }, 401, origin);
   }
 
