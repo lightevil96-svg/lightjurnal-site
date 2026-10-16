@@ -117,7 +117,7 @@ async function loadApprovedArticles() {
 
     const mapped = await Promise.all((data || []).map(async (item) => {
       const { data: signed } = await window.ljSupabase.storage
-        .from("journal-pdfs").createSignedUrl(item.file_path, 86400);
+        .from("journal-pdfs").createSignedUrl(item.file_path, 3600);
       return {
         id: item.id,
         title: item.title,
