@@ -1,4 +1,0 @@
-project_id = "lightjurnal"
-
-[functions.youtube-search]
-verify_jwt = false
