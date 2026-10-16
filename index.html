@@ -25,11 +25,12 @@
       <div class="nav-actions">
         <button class="icon-btn" id="theme-toggle" aria-label="Aktifkan mode gelap" title="Ganti tema"><span id="theme-icon">☾</span></button>
         <a class="button button-dark nav-submit" href="login.html">＋ Unggah karya</a>
+        <a class="button button-outline account-link" id="account-link" href="login.html">Masuk akun</a>
         <button class="menu-toggle icon-btn" id="menu-toggle" aria-label="Buka menu" aria-expanded="false">☰</button>
       </div>
     </div>
     <nav class="mobile-nav" id="mobile-nav" aria-label="Navigasi mobile" hidden>
-      <a href="#beranda">Beranda</a><a href="#artikel">Koleksi jurnal</a><a href="#tentang">Tentang</a><a href="#komentar">Diskusi</a><a href="login.html">Unggah karya</a>
+      <a href="#beranda">Beranda</a><a href="#artikel">Koleksi jurnal</a><a href="#tentang">Tentang</a><a href="#komentar">Diskusi</a><a href="login.html">Unggah karya</a><a id="mobile-account-link" href="login.html">Masuk akun</a>
     </nav>
   </header>
 
@@ -67,10 +68,34 @@
     <section class="quote-section"><div class="quote-inner"><span class="quote-mark">“</span><blockquote>Menulis adalah cara kita memberi bentuk pada pikiran, dan mengarsipkan adalah cara kita menjaga agar pikiran itu tetap bisa ditemukan.</blockquote><div class="quote-credit"><span class="quote-line"></span> CATATAN LIGHTJURNAL</div></div><div class="quote-decoration">LJ.</div></section>
 
     <section class="comments-section section-shell" id="komentar">
-      <div class="section-heading"><div><span class="section-kicker">RUANG DISKUSI</span><h2>Obrolan <span>pembaca.</span></h2><p>Tinggalkan tanggapan atau diskusikan karya bersama pembaca lain.</p></div></div>
-      <div class="comments-panel"><script src="https://utteranc.es/client.js" repo="lightevil96-svg/lightjurnal-site" issue-term="pathname" crossorigin="anonymous" async></script><noscript>Aktifkan JavaScript untuk melihat ruang komentar.</noscript></div>
-      <p class="comments-note">Komentar menggunakan GitHub Issues. Pembaca perlu masuk dengan akun GitHub; komentar akan tampil secara publik.</p>
+      <div class="section-heading"><div><span class="section-kicker">RUANG DISKUSI</span><h2>Obrolan <span>pembaca.</span></h2><p>Berbagi pemikiran dengan nama akun LightJurnal milikmu.</p></div></div>
+      <div class="comments-panel discussion-panel">
+        <div class="discussion-head"><div class="discussion-online"><span></span> RUANG DISKUSI PUBLIK</div><p>Jaga diskusi tetap santun, relevan, dan saling menghargai.</p></div>
+        <div id="discussion-feed" class="discussion-feed" aria-live="polite"><div class="discussion-empty">Memuat obrolan pembaca…</div></div>
+        <div id="discussion-auth-required" class="discussion-auth-required" hidden><div class="discussion-lock">✦</div><div><strong>Obrolan lebih dekat dengan akunmu.</strong><p>Masuk atau buat akun LightJurnal untuk mengirim pesan. Nama yang tampil mengikuti profil LightJurnal kamu.</p><a class="button button-primary" href="login.html">Masuk untuk ngobrol ↗</a></div></div>
+        <form id="discussion-form" class="discussion-compose" hidden>
+          <label class="visually-hidden" for="discussion-body">Tulis tanggapan</label>
+          <textarea id="discussion-body" name="body" required maxlength="2000" placeholder="Apa yang ingin kamu diskusikan?"></textarea>
+          <div class="discussion-compose-footer"><span>Maksimal 2.000 karakter</span><button class="button button-primary" id="discussion-submit" type="submit">Kirim tanggapan ↗</button></div>
+          <div id="discussion-message" class="portal-message" role="status" aria-live="polite"></div>
+        </form>
+      </div>
+      <p class="comments-note">Kamu harus masuk dengan akun LightJurnal untuk menulis. Pesan yang dikirim dapat dibaca publik.</p>
     </section>
+
+    <dialog id="journal-comments-dialog" class="comment-dialog" aria-labelledby="journal-comments-title">
+      <div class="comment-dialog-shell">
+        <div class="comment-dialog-head"><div><span class="section-kicker">RUANG DISKUSI JURNAL</span><h2 id="journal-comments-title">Komentar pembaca</h2><p id="journal-comments-subtitle">Diskusikan isi karya dengan santun.</p></div><button class="icon-btn comment-dialog-close" id="close-journal-comments" type="button" aria-label="Tutup komentar">✕</button></div>
+        <div id="journal-comment-feed" class="discussion-feed journal-comment-feed" aria-live="polite"><div class="discussion-empty">Memuat komentar…</div></div>
+        <div id="journal-comments-auth" class="discussion-auth-required" hidden><div class="discussion-lock">✦</div><div><strong>Masuk untuk ikut berdiskusi.</strong><p>Komentar akan menggunakan nama profil LightJurnal kamu.</p><a class="button button-primary" href="login.html">Masuk / Daftar ↗</a></div></div>
+        <form id="journal-comment-form" class="discussion-compose" hidden>
+          <label class="visually-hidden" for="journal-comment-body">Tulis komentar jurnal</label>
+          <textarea id="journal-comment-body" name="body" required maxlength="2000" placeholder="Tulis komentar yang membangun…"></textarea>
+          <div class="discussion-compose-footer"><span>Maksimal 2.000 karakter</span><button class="button button-primary" id="journal-comment-submit" type="submit">Kirim komentar ↗</button></div>
+          <div id="journal-comment-message" class="portal-message" role="status" aria-live="polite"></div>
+        </form>
+      </div>
+    </dialog>
 
     <section class="about section-shell" id="tentang"><div class="about-icon">✳</div><div class="about-copy"><span class="section-kicker">TENTANG LIGHTJURNAL</span><h2>Ruang belajar yang tumbuh <span>bersamamu.</span></h2><p>LightJurnal dibuat sebagai arsip digital untuk jurnal, artikel, rangkuman, dan tugas kuliah. Susun berdasarkan kategori dan tag supaya setiap ide lebih mudah ditemukan saat dibutuhkan.</p></div><div class="about-stats"><div><strong>01</strong><span>Arsip terorganisir</span></div><div><strong>02</strong><span>Pencarian praktis</span></div><div><strong>03</strong><span>Akses lintas perangkat</span></div></div></section>
   </main>
