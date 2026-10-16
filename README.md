@@ -1,0 +1,2 @@
+# lightjurnal-site
+Jurnal
