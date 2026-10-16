@@ -1,21 +1,71 @@
 <!doctype html>
 <html lang="id">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f7f8fc"><meta name="description" content="Ruang kerja untuk menyiapkan metadata jurnal dan tugas kuliah LightJurnal."><title>Ruang Pengelola — LightJurnal</title><link rel="canonical" href="https://lightjurnal.my.id/admin.html"><link rel="stylesheet" href="style.css"><script>try{if(localStorage.getItem('lj-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script></head>
-<body><header class="site-header"><div class="nav-wrap"><a class="brand" href="./"><span class="brand-mark">L<span>J</span></span><span class="brand-copy">light<span>jurnal</span><small>RUANG KARYA AKADEMIK</small></span></a><div class="nav-actions"><button class="icon-btn" id="theme-toggle" aria-label="Aktifkan mode gelap"><span id="theme-icon">☾</span></button><a class="button button-dark" href="./">← Lihat situs</a></div></div></header>
-<main class="section-shell admin-main"><div class="admin-head"><span class="section-kicker">RUANG KERJA</span><h1>Siapkan karya<br><span style="color:var(--primary)">akademikmu.</span></h1><p>Isi informasi jurnal atau tugas kuliah, lalu simpan draf di browser atau ekspor data untuk dipublikasikan ke situs. PDF dapat kamu unggah ke repository GitHub dan ditautkan di formulir ini.</p></div>
-<div class="notice"><strong>Catatan penting tentang halaman pengelola</strong>Ini adalah alat bantu statis, bukan sistem admin dengan login. Draf dan daftar karya yang ditambahkan di sini tersimpan hanya di browser/perangkat ini, tidak otomatis muncul untuk pengunjung lain. Jangan masukkan kata sandi atau data sensitif. Untuk publikasi permanen, ikuti panduan di bawah dan commit berkas ke repository.</div>
-<section class="admin-panel"><h2>Metadata karya baru</h2><p class="panel-subtitle">Lengkapi informasi inti agar arsip mudah dicari dan dikenali.</p>
-<form id="article-form"><div class="form-grid">
-<div class="field full"><label for="title">Judul karya *</label><input id="title" name="title" required maxlength="180" placeholder="Contoh: Pengaruh Literasi Digital terhadap..."></div>
-<div class="field"><label for="category">Kategori *</label><select id="category" name="category" required><option>Pendidikan</option><option>Teknologi</option><option>Sosial</option><option>Kesehatan</option><option>Lainnya</option></select></div>
-<div class="field"><label for="type">Jenis karya</label><select id="type" name="type"><option>Jurnal</option><option>Artikel</option><option>Tugas kuliah</option><option>Makalah</option><option>Laporan praktikum</option><option>Catatan kuliah</option><option>Esai</option></select></div>
-<div class="field"><label for="author">Penulis</label><input id="author" name="author" maxlength="100" placeholder="Nama penulis"></div>
-<div class="field"><label for="date">Tanggal</label><input id="date" name="date" type="date"></div>
-<div class="field full"><label for="description">Ringkasan *</label><textarea id="description" name="description" required maxlength="600" placeholder="Ringkas isi karya dalam 1–3 kalimat..."></textarea><small>Ringkasan yang jelas membantu pencarian dan memberi konteks kepada pembaca.</small></div>
-<div class="field full"><label for="tags">Tag</label><input id="tags" name="tags" placeholder="misalnya: metodologi, kampus, penelitian (pisahkan dengan koma)"></div>
-<div class="field full"><label for="file">Path berkas PDF (opsional)</label><input id="file" name="file" placeholder="documents/nama-berkas.pdf"><small>Unggah PDF ke folder <code>documents/</code> di GitHub, lalu tulis path relatifnya di sini. Form ini tidak mengunggah berkas secara langsung.</small></div>
-<div class="field full"><label for="url">Tautan sumber / DOI (opsional)</label><input id="url" name="url" type="url" placeholder="https://doi.org/..."></div>
-</div><div class="admin-actions"><button class="button button-primary" type="submit">Simpan draf di perangkat</button><button class="button button-outline" id="export-json" type="button">Ekspor JSON</button><button class="button button-outline" id="export-md" type="button">Ekspor daftar Markdown</button></div><div class="status-message" id="status-message" role="status" aria-live="polite"></div></form>
-<div class="draft-list"><h3>Draf di perangkat ini</h3><div id="draft-list"><p class="panel-subtitle">Belum ada draf buatanmu.</p></div></div>
-<div class="howto"><h3>Cara menerbitkan karya ke situs publik</h3><ol><li>Siapkan file PDF final dan pastikan kamu berhak membagikannya. Jangan unggah file yang melanggar hak cipta atau memuat data pribadi.</li><li>Buka repository <a class="text-link" href="https://github.com/lightevil96-svg/lightjurnal-site" target="_blank" rel="noopener noreferrer">lightjurnal-site ↗</a>. Buat folder <code>documents</code> (jika belum ada) dan unggah PDF ke sana.</li><li>Ekspor JSON dari formulir ini sebagai catatan metadata. Tambahkan karya ke daftar data pada <code>script.js</code> menggunakan format objek yang ada di <code>DEMO_ARTICLES</code>; gunakan path PDF relatif seperti <code>documents/nama-berkas.pdf</code>.</li><li>Commit perubahan ke branch <code>main</code>. Setelah GitHub Pages membangun ulang situs, karya akan tampil untuk semua pengunjung.</li></ol><p class="panel-subtitle">Komentar pembaca: integrasi komentar publik memerlukan konfigurasi layanan pihak ketiga. Halaman ini belum menerima komentar secara langsung.</p></div>
-</section></main><footer class="site-footer"><div class="footer-bottom"><span>© <span id="year"></span> LightJurnal</span><a href="./">Kembali ke beranda ↗</a></div></footer><script src="admin.js" defer></script></body></html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8fc">
+  <meta name="description" content="Panel moderasi LightJurnal untuk memeriksa dan mengelola jurnal yang dikirim pengguna.">
+  <title>Panel Admin — LightJurnal</title>
+  <link rel="canonical" href="https://lightjurnal.my.id/admin.html">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="portal.css">
+  <script>try{if(localStorage.getItem('lj-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="nav-wrap">
+  <a class="brand" href="./" aria-label="LightJurnal beranda"><span class="brand-mark">L<span>J</span></span><span class="brand-copy">light<span>jurnal</span><small>RUANG KARYA AKADEMIK</small></span></a>
+  <div class="nav-actions"><button class="icon-btn" id="theme-toggle" aria-label="Aktifkan mode gelap"><span id="theme-icon">☾</span></button><a class="button button-dark" href="./">← Lihat situs</a></div>
+</div></header>
+<main class="portal-main">
+  <div class="portal-config-warning" id="config-warning" hidden>Backend belum dikonfigurasi. Ikuti langkah di <a href="SUPABASE-SETUP.md">SUPABASE-SETUP.md</a>, jalankan SQL, dan isi <code>supabase-config.js</code>.</div>
+  <section class="portal-login-wrap" id="admin-login-view">
+    <div class="portal-heading"><span class="section-kicker">AREA TERBATAS</span><h1>Masuk<br><span style="color:var(--primary)">sebagai admin.</span></h1><p>Panel ini hanya dapat digunakan akun yang perannya sudah ditetapkan sebagai admin di Supabase. Akun biasa tidak dapat menyetujui jurnal.</p></div>
+    <div class="portal-panel">
+      <h2>Login admin</h2><p class="portal-subtitle">Gunakan email dan kata sandi akun admin yang sudah terdaftar.</p>
+      <form id="admin-login-form">
+        <div class="portal-form">
+          <div class="portal-field full"><label for="admin-email-input">Email admin</label><input id="admin-email-input" type="email" required autocomplete="username" maxlength="254" placeholder="admin@email.com"></div>
+          <div class="portal-field full"><label for="admin-password-input">Kata sandi</label><input id="admin-password-input" type="password" required autocomplete="current-password" placeholder="Kata sandi admin"></div>
+        </div>
+        <div class="portal-actions"><button class="button button-primary" id="admin-login-submit" type="submit">Masuk ke panel</button><a class="text-link" href="login.html">Akun pengguna ↗</a></div>
+        <div id="admin-login-message" class="portal-message" role="status" aria-live="polite"></div>
+      </form>
+    </div>
+  </section>
+
+  <section id="admin-denied-view" hidden>
+    <div class="portal-heading"><span class="section-kicker">AKSES DITOLAK</span><h1>Akun ini bukan<br><span style="color:var(--primary)">administrator.</span></h1><p id="denied-email"></p><p>Masuk sebagai akun pengguna tidak memberi akses untuk meninjau, menyetujui, atau menghapus jurnal.</p></div>
+    <div class="portal-actions"><button class="button button-dark" id="denied-signout" type="button">Keluar dari akun ini</button><a class="button button-outline" href="login.html">Dashboard pengguna</a></div>
+  </section>
+
+  <section id="admin-dashboard-view" hidden>
+    <div class="portal-topline">
+      <div class="portal-heading"><span class="section-kicker">MODERASI JURNAL</span><h1>Panel <span style="color:var(--primary)">admin.</span></h1><p>Tinjau isi dan metadata sebelum jurnal diterbitkan. PDF yang menunggu atau ditolak tetap privat.</p></div>
+      <div class="portal-actions"><span class="portal-user" id="admin-email"></span><button class="button button-dark" id="admin-logout" type="button">Keluar</button></div>
+    </div>
+    <div class="portal-stats">
+      <div class="portal-stat"><strong id="stat-total">0</strong><span>SEMUA KIRIMAN</span></div>
+      <div class="portal-stat"><strong id="stat-pending">0</strong><span>MENUNGGU</span></div>
+      <div class="portal-stat"><strong id="stat-approved">0</strong><span>DISETUJUI</span></div>
+      <div class="portal-stat"><strong id="stat-rejected">0</strong><span>DITOLAK</span></div>
+    </div>
+    <section class="portal-panel">
+      <div class="portal-topline"><div><h2>Antrean peninjauan</h2><p class="portal-subtitle" style="margin-bottom:0">Periksa PDF, baca ringkasan, lalu setujui atau tolak dengan alasan.</p></div><button class="portal-small-button" id="reload-journals" type="button">Muat ulang</button></div>
+      <div class="portal-filters" aria-label="Filter status">
+        <button class="portal-filter" data-filter="pending" type="button">Menunggu</button>
+        <button class="portal-filter" data-filter="approved" type="button">Disetujui</button>
+        <button class="portal-filter" data-filter="rejected" type="button">Ditolak</button>
+        <button class="portal-filter" data-filter="all" type="button">Semua</button>
+      </div>
+      <div id="moderation-list" class="portal-list" aria-live="polite"><div class="portal-empty">Memeriksa sesi admin…</div></div>
+      <div id="admin-message" class="portal-message" role="status" aria-live="polite"></div>
+    </section>
+  </section>
+</main>
+<footer class="site-footer"><div class="footer-bottom"><span>© <span id="year"></span> LightJurnal · Panel admin</span><span>Verifikasi sebelum publikasi</span></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="admin.js" defer></script>
+</body>
+</html>
