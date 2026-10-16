@@ -5,5 +5,5 @@
  * Jangan pernah menaruh kredensial server/private key di file ini.
  */
 window.LIGHTJURNAL_YOUTUBE_CONFIG = {
-  apiKey: "YOUR_YOUTUBE_DATA_API_KEY"
+  apiKey: "AIzaSyC891BOlyD0bDlxT7VML1PDW_3bDbLm-hM"
 };
