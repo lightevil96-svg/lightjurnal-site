@@ -11,7 +11,7 @@ Website jurnal dan arsip tugas kuliah untuk **lightjurnal.my.id**. Dibangun deng
 - Domain khusus melalui file \`CNAME\`
 
 ## Penting: cara kerja admin dan komentar
-Repository ini memakai hosting statis. Halaman \`admin.html\` **bukan CMS yang aman dengan login**; draf disimpan di browser/perangkat yang sedang digunakan dan tidak otomatis tampil pada pengunjung lain. Jangan menyimpan rahasia di halaman tersebut. Untuk menerbitkan karya, unggah PDF ke folder \`documents/\` di repository, lalu tambahkan metadata karya ke array \`DEMO_ARTICLES\` di \`script.js\` dan commit perubahan. Contoh karya di halaman utama adalah konten contoh untuk pratinjau; ganti/hapus sebelum situs digunakan sebagai arsip resmi.
+Repository ini memakai hosting statis. Halaman \`admin.html\` **bukan CMS yang aman dengan login**; draf disimpan di browser/perangkat yang sedang digunakan dan tidak otomatis tampil pada pengunjung lain. Jangan menyimpan rahasia di halaman tersebut. Untuk menerbitkan karya, unggah PDF ke folder \`documents/\` di repository, lalu tambahkan metadata karya ke array \`DEMO_ARTICLES\` di \`script.js\` dan commit perubahan. Koleksi halaman utama dimulai dalam keadaan kosong agar hanya karya yang benar-benar kamu tambahkan yang akan tampil.
 
 Komentar pembaca menggunakan Utterances, yang menyimpan diskusi sebagai GitHub Issues. Pastikan fitur Issues aktif di Settings repository; pembaca harus masuk dengan akun GitHub dan komentar bersifat publik. Jika ruang komentar menampilkan pesan konfigurasi, periksa apakah Issues diaktifkan dan repository dapat diakses oleh Utterances.
 
