@@ -22,6 +22,38 @@ Alur karya:
 - Admin masuk melalui `admin.html` untuk menyetujui, menolak dengan catatan, menarik publikasi, atau menghapus kiriman.
 - Halaman utama hanya memuat jurnal berstatus `approved`.
 
+
+## Ruang Musik YouTube
+
+Halaman `musik.html` menambahkan pencarian video musik melalui YouTube Data API v3 dan pemutaran melalui YouTube IFrame Player API. Fitur ini terpisah dari logika autentikasi, jurnal, komentar, dan moderasi Supabase.
+
+### Mengaktifkan pencarian
+
+1. Buka [Google Cloud Console](https://console.cloud.google.com/).
+2. Pilih atau buat project, lalu aktifkan **YouTube Data API v3**.
+3. Buat API key di **APIs & Services → Credentials**.
+4. Pada pembatasan API key, pilih **Restrict key → YouTube Data API v3**.
+5. Pada **Application restrictions**, gunakan **Websites / HTTP referrers** dan izinkan domain yang dipakai, minimal `https://lightjurnal.my.id/*`. Tambahkan domain `www` hanya jika memang dipakai. Untuk pengujian lokal, tambahkan origin lokal yang tepat lalu hapus setelah selesai.
+6. Buka `youtube-config.js` dan ganti `YOUR_YOUTUBE_DATA_API_KEY` dengan API key tersebut.
+7. Simpan perubahan, tunggu GitHub Pages memperbarui situs, lalu buka **Musik** di navigasi.
+
+**Keamanan:** GitHub Pages adalah hosting statis, sehingga API key yang dipakai di browser dapat dilihat pengunjung. Karena itu, jangan memakai secret key atau kredensial server di file ini. Batasi key berdasarkan HTTP referrer dan API yang diizinkan, pantau penggunaan kuota, dan rotasi key jika bocor. Jika membutuhkan kredensial yang tidak terekspos, gunakan backend/proxy yang dikelola dengan aman—bukan secret yang ditanam di JavaScript.
+
+### Batasan pemutaran
+
+- Pencarian dan metadata menggunakan YouTube Data API; pemutaran menggunakan pemutar YouTube resmi tertanam. Akses akun Google tidak diperlukan.
+- Hasil pencarian tidak menjamin video bisa diputar: pemilik dapat menonaktifkan embedding, atau video dapat dibatasi wilayah/akses.
+- Browser dan WebView dapat membatasi autoplay. Pengguna harus memulai playback melalui interaksi yang sesuai.
+- Antrean, riwayat, dan volume disimpan secara lokal pada perangkat/browser.
+- Situs ini menggunakan beberapa halaman HTML. Navigasi penuh ke halaman lain akan menghentikan instance pemutar halaman musik; antrean dan riwayat tetap tersimpan, tetapi playback lintas halaman tidak dijanjikan.
+- Integrasi web biasa tidak menjamin pemutaran ketika layar mati atau aplikasi berjalan di latar belakang.
+- Pencarian memakai kuota YouTube Data API. Permintaan tambahan untuk halaman berikutnya juga memakai kuota; debounce dan cache sesi digunakan untuk mengurangi permintaan yang tidak diperlukan.
+
+Dokumentasi resmi:
+- [YouTube Data API search.list](https://developers.google.com/youtube/v3/docs/search/list)
+- [YouTube IFrame Player API](https://developers.google.com/youtube/iframe_api_reference)
+- [YouTube API Services Developer Policies](https://developers.google.com/youtube/terms/developer-policies)
+
 ## Publikasi melalui GitHub Pages
 1. Buka **Settings → Pages** pada repository ini.
 2. Pada **Build and deployment**, pilih **Deploy from a branch**, branch \`main\`, folder \`/(root)\`, lalu **Save**.
