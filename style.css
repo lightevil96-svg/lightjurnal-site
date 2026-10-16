@@ -136,3 +136,10 @@ body { min-width:0; }
  .journal-comment-feed{padding:2px 16px;max-height:44dvh}
 }
 
+/* Clear feedback styling for account-authenticated comments */
+.discussion-compose .portal-message{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--surface);color:var(--ink);font-size:10px;line-height:1.65;overflow-wrap:anywhere}
+.discussion-compose .portal-message:empty{display:none}
+.discussion-compose .portal-message.error{background:color-mix(in srgb,#d94d4d 11%,var(--surface));color:color-mix(in srgb,#b62c2c 88%,var(--ink))}
+.discussion-compose .portal-message.success{background:color-mix(in srgb,#35a76d 12%,var(--surface));color:color-mix(in srgb,#16804b 88%,var(--ink))}
+.account-link{max-width:170px;overflow:hidden;text-overflow:ellipsis}
+
