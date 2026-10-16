@@ -215,7 +215,7 @@ function renderCommentList(comments, target) {
 async function fetchComments(journalId = null) {
   let query = window.ljSupabase.from("comments")
     .select("id,journal_id,author_id,author_name,author_avatar,body,created_at")
-    .order("created_at", { ascending: false }).limit(100);
+    .order("created_at", { ascending: true }).limit(100);
   query = journalId ? query.eq("journal_id", journalId) : query.is("journal_id", null);
   const { data, error } = await query;
   if (error) throw error;
@@ -232,6 +232,7 @@ async function loadGlobalDiscussion() {
   }
   try {
     feed.innerHTML = renderCommentList(await fetchComments(null), "global");
+    feed.scrollTop = feed.scrollHeight;
   } catch (error) {
     console.error("LightJurnal: gagal memuat obrolan publik.", error);
     feed.innerHTML = '<div class="discussion-empty"><strong>Obrolan belum dapat dimuat.</strong><p>Pastikan pengelola sudah menjalankan migrasi komentar di Supabase.</p></div>';
@@ -244,6 +245,7 @@ async function loadJournalDiscussion(journalId) {
   feed.innerHTML = '<div class="discussion-empty">Memuat komentar…</div>';
   try {
     feed.innerHTML = renderCommentList(await fetchComments(journalId), journalId);
+    feed.scrollTop = feed.scrollHeight;
   } catch (error) {
     console.error("LightJurnal: gagal memuat komentar jurnal.", error);
     feed.innerHTML = '<div class="discussion-empty"><strong>Komentar belum dapat dimuat.</strong><p>Pengelola perlu mengaktifkan skema komentar Supabase.</p></div>';
@@ -291,6 +293,22 @@ async function submitComment(event, journalId, textarea, message, submitButton) 
   } finally {
     submitButton.disabled = false;
   }
+}
+
+function subscribeToLiveComments() {
+  if (!window.ljSupabaseConfigured || !window.ljSupabase) return;
+  window.ljSupabase
+    .channel("lightjurnal-live-comments")
+    .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, (payload) => {
+      const changed = payload.new || payload.old || {};
+      if (changed.journal_id == null) loadGlobalDiscussion();
+      else if (activeJournalId && changed.journal_id === activeJournalId) loadJournalDiscussion(activeJournalId);
+    })
+    .subscribe((status) => {
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        console.warn("LightJurnal: pembaruan realtime komentar belum tersedia. Memuat komentar tetap dapat dilakukan manual.");
+      }
+    });
 }
 
 async function loadAccountContext() {
@@ -365,7 +383,10 @@ function init() {
   initTheme();
   renderArticles();
   loadApprovedArticles();
-  loadAccountContext().then(loadGlobalDiscussion);
+  loadAccountContext().then(() => {
+    loadGlobalDiscussion();
+    subscribeToLiveComments();
+  });
 
   $("#search-form")?.addEventListener("submit", (event) => {
     event.preventDefault();
