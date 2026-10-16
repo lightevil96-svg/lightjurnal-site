@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8fc">
+  <meta name="description" content="Ruang akun LightJurnal untuk mengunggah jurnal dan memantau hasil peninjauan.">
+  <title>Dashboard Pengguna — LightJurnal</title>
+  <link rel="canonical" href="https://lightjurnal.my.id/dashboard.html">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="portal.css">
+  <script>try{if(localStorage.getItem('lj-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
+</head>
+<body>
+<header class="site-header"><div class="nav-wrap">
+  <a class="brand" href="./" aria-label="LightJurnal beranda"><span class="brand-mark">L<span>J</span></span><span class="brand-copy">light<span>jurnal</span><small>RUANG KARYA AKADEMIK</small></span></a>
+  <div class="nav-actions"><button class="icon-btn" id="theme-toggle" aria-label="Aktifkan mode gelap"><span id="theme-icon">☾</span></button><a class="button button-outline" href="./">← Lihat situs</a><button class="button button-dark" id="signout-button" type="button">Keluar</button></div>
+</div></header>
+<main class="portal-main">
+  <div class="portal-topline"><div class="portal-heading"><span class="section-kicker">DASHBOARD PENGGUNA</span><h1>Ruang karya<br><span style="color:var(--primary)">milikmu.</span></h1><p>Unggah jurnal dalam format PDF dan pantau proses peninjauannya di sini.</p></div><div class="portal-user" id="user-email">Memeriksa sesi…</div></div>
+  <div class="portal-config-warning" id="config-warning" hidden>Backend belum dikonfigurasi. Ikuti panduan <a href="SUPABASE-SETUP.md">SUPABASE-SETUP.md</a> di repository, lalu isi <code>supabase-config.js</code>.</div>
+  <div class="portal-stats">
+    <div class="portal-stat"><strong id="count-total">0</strong><span>SEMUA KIRIMAN</span></div>
+    <div class="portal-stat"><strong id="count-pending">0</strong><span>MENUNGGU</span></div>
+    <div class="portal-stat"><strong id="count-approved">0</strong><span>DISETUJUI</span></div>
+  </div>
+  <section class="portal-panel">
+    <h2>Unggah jurnal baru</h2><p class="portal-subtitle">Lengkapi identitas jurnal dan unggah PDF. Batas berkas 25 MB; berkas belum dapat dibaca publik sebelum disetujui admin.</p>
+    <form id="upload-form">
+      <div class="portal-form">
+        <div class="portal-field full"><label for="title">Judul jurnal *</label><input id="title" name="title" required minlength="3" maxlength="200" placeholder="Masukkan judul jurnal"></div>
+        <div class="portal-field"><label for="author-name">Nama penulis *</label><input id="author-name" name="author-name" required minlength="2" maxlength="120" placeholder="Nama penulis"></div>
+        <div class="portal-field"><label for="category">Kategori *</label><select id="category" name="category" required><option value="Pendidikan">Pendidikan</option><option value="Teknologi">Teknologi</option><option value="Sosial">Sosial</option><option value="Kesehatan">Kesehatan</option><option value="Lainnya">Lainnya</option></select></div>
+        <div class="portal-field full"><label for="description">Ringkasan *</label><textarea id="description" name="description" required minlength="10" maxlength="2000" placeholder="Jelaskan isi jurnal secara singkat (10–2.000 karakter)"></textarea></div>
+        <div class="portal-field full"><label for="tags">Tag (opsional)</label><input id="tags" name="tags" maxlength="300" placeholder="mis. metode penelitian, pendidikan, literasi"><small>Pisahkan tag dengan koma. Maksimal 8 tag.</small></div>
+        <div class="portal-field full"><label for="pdf">Berkas PDF *</label><input id="pdf" name="pdf" type="file" accept=".pdf,application/pdf" required><small>Hanya PDF, maksimal 25 MB. Pastikan kamu memiliki hak untuk membagikan dokumen tersebut dan hapus data pribadi yang tidak perlu.</small></div>
+      </div>
+      <div class="portal-actions"><button class="button button-primary" id="upload-submit" type="submit">Kirim untuk ditinjau ↗</button></div>
+      <div id="upload-message" class="portal-message" role="status" aria-live="polite"></div>
+    </form>
+  </section>
+  <section class="portal-panel">
+    <div class="portal-topline"><div><h2>Riwayat kiriman</h2><p class="portal-subtitle" style="margin-bottom:0">Status dan catatan admin untuk jurnal milikmu.</p></div><button class="portal-small-button" id="refresh-list" type="button">Muat ulang</button></div>
+    <div id="my-journals" class="portal-list" aria-live="polite"><div class="portal-empty">Memuat kiriman…</div></div>
+    <div id="list-message" class="portal-message" role="status" aria-live="polite"></div>
+  </section>
+</main>
+<footer class="site-footer"><div class="footer-bottom"><span>© <span id="year"></span> LightJurnal</span><span>Belajar · Menulis · Bertumbuh</span></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="dashboard.js" defer></script>
+</body>
+</html>
