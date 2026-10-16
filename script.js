@@ -2,6 +2,9 @@ const APPROVED_ARTICLES = [];
 let activeCategory = "Semua";
 let activeQuery = "";
 let backendState = "loading";
+let discussionUser = null;
+let discussionProfile = null;
+let activeJournalId = null;
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
@@ -17,6 +20,24 @@ function prettyDate(value) {
   return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat("id-ID", {
     day: "numeric", month: "short", year: "numeric"
   }).format(date);
+}
+
+function dateTimeLabel(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat("id-ID", {
+    day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
+  }).format(date);
+}
+
+function initials(value) {
+  const words = String(value || "LightJurnal").trim().split(/\s+/).filter(Boolean);
+  return words.slice(0, 2).map((word) => word[0]).join("").toLocaleUpperCase("id") || "LJ";
+}
+
+function safeAvatar(value) {
+  const url = String(value || "");
+  return /^https:\/\//i.test(url) ? url : "";
 }
 
 function categoryClass(category) {
@@ -42,10 +63,11 @@ function articleCard(article, index) {
     escapeHTML(article.title) + '</h3><p class="card-description">' +
     escapeHTML(article.description || "Belum ada ringkasan untuk jurnal ini.") +
     '</p><div class="tag-list">' + tags + '</div><div class="card-footer"><span class="author">' +
-    escapeHTML(article.author || "Penulis") + '</span>' + link + '</div></div></article>';
+    escapeHTML(article.author || "Penulis") + '</span><span class="card-actions">' + link +
+    '<button class="card-comment-link" type="button" data-journal-comments="' + escapeHTML(article.id) + '" aria-label="Buka komentar untuk ' + escapeHTML(article.title) + '">Komentar <span aria-hidden="true">↗</span></button></span></div></div></article>';
 }
 
-function emptyStateCopy(list) {
+function emptyStateCopy() {
   if (activeQuery || activeCategory !== "Semua") {
     $("#empty-title").textContent = "Tidak ada hasil yang cocok";
     $("#empty-copy").textContent = "Coba kata kunci lain atau hapus filter pencarian.";
@@ -90,7 +112,7 @@ function renderArticles() {
   $("#collection-footnote").textContent = activeQuery || activeCategory !== "Semua"
     ? "Hasil yang sesuai dengan filter kamu"
     : "Jurnal yang telah disetujui admin";
-  if (!list.length) emptyStateCopy(list);
+  if (!list.length) emptyStateCopy();
 }
 
 function setQuery(query) {
@@ -139,6 +161,182 @@ async function loadApprovedArticles() {
   renderArticles();
 }
 
+function updateAccountLinks() {
+  const accountLink = $("#account-link");
+  const mobileAccountLink = $("#mobile-account-link");
+  const name = discussionProfile?.display_name?.trim() || (discussionUser?.email || "").split("@")[0] || "";
+  if (accountLink) {
+    accountLink.href = discussionUser ? "dashboard.html#profil" : "login.html";
+    accountLink.textContent = discussionUser ? (name ? "Akun · " + name : "Akun saya") : "Masuk akun";
+    accountLink.title = discussionUser ? "Buka profil LightJurnal" : "Masuk ke akun LightJurnal";
+  }
+  if (mobileAccountLink) {
+    mobileAccountLink.href = discussionUser ? "dashboard.html#profil" : "login.html";
+    mobileAccountLink.textContent = discussionUser ? "Profil saya · " + (name || "Akun LightJurnal") : "Masuk akun";
+  }
+}
+
+function showAuthState() {
+  const isSignedIn = Boolean(discussionUser);
+  const globalForm = $("#discussion-form");
+  const globalAuth = $("#discussion-auth-required");
+  if (globalForm) globalForm.hidden = !isSignedIn;
+  if (globalAuth) globalAuth.hidden = isSignedIn;
+  const journalForm = $("#journal-comment-form");
+  const journalAuth = $("#journal-comments-auth");
+  if (journalForm) journalForm.hidden = !isSignedIn;
+  if (journalAuth) journalAuth.hidden = isSignedIn;
+  updateAccountLinks();
+}
+
+function commentAvatar(comment) {
+  const name = escapeHTML(comment.author_name || "Pengguna LightJurnal");
+  const avatar = safeAvatar(comment.author_avatar);
+  return avatar
+    ? '<span class="discussion-avatar has-image"><img src="' + escapeHTML(avatar) + '" alt="" loading="lazy"></span>'
+    : '<span class="discussion-avatar">' + escapeHTML(initials(name)) + '</span>';
+}
+
+function renderCommentList(comments, target) {
+  if (!comments?.length) return '<div class="discussion-empty"><span>✳</span><strong>Jadilah yang pertama berdiskusi.</strong><p>Bagikan tanggapan yang membantu pembaca lain memahami karya ini.</p></div>';
+  return comments.map((comment) => {
+    const ownComment = discussionUser && comment.author_id === discussionUser.id;
+    const deleteButton = ownComment
+      ? '<button type="button" class="comment-delete" data-delete-comment="' + escapeHTML(comment.id) + '" data-comment-target="' + escapeHTML(target) + '">Hapus</button>'
+      : "";
+    return '<article class="discussion-comment">' + commentAvatar(comment) +
+      '<div class="discussion-comment-main"><div class="discussion-comment-head"><strong>' + escapeHTML(comment.author_name || "Pengguna LightJurnal") +
+      '</strong><time datetime="' + escapeHTML(comment.created_at || "") + '">' + escapeHTML(dateTimeLabel(comment.created_at)) +
+      '</time></div><p>' + escapeHTML(comment.body) + '</p>' + (deleteButton ? '<div class="discussion-comment-actions">' + deleteButton + '</div>' : '') +
+      '</div></article>';
+  }).join("");
+}
+
+async function fetchComments(journalId = null) {
+  let query = window.ljSupabase.from("comments")
+    .select("id,journal_id,author_id,author_name,author_avatar,body,created_at")
+    .order("created_at", { ascending: false }).limit(100);
+  query = journalId ? query.eq("journal_id", journalId) : query.is("journal_id", null);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+async function loadGlobalDiscussion() {
+  const feed = $("#discussion-feed");
+  if (!feed) return;
+  feed.innerHTML = '<div class="discussion-empty">Memuat obrolan pembaca…</div>';
+  if (!window.ljSupabaseConfigured || !window.ljSupabase) {
+    feed.innerHTML = '<div class="discussion-empty"><strong>Ruang obrolan belum tersambung.</strong><p>Pengelola perlu mengaktifkan backend Supabase.</p></div>';
+    return;
+  }
+  try {
+    feed.innerHTML = renderCommentList(await fetchComments(null), "global");
+  } catch (error) {
+    console.error("LightJurnal: gagal memuat obrolan publik.", error);
+    feed.innerHTML = '<div class="discussion-empty"><strong>Obrolan belum dapat dimuat.</strong><p>Pastikan pengelola sudah menjalankan migrasi komentar di Supabase.</p></div>';
+  }
+}
+
+async function loadJournalDiscussion(journalId) {
+  const feed = $("#journal-comment-feed");
+  if (!feed) return;
+  feed.innerHTML = '<div class="discussion-empty">Memuat komentar…</div>';
+  try {
+    feed.innerHTML = renderCommentList(await fetchComments(journalId), journalId);
+  } catch (error) {
+    console.error("LightJurnal: gagal memuat komentar jurnal.", error);
+    feed.innerHTML = '<div class="discussion-empty"><strong>Komentar belum dapat dimuat.</strong><p>Pengelola perlu mengaktifkan skema komentar Supabase.</p></div>';
+  }
+}
+
+async function submitComment(event, journalId, textarea, message, submitButton) {
+  event.preventDefault();
+  const body = textarea.value.trim();
+  if (!discussionUser) {
+    showAuthState();
+    return;
+  }
+  if (!body) {
+    message.textContent = "Tulis tanggapan sebelum mengirim.";
+    message.className = "portal-message error";
+    return;
+  }
+  if (body.length > 2000) {
+    message.textContent = "Komentar maksimal 2.000 karakter.";
+    message.className = "portal-message error";
+    return;
+  }
+  submitButton.disabled = true;
+  message.textContent = "Mengirim tanggapan…";
+  message.className = "portal-message";
+  try {
+    const { error } = await window.ljSupabase.from("comments").insert({
+      journal_id: journalId || null,
+      author_id: discussionUser.id,
+      body
+    });
+    if (error) throw error;
+    textarea.value = "";
+    message.textContent = "Tanggapan berhasil dikirim.";
+    message.className = "portal-message success";
+    if (journalId) await loadJournalDiscussion(journalId);
+    else await loadGlobalDiscussion();
+    window.setTimeout(() => { if (message) message.textContent = ""; }, 2800);
+  } catch (error) {
+    message.textContent = /relation .*comments.* does not exist|schema cache/i.test(error?.message || "")
+      ? "Fitur komentar belum aktif. Jalankan supabase-social-profile-migration.sql di Supabase SQL Editor."
+      : (error?.message || "Komentar gagal dikirim. Periksa koneksi dan aturan akses Supabase.");
+    message.className = "portal-message error";
+  } finally {
+    submitButton.disabled = false;
+  }
+}
+
+async function loadAccountContext() {
+  if (!window.ljSupabaseConfigured || !window.ljSupabase) {
+    showAuthState();
+    return;
+  }
+  const { data: sessionData } = await window.ljSupabase.auth.getSession();
+  discussionUser = sessionData.session?.user || null;
+  discussionProfile = null;
+  if (discussionUser) {
+    const { data } = await window.ljSupabase.from("profiles")
+      .select("display_name,avatar_url").eq("id", discussionUser.id).maybeSingle();
+    discussionProfile = data || { display_name: discussionUser.user_metadata?.display_name || "" };
+  }
+  showAuthState();
+  window.ljSupabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === "SIGNED_OUT" || event === "SIGNED_IN" || event === "USER_UPDATED") {
+      discussionUser = session?.user || null;
+      discussionProfile = null;
+      if (discussionUser) {
+        const { data } = await window.ljSupabase.from("profiles")
+          .select("display_name,avatar_url").eq("id", discussionUser.id).maybeSingle();
+        discussionProfile = data || null;
+      }
+      showAuthState();
+      await loadGlobalDiscussion();
+    }
+  });
+}
+
+function openJournalComments(journalId) {
+  const article = APPROVED_ARTICLES.find((item) => item.id === journalId);
+  if (!article) return;
+  activeJournalId = journalId;
+  $("#journal-comments-title").textContent = "Komentar pembaca";
+  $("#journal-comments-subtitle").textContent = article.title;
+  $("#journal-comment-body").value = "";
+  $("#journal-comment-message").textContent = "";
+  showAuthState();
+  const dialog = $("#journal-comments-dialog");
+  if (typeof dialog.showModal === "function") dialog.showModal();
+  else dialog.setAttribute("open", "");
+  loadJournalDiscussion(journalId);
+}
+
 function initTheme() {
   const button = $("#theme-toggle");
   const icon = $("#theme-icon");
@@ -163,6 +361,7 @@ function init() {
   initTheme();
   renderArticles();
   loadApprovedArticles();
+  loadAccountContext().then(loadGlobalDiscussion);
 
   $("#search-form")?.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -183,6 +382,36 @@ function init() {
     renderArticles();
   }));
   $("#sort-select")?.addEventListener("change", renderArticles);
+  $("#article-grid")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-journal-comments]");
+    if (button) openJournalComments(button.dataset.journalComments);
+  });
+
+  $("#discussion-form")?.addEventListener("submit", (event) =>
+    submitComment(event, null, $("#discussion-body"), $("#discussion-message"), $("#discussion-submit")));
+  $("#journal-comment-form")?.addEventListener("submit", (event) =>
+    submitComment(event, activeJournalId, $("#journal-comment-body"), $("#journal-comment-message"), $("#journal-comment-submit")));
+  $("#close-journal-comments")?.addEventListener("click", () => $("#journal-comments-dialog").close());
+  $("#journal-comments-dialog")?.addEventListener("click", (event) => {
+    if (event.target === $("#journal-comments-dialog")) $("#journal-comments-dialog").close();
+  });
+  document.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-delete-comment]");
+    if (!button || !discussionUser || !window.ljSupabase) return;
+    if (!window.confirm("Hapus komentar ini?")) return;
+    button.disabled = true;
+    try {
+      const { error } = await window.ljSupabase.from("comments").delete()
+        .eq("id", button.dataset.deleteComment).eq("author_id", discussionUser.id);
+      if (error) throw error;
+      if (button.dataset.commentTarget === "global") await loadGlobalDiscussion();
+      else if (activeJournalId) await loadJournalDiscussion(activeJournalId);
+    } catch (error) {
+      window.alert(error?.message || "Komentar belum dapat dihapus.");
+      button.disabled = false;
+    }
+  });
+
   const menu = $("#menu-toggle");
   const nav = $("#mobile-nav");
   menu?.addEventListener("click", () => {
