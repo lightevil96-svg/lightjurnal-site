@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f8fc">
+  <meta name="description" content="Temukan dan putar musik melalui pemutar YouTube resmi di LightJurnal.">
+  <title>Ruang Musik — LightJurnal</title>
+  <script>try{if(localStorage.getItem('lj-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="music.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="index.html" aria-label="LightJurnal beranda"><span class="brand-mark">L<span>J</span></span><span class="brand-copy">light<span>jurnal</span><small>RUANG KARYA AKADEMIK</small></span></a>
+      <nav class="desktop-nav" aria-label="Navigasi utama">
+        <a class="nav-link" href="index.html">Beranda</a>
+        <a class="nav-link" href="index.html#artikel">Koleksi jurnal</a>
+        <a class="nav-link" href="index.html#komentar">Diskusi</a>
+        <a class="nav-link active" href="musik.html" aria-current="page">Musik</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-btn" id="music-theme-toggle" type="button" aria-label="Ganti tema" title="Ganti tema"><span id="music-theme-icon">☾</span></button>
+        <a class="button button-outline music-account-link" href="login.html">Akun ↗</a>
+        <button class="menu-toggle icon-btn" id="music-menu-toggle" type="button" aria-label="Buka menu" aria-expanded="false">☰</button>
+      </div>
+    </div>
+    <nav class="mobile-nav" id="music-mobile-nav" aria-label="Navigasi mobile" hidden>
+      <a href="index.html">Beranda</a><a href="index.html#artikel">Koleksi jurnal</a><a href="index.html#komentar">Diskusi</a><a href="musik.html" aria-current="page">Musik</a><a href="login.html">Masuk akun</a>
+    </nav>
+  </header>
+
+  <main class="music-main" id="konten">
+    <section class="music-hero">
+      <div class="music-hero-copy">
+        <span class="section-kicker">RUANG MUSIK LIGHTJURNAL</span>
+        <h1>Temukan irama.<br><span>Temani prosesmu.</span></h1>
+        <p>Cari lagu dan video musik, lalu putar langsung melalui pemutar YouTube resmi.</p>
+        <form class="music-search" id="music-search-form" role="search">
+          <label class="visually-hidden" for="music-search-input">Cari judul lagu atau artis</label>
+          <span aria-hidden="true">⌕</span>
+          <input id="music-search-input" type="search" placeholder="Judul lagu, penyanyi, atau kata kunci…" autocomplete="off" maxlength="160" required>
+          <button class="button button-primary" id="music-search-button" type="submit">Cari musik ↗</button>
+        </form>
+        <div class="music-quick-searches" aria-label="Pencarian populer">
+          <span>Coba:</span><button type="button" data-music-query="lofi study music">Lofi belajar</button><button type="button" data-music-query="acoustic indie Indonesia">Akustik Indonesia</button><button type="button" data-music-query="instrumental piano">Piano instrumental</button>
+        </div>
+      </div>
+      <div class="music-hero-art" aria-hidden="true"><div class="music-disc"><div class="music-disc-label">LJ.</div></div><span class="music-note note-one">♪</span><span class="music-note note-two">♫</span><span class="music-art-caption">PLAY YOUR MOMENT</span></div>
+    </section>
+
+    <section class="music-workspace" aria-label="Pemutar dan hasil pencarian">
+      <div class="music-results-column">
+        <div class="music-section-heading"><div><span class="section-kicker">PILIH SUASANA</span><h2>Hasil pencarian</h2><p id="music-results-subtitle">Cari musik favoritmu untuk memulai.</p></div><span class="music-result-count" id="music-result-count">0 video</span></div>
+        <div id="music-feedback" class="music-feedback" role="status" aria-live="polite">Masukkan judul lagu atau nama artis untuk mencari.</div>
+        <div id="music-results" class="music-results" aria-label="Hasil pencarian"></div>
+        <div class="music-load-more-wrap"><button id="music-load-more" class="button button-outline" type="button" hidden>Muat hasil berikutnya ↓</button></div>
+      </div>
+
+      <aside class="music-side-column">
+        <section class="music-player-card" aria-label="Pemutar YouTube">
+          <div class="music-section-heading player-heading"><div><span class="section-kicker">SEDANG DIPUTAR</span><h2>Now playing</h2></div><span class="music-live-dot" id="music-live-dot"></span></div>
+          <div class="music-player-frame" id="music-player-frame"><div id="youtube-player"></div><div class="music-player-placeholder" id="music-player-placeholder"><span>♫</span><strong>Musikmu dimulai di sini</strong><p>Pilih video dari hasil pencarian. Pemutar YouTube akan muncul di area ini.</p></div></div>
+          <div class="music-now-playing"><div class="music-now-thumb" id="music-now-thumb"><span>♪</span></div><div class="music-now-meta"><strong id="music-now-title">Belum ada lagu dipilih</strong><span id="music-now-channel">Pilih hasil pencarian untuk mulai</span><span class="music-playback-state" id="music-playback-state">Siap diputar</span></div></div>
+          <div class="music-progress"><span id="music-current-time">0:00</span><input id="music-progress-range" type="range" min="0" max="1000" value="0" aria-label="Posisi pemutaran" disabled><span id="music-duration">0:00</span></div>
+          <div class="music-player-controls"><button type="button" id="music-previous" class="music-control-button" aria-label="Lagu sebelumnya" title="Lagu sebelumnya" disabled>⏮</button><button type="button" id="music-play-pause" class="music-control-button music-control-main" aria-label="Putar atau jeda" title="Putar atau jeda" disabled>▶</button><button type="button" id="music-next" class="music-control-button" aria-label="Lagu berikutnya" title="Lagu berikutnya" disabled>⏭</button></div>
+          <div class="music-volume"><span aria-hidden="true">◖</span><label class="visually-hidden" for="music-volume-range">Volume pemutar</label><input id="music-volume-range" type="range" min="0" max="100" value="70" aria-label="Volume" disabled><span id="music-volume-label">70%</span></div>
+          <p class="music-player-note">Video diputar sesuai kemampuan dan ketentuan YouTube. Beberapa video mungkin tidak mengizinkan pemutaran tertanam.</p>
+        </section>
+
+        <section class="music-list-card">
+          <div class="music-section-heading"><div><span class="section-kicker">PUTAR BERIKUTNYA</span><h2>Antrean lagu</h2></div><button type="button" class="music-text-button" id="music-clear-queue">Kosongkan</button></div>
+          <div id="music-queue" class="music-queue"><div class="music-list-empty">Lagu yang kamu tambahkan akan muncul di sini.</div></div>
+        </section>
+        <section class="music-list-card">
+          <div class="music-section-heading"><div><span class="section-kicker">BARU KAMU DENGAR</span><h2>Riwayat</h2></div><button type="button" class="music-text-button" id="music-clear-history">Hapus</button></div>
+          <div id="music-history" class="music-queue"><div class="music-list-empty">Riwayat lagu akan tersimpan di perangkat ini.</div></div>
+        </section>
+      </aside>
+    </section>
+    <p class="music-disclaimer">Pencarian menggunakan YouTube Data API. Pemutaran dilakukan melalui pemutar YouTube tertanam; LightJurnal tidak mengunduh atau mengekstrak audio. <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">Ketentuan YouTube ↗</a></p>
+  </main>
+
+  <footer class="site-footer"><div class="footer-top"><a class="brand footer-brand" href="index.html"><span class="brand-mark">L<span>J</span></span><span class="brand-copy">light<span>jurnal</span><small>RUANG KARYA AKADEMIK</small></span></a><p>Tempat menyimpan proses, bukan hanya hasil.</p><a href="index.html" class="footer-admin">Kembali ke LightJurnal ↗</a></div><div class="footer-bottom"><span>© <span id="music-year"></span> LightJurnal.</span><span>Belajar · Menulis · Bertumbuh</span></div></footer>
+
+  <div class="music-mini-player" id="music-mini-player" hidden>
+    <div class="music-mini-thumb" id="music-mini-thumb"><span>♪</span></div>
+    <div class="music-mini-meta"><strong id="music-mini-title">Belum ada lagu dipilih</strong><span id="music-mini-state">Pemutar siap</span></div>
+    <button id="music-mini-play" type="button" aria-label="Putar atau jeda" disabled>▶</button>
+    <button id="music-mini-open" type="button" aria-label="Buka pemutar">↗</button>
+  </div>
+
+  <script src="youtube-config.js"></script>
+  <script src="music.js" defer></script>
+</body>
+</html>
