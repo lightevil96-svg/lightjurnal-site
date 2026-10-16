@@ -29,14 +29,17 @@ Halaman `musik.html` menggunakan YouTube Data API v3 melalui **Supabase Edge Fun
 
 ### Mengaktifkan pencarian dengan API key yang aman
 
-1. Di Google Cloud Console, pastikan YouTube Data API v3 aktif dan API key hanya diizinkan untuk YouTube Data API v3.
-2. Jangan simpan API key di `youtube-config.js`, `music.js`, HTML, atau file lain yang masuk GitHub.
-3. Simpan key sebagai secret bernama `YOUTUBE_API_KEY` pada project Supabase yang digunakan LightJurnal. Cara CLI: `supabase secrets set YOUTUBE_API_KEY=KEY_DARI_GOOGLE_CLOUD` (jalankan secara lokal; jangan kirim key ke chat atau commit ke Git).
-4. Deploy function dari folder repository: `supabase functions deploy youtube-search --no-verify-jwt`.
-5. Pastikan konfigurasi Supabase pada `supabase-config.js` menggunakan project URL dan publishable/anon key publik yang benar.
-6. Buka `https://lightjurnal.my.id/musik.html` dan coba pencarian. Bila deploy function belum dilakukan atau secret belum dipasang, pencarian sengaja menampilkan pemberitahuan konfigurasi.
+Pencarian memakai Supabase Edge Function. Google API key tidak lagi disimpan di file frontend.
 
-**Penting:** API key Google pernah tersimpan pada file frontend. Hapus dari kode publik (sudah dilakukan di file saat ini), tetapi commit lama mungkin masih menyimpan nilainya. Pembatasan API mengurangi penyalahgunaan, tetapi tidak menghapus paparan riwayat. Jika ingin key benar-benar aman, setelah memindahkan ke secret server, rotasi key di Google Cloud dan gunakan key baru sebagai secret. Jangan pernah kirim nilai key ke chat. Beri batasan API YouTube Data API v3 dan pantau kuota. Function membatasi origin, panjang kueri, jumlah hasil, dan laju permintaan; perlindungan berbasis origin bukan pengganti pemantauan kuota.
+1. Pastikan **YouTube Data API v3** aktif di Google Cloud. Pada API restrictions, batasi key ke YouTube Data API v3.
+2. Di GitHub, buka **Settings → Secrets and variables → Actions → New repository secret**. Tambahkan:
+   - `YOUTUBE_API_KEY`: API key Google yang akan digunakan server.
+   - `SUPABASE_ACCESS_TOKEN`: access token Supabase milik project owner.
+3. Workflow `.github/workflows/deploy-youtube-search.yml` akan mengirim key ke secret Supabase lalu deploy function. Setelah secrets disimpan, buka tab **Actions**, pilih workflow **Deploy YouTube Search Proxy**, lalu tekan **Run workflow**.
+4. Pastikan `supabase-config.js` memuat project URL dan public/publishable key Supabase yang benar.
+5. Buka `https://lightjurnal.my.id/musik.html` dan coba pencarian. Jika workflow gagal, buka detail run untuk melihat langkah yang gagal—jangan tempel nilai secret ke issue atau chat.
+
+**Penting:** API key Google sebelumnya pernah tersimpan pada file frontend, sehingga nilai yang sama mungkin masih dapat ditemukan di commit lama. Menghapusnya dari file terbaru tidak menghapus riwayat Git. Pembatasan API membantu mengurangi risiko, tetapi cara paling aman setelah paparan publik adalah membuat API key baru, membatasi key tersebut ke YouTube Data API v3, lalu menyimpannya hanya sebagai secret `YOUTUBE_API_KEY`. Jangan pernah menaruhnya di JavaScript/HTML atau mengirim nilainya ke chat. Function menerapkan allowlist origin, validasi kueri, cache dan pembatasan laju dasar; pemantauan kuota tetap diperlukan.
 
 ### Batasan pemutaran
 
