@@ -4,8 +4,8 @@
  * JANGAN pernah menaruh service_role/secret key di file ini.
  */
 window.LIGHTJURNAL_CONFIG = {
-  url: "https://PROJECT_REF.supabase.co",
-  anonKey: "PASTE_SUPABASE_ANON_OR_PUBLISHABLE_KEY_HERE"
+  url: "https://wyxjubvpnshqthtnmbyl.supabase.co",
+  anonKey: "sb_publishable_HdOlM0dKlT60-5EWLFabEQ_XTSijgSn"
 };
 
 (function () {
