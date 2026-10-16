@@ -25,34 +25,32 @@ Alur karya:
 
 ## Ruang Musik YouTube
 
-Halaman `musik.html` menambahkan pencarian video musik melalui YouTube Data API v3 dan pemutaran melalui YouTube IFrame Player API. Fitur ini terpisah dari logika autentikasi, jurnal, komentar, dan moderasi Supabase.
+Halaman `musik.html` menggunakan YouTube Data API v3 melalui **Supabase Edge Function** agar API key Google tidak ditanam di JavaScript yang dikirim ke pengunjung. Pemutaran memakai YouTube IFrame Player API resmi. Mode awal berfokus pada musik dengan pemutar ringkas yang tetap terlihat; tombol **Tonton video besar** memperluas video saat pengguna ingin menontonnya.
 
-### Mengaktifkan pencarian
+### Mengaktifkan pencarian dengan API key yang aman
 
-1. Buka [Google Cloud Console](https://console.cloud.google.com/).
-2. Pilih atau buat project, lalu aktifkan **YouTube Data API v3**.
-3. Buat API key di **APIs & Services → Credentials**.
-4. Pada pembatasan API key, pilih **Restrict key → YouTube Data API v3**.
-5. Pada **Application restrictions**, gunakan **Websites / HTTP referrers** dan izinkan domain yang dipakai, minimal `https://lightjurnal.my.id/*`. Tambahkan domain `www` hanya jika memang dipakai. Untuk pengujian lokal, tambahkan origin lokal yang tepat lalu hapus setelah selesai.
-6. Buka `youtube-config.js` dan ganti `YOUR_YOUTUBE_DATA_API_KEY` dengan API key tersebut.
-7. Simpan perubahan, tunggu GitHub Pages memperbarui situs, lalu buka **Musik** di navigasi.
+1. Di Google Cloud Console, pastikan YouTube Data API v3 aktif dan API key hanya diizinkan untuk YouTube Data API v3.
+2. Jangan simpan API key di `youtube-config.js`, `music.js`, HTML, atau file lain yang masuk GitHub.
+3. Simpan key sebagai secret bernama `YOUTUBE_API_KEY` pada project Supabase yang digunakan LightJurnal. Cara CLI: `supabase secrets set YOUTUBE_API_KEY=KEY_DARI_GOOGLE_CLOUD` (jalankan secara lokal; jangan kirim key ke chat atau commit ke Git).
+4. Deploy function dari folder repository: `supabase functions deploy youtube-search --no-verify-jwt`.
+5. Pastikan konfigurasi Supabase pada `supabase-config.js` menggunakan project URL dan publishable/anon key publik yang benar.
+6. Buka `https://lightjurnal.my.id/musik.html` dan coba pencarian. Bila deploy function belum dilakukan atau secret belum dipasang, pencarian sengaja menampilkan pemberitahuan konfigurasi.
 
-**Keamanan:** GitHub Pages adalah hosting statis, sehingga API key yang dipakai di browser dapat dilihat pengunjung. Karena itu, jangan memakai secret key atau kredensial server di file ini. Batasi key berdasarkan HTTP referrer dan API yang diizinkan, pantau penggunaan kuota, dan rotasi key jika bocor. Jika membutuhkan kredensial yang tidak terekspos, gunakan backend/proxy yang dikelola dengan aman—bukan secret yang ditanam di JavaScript.
+**Penting:** API key Google pernah tersimpan pada file frontend. Hapus dari kode publik (sudah dilakukan di file saat ini), tetapi commit lama mungkin masih menyimpan nilainya. Pembatasan API mengurangi penyalahgunaan, tetapi tidak menghapus paparan riwayat. Jika ingin key benar-benar aman, setelah memindahkan ke secret server, rotasi key di Google Cloud dan gunakan key baru sebagai secret. Jangan pernah kirim nilai key ke chat. Beri batasan API YouTube Data API v3 dan pantau kuota. Function membatasi origin, panjang kueri, jumlah hasil, dan laju permintaan; perlindungan berbasis origin bukan pengganti pemantauan kuota.
 
 ### Batasan pemutaran
 
-- Pencarian dan metadata menggunakan YouTube Data API; pemutaran menggunakan pemutar YouTube resmi tertanam. Akses akun Google tidak diperlukan.
-- Hasil pencarian tidak menjamin video bisa diputar: pemilik dapat menonaktifkan embedding, atau video dapat dibatasi wilayah/akses.
-- Browser dan WebView dapat membatasi autoplay. Pengguna harus memulai playback melalui interaksi yang sesuai.
+- Pencarian memakai YouTube Data API; pemutaran dilakukan oleh pemutar YouTube resmi tertanam. LightJurnal tidak mengekstrak atau mengunduh audio.
+- Mode ringkas tetap menampilkan pemutar YouTube berukuran ringkas; tombol **Tonton video besar** memperluas tampilannya.
+- Sebagian video tidak bisa diputar tertanam karena pengaturan pemilik, pembatasan wilayah, atau kebijakan YouTube.
+- Browser/WebView dapat membatasi autoplay. Navigasi penuh ke halaman lain dan mode latar belakang tidak menjamin pemutaran berlanjut.
 - Antrean, riwayat, dan volume disimpan secara lokal pada perangkat/browser.
-- Situs ini menggunakan beberapa halaman HTML. Navigasi penuh ke halaman lain akan menghentikan instance pemutar halaman musik; antrean dan riwayat tetap tersimpan, tetapi playback lintas halaman tidak dijanjikan.
-- Integrasi web biasa tidak menjamin pemutaran ketika layar mati atau aplikasi berjalan di latar belakang.
-- Pencarian memakai kuota YouTube Data API. Permintaan tambahan untuk halaman berikutnya juga memakai kuota; debounce dan cache sesi digunakan untuk mengurangi permintaan yang tidak diperlukan.
 
 Dokumentasi resmi:
 - [YouTube Data API search.list](https://developers.google.com/youtube/v3/docs/search/list)
 - [YouTube IFrame Player API](https://developers.google.com/youtube/iframe_api_reference)
-- [YouTube API Services Developer Policies](https://developers.google.com/youtube/terms/developer-policies)
+- [Supabase Edge Functions secrets](https://supabase.com/docs/guides/functions/secrets)
+- [Supabase Edge Functions deploy](https://supabase.com/docs/guides/functions/deploy)
 
 ## Publikasi melalui GitHub Pages
 1. Buka **Settings → Pages** pada repository ini.
