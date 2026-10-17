@@ -180,18 +180,101 @@ async function createArticlePdfUrl(article, download = false) {
   return data.signedUrl;
 }
 
+let pdfJsImportPromise = null;
+let pdfViewerGeneration = 0;
+let activePdfLoadTask = null;
+let activePdfDocument = null;
+
+async function loadPdfJs() {
+  if (!pdfJsImportPromise) {
+    pdfJsImportPromise = import("https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs")
+      .then((pdfjsLib) => {
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
+        return pdfjsLib;
+      })
+      .catch((error) => {
+        pdfJsImportPromise = null;
+        throw error;
+      });
+  }
+  return pdfJsImportPromise;
+}
+
+function disposeActivePdf() {
+  if (activePdfLoadTask) {
+    activePdfLoadTask.destroy().catch(() => {});
+    activePdfLoadTask = null;
+  }
+  if (activePdfDocument) {
+    activePdfDocument.destroy().catch(() => {});
+    activePdfDocument = null;
+  }
+}
+
+async function renderPdfPages(pdfDocument, generation, pages, status, dialog) {
+  const totalPages = pdfDocument.numPages;
+  pages.replaceChildren();
+  for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
+    if (generation !== pdfViewerGeneration || !dialog.open) return;
+    status.textContent = "Merender halaman " + pageNumber + " dari " + totalPages + "…";
+    const page = await pdfDocument.getPage(pageNumber);
+    if (generation !== pdfViewerGeneration || !dialog.open) {
+      page.cleanup();
+      return;
+    }
+
+    const baseViewport = page.getViewport({ scale: 1 });
+    const availableWidth = Math.max(1, pages.clientWidth - 24);
+    const scale = Math.min(availableWidth / baseViewport.width, 1.75);
+    const viewport = page.getViewport({ scale });
+    const outputScale = Math.min(window.devicePixelRatio || 1, 1.5);
+    const pageShell = document.createElement("section");
+    pageShell.className = "pdf-rendered-page";
+    pageShell.setAttribute("aria-label", "Halaman " + pageNumber);
+    const pageLabel = document.createElement("div");
+    pageLabel.className = "pdf-rendered-page-label";
+    pageLabel.textContent = "Halaman " + pageNumber;
+    const canvas = document.createElement("canvas");
+    canvas.className = "pdf-rendered-canvas";
+    canvas.width = Math.max(1, Math.floor(viewport.width * outputScale));
+    canvas.height = Math.max(1, Math.floor(viewport.height * outputScale));
+    canvas.style.width = viewport.width + "px";
+    canvas.style.maxWidth = "100%";
+    canvas.style.height = "auto";
+    pageShell.append(pageLabel, canvas);
+    pages.append(pageShell);
+
+    const context = canvas.getContext("2d", { alpha: false });
+    if (!context) throw new Error("Browser ini tidak dapat menampilkan kanvas PDF.");
+    await page.render({
+      canvasContext: context,
+      viewport,
+      transform: outputScale === 1 ? null : [outputScale, 0, 0, outputScale, 0, 0],
+      background: "#ffffff"
+    }).promise;
+    page.cleanup();
+  }
+  if (generation === pdfViewerGeneration && dialog.open) {
+    status.textContent = "PDF siap dibaca · " + totalPages + " halaman.";
+  }
+}
+
 async function openArticlePdf(article) {
   const dialog = $("#pdf-viewer-dialog");
-  const frame = $("#pdf-viewer-frame");
+  const pages = $("#pdf-viewer-pages");
   const title = $("#pdf-viewer-title");
   const status = $("#pdf-viewer-status");
   const openLink = $("#pdf-open-new-tab");
   const downloadLink = $("#pdf-download-link");
-  if (!dialog || !frame || !status || !openLink || !downloadLink) return;
+  if (!dialog || !pages || !status || !openLink || !downloadLink) return;
 
+  const generation = ++pdfViewerGeneration;
+  disposeActivePdf();
   title.textContent = article.title || "Pratinjau PDF";
-  status.textContent = "Menyiapkan dokumen…";
-  frame.removeAttribute("src");
+  status.textContent = "Menyiapkan isi PDF…";
+  pages.replaceChildren();
+  pages.scrollTop = 0;
   openLink.hidden = true;
   downloadLink.hidden = true;
   openLink.removeAttribute("href");
@@ -200,21 +283,45 @@ async function openArticlePdf(article) {
   else dialog.setAttribute("open", "");
 
   try {
-    const [viewUrl, downloadUrl] = await Promise.all([
+    const [viewUrl, downloadUrl, pdfjsLib] = await Promise.all([
       createArticlePdfUrl(article),
-      createArticlePdfUrl(article, true)
+      createArticlePdfUrl(article, true),
+      loadPdfJs()
     ]);
-    if (!dialog.open) return;
-    frame.src = viewUrl;
+    if (generation !== pdfViewerGeneration || !dialog.open) return;
+
     openLink.href = viewUrl;
     downloadLink.href = downloadUrl;
     downloadLink.download = article.fileName || "jurnal.pdf";
     openLink.hidden = false;
     downloadLink.hidden = false;
-    status.textContent = "PDF siap dibaca. Pada HP tertentu, pratinjau mungkin lebih baik dibuka di tab baru.";
+    status.textContent = "Mengambil isi dokumen…";
+
+    const loadingTask = pdfjsLib.getDocument({
+      url: viewUrl,
+      disableRange: true,
+      disableStream: true,
+      useSystemFonts: true,
+      isEvalSupported: false
+    });
+    activePdfLoadTask = loadingTask;
+    const pdfDocument = await loadingTask.promise;
+    if (generation !== pdfViewerGeneration || !dialog.open) {
+      await pdfDocument.destroy();
+      return;
+    }
+    activePdfLoadTask = null;
+    activePdfDocument = pdfDocument;
+    await renderPdfPages(pdfDocument, generation, pages, status, dialog);
   } catch (error) {
-    if (!dialog.open) return;
-    status.textContent = error?.message || "PDF belum dapat dibuka. Coba lagi beberapa saat lagi.";
+    if (generation !== pdfViewerGeneration || !dialog.open) return;
+    console.error("LightJurnal: pratinjau PDF gagal dirender.", error);
+    pages.replaceChildren();
+    const help = document.createElement("p");
+    help.className = "pdf-render-error";
+    help.textContent = "PDF belum bisa ditampilkan langsung. Periksa koneksi lalu coba lagi, atau gunakan tombol Unduh PDF di bawah.";
+    pages.append(help);
+    status.textContent = "Pratinjau gagal dimuat.";
   }
 }
 
@@ -504,7 +611,11 @@ function init() {
   $("#journal-comment-form")?.addEventListener("submit", (event) =>
     submitComment(event, activeJournalId, $("#journal-comment-body"), $("#journal-comment-message"), $("#journal-comment-submit")));
   $("#close-pdf-viewer")?.addEventListener("click", () => $("#pdf-viewer-dialog").close());
-  $("#pdf-viewer-dialog")?.addEventListener("close", () => $("#pdf-viewer-frame")?.removeAttribute("src"));
+  $("#pdf-viewer-dialog")?.addEventListener("close", () => {
+    pdfViewerGeneration += 1;
+    disposeActivePdf();
+    $("#pdf-viewer-pages")?.replaceChildren();
+  });
   $("#pdf-viewer-dialog")?.addEventListener("click", (event) => {
     if (event.target === $("#pdf-viewer-dialog")) $("#pdf-viewer-dialog").close();
   });
