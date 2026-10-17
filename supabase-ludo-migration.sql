@@ -239,6 +239,8 @@ begin
   if v_room.status not in ('waiting','finished') then raise exception 'Permainan yang sedang berlangsung tidak dapat ditutup dari sini.'; end if;
   update public.ludo_rooms set status='closed',updated_at=now() where id=p_room_id;
   update public.ludo_invites set status='revoked' where room_id=p_room_id and status='active';
+  update public.ludo_join_requests set status='rejected',updated_at=now()
+    where room_id=p_room_id and status='pending';
   return jsonb_build_object('status','closed');
 end;
 $$;
