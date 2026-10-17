@@ -111,3 +111,25 @@
  .profile-badge{display:none}
 }
 
+
+
+/* Comfortable PDF controls and card layout on narrow mobile screens */
+.portal-item-head>div{min-width:0;flex:1}
+.portal-item-head h3,.portal-item-meta,.portal-article-desc{overflow-wrap:anywhere;word-break:normal}
+.portal-item-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:15px}
+.portal-item-actions .portal-small-button{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 14px;cursor:pointer;text-decoration:none}
+.portal-item-actions .portal-small-button:focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 35%,transparent);outline-offset:2px}
+.portal-file-missing{font-size:11px;color:var(--muted)}
+@media(max-width:680px){
+  .portal-main{padding-top:30px;padding-bottom:58px}
+  .portal-panel{padding:17px;border-radius:17px}
+  .portal-item{padding:16px}
+  .portal-item-head{align-items:flex-start;gap:10px;flex-wrap:wrap}
+  .portal-item-head h3{font-size:15px;line-height:1.4}
+  .portal-item-meta{font-size:10px;line-height:1.7}
+  .portal-item-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .portal-item-actions .portal-small-button{width:100%;min-width:0;padding:10px 8px;text-align:center;white-space:normal;font-size:10px}
+}
+@media(max-width:360px){
+  .portal-item-actions{grid-template-columns:1fr}
+}
