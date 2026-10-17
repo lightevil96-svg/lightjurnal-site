@@ -48,8 +48,8 @@ function articleCard(article, index) {
   const coverClass = "cover-" + categoryClass(article.category);
   const tags = (article.tags || []).slice(0, 3)
     .map((tag) => '<span class="tag">' + escapeHTML(tag) + "</span>").join("");
-  const link = article.url
-    ? '<a class="read-link" href="' + escapeHTML(article.url) + '" target="_blank" rel="noopener noreferrer">Baca jurnal ↗</a>'
+  const pdfActions = article.filePath
+    ? '<span class="pdf-card-actions"><button type="button" class="pdf-action" data-read-pdf="' + escapeHTML(article.id) + '">Baca PDF ↗</button><button type="button" class="pdf-action pdf-action-secondary" data-download-pdf="' + escapeHTML(article.id) + '">Unduh ↓</button></span>'
     : '<span class="read-link">PDF belum tersedia</span>';
   const symbol = ({ Pendidikan: "✳", Teknologi: "⌘", Sosial: "◌", Kesehatan: "✚", Lainnya: "¶" })[article.category] || "¶";
   return '<article class="article-card">' +
@@ -63,7 +63,7 @@ function articleCard(article, index) {
     escapeHTML(article.title) + '</h3><p class="card-description">' +
     escapeHTML(article.description || "Belum ada ringkasan untuk jurnal ini.") +
     '</p><div class="tag-list">' + tags + '</div><div class="card-footer"><span class="author">' +
-    escapeHTML(article.author || "Penulis") + '</span><span class="card-actions">' + link +
+    escapeHTML(article.author || "Penulis") + '</span><span class="card-actions">' + pdfActions +
     '<button class="card-comment-link" type="button" data-journal-comments="' + escapeHTML(article.id) + '" aria-label="Buka komentar untuk ' + escapeHTML(article.title) + '">Komentar <span aria-hidden="true">↗</span></button></span></div></div></article>';
 }
 
@@ -131,26 +131,23 @@ async function loadApprovedArticles() {
   try {
     const { data, error } = await window.ljSupabase
       .from("journals")
-      .select("id,title,author_name,category,description,tags,type,file_path,created_at,status")
+      .select("id,title,author_name,category,description,tags,type,file_path,original_filename,created_at,status")
       .eq("status", "approved")
       .order("created_at", { ascending: false })
       .limit(100);
     if (error) throw error;
 
-    const mapped = await Promise.all((data || []).map(async (item) => {
-      const { data: signed } = await window.ljSupabase.storage
-        .from("journal-pdfs").createSignedUrl(item.file_path, 3600);
-      return {
-        id: item.id,
-        title: item.title,
-        author: item.author_name,
-        category: item.category,
-        description: item.description,
-        tags: item.tags || [],
-        type: item.type || "Jurnal",
-        date: item.created_at,
-        url: signed?.signedUrl || ""
-      };
+    const mapped = (data || []).map((item) => ({
+      id: item.id,
+      title: item.title,
+      author: item.author_name,
+      category: item.category,
+      description: item.description,
+      tags: item.tags || [],
+      type: item.type || "Jurnal",
+      date: item.created_at,
+      filePath: item.file_path,
+      fileName: item.original_filename || "jurnal.pdf"
     }));
     APPROVED_ARTICLES.splice(0, APPROVED_ARTICLES.length, ...mapped);
     backendState = "ready";
@@ -159,6 +156,84 @@ async function loadApprovedArticles() {
     backendState = "error";
   }
   renderArticles();
+}
+
+
+function setPdfActionMessage(message) {
+  const notice = $("#pdf-action-message");
+  if (!notice) return;
+  notice.textContent = message || "";
+  notice.hidden = !message;
+}
+
+async function createArticlePdfUrl(article, download = false) {
+  if (!window.ljSupabaseConfigured || !window.ljSupabase) {
+    throw new Error("Layanan PDF belum terhubung.");
+  }
+  if (!article?.filePath) throw new Error("Berkas PDF tidak ditemukan.");
+  const options = download ? { download: article.fileName || true } : undefined;
+  const { data, error } = await window.ljSupabase.storage
+    .from("journal-pdfs")
+    .createSignedUrl(article.filePath, 300, options);
+  if (error) throw error;
+  if (!data?.signedUrl) throw new Error("Tautan PDF tidak tersedia.");
+  return data.signedUrl;
+}
+
+async function openArticlePdf(article) {
+  const dialog = $("#pdf-viewer-dialog");
+  const frame = $("#pdf-viewer-frame");
+  const title = $("#pdf-viewer-title");
+  const status = $("#pdf-viewer-status");
+  const openLink = $("#pdf-open-new-tab");
+  const downloadLink = $("#pdf-download-link");
+  if (!dialog || !frame || !status || !openLink || !downloadLink) return;
+
+  title.textContent = article.title || "Pratinjau PDF";
+  status.textContent = "Menyiapkan dokumen…";
+  frame.removeAttribute("src");
+  openLink.hidden = true;
+  downloadLink.hidden = true;
+  openLink.removeAttribute("href");
+  downloadLink.removeAttribute("href");
+  if (typeof dialog.showModal === "function") dialog.showModal();
+  else dialog.setAttribute("open", "");
+
+  try {
+    const [viewUrl, downloadUrl] = await Promise.all([
+      createArticlePdfUrl(article),
+      createArticlePdfUrl(article, true)
+    ]);
+    if (!dialog.open) return;
+    frame.src = viewUrl;
+    openLink.href = viewUrl;
+    downloadLink.href = downloadUrl;
+    downloadLink.download = article.fileName || "jurnal.pdf";
+    openLink.hidden = false;
+    downloadLink.hidden = false;
+    status.textContent = "PDF siap dibaca. Pada HP tertentu, pratinjau mungkin lebih baik dibuka di tab baru.";
+  } catch (error) {
+    if (!dialog.open) return;
+    status.textContent = error?.message || "PDF belum dapat dibuka. Coba lagi beberapa saat lagi.";
+  }
+}
+
+async function downloadArticlePdf(article, button) {
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = "Menyiapkan…";
+  setPdfActionMessage("Menyiapkan unduhan PDF…");
+  try {
+    const url = await createArticlePdfUrl(article, true);
+    setPdfActionMessage("");
+    // The signed URL is created on demand and asks Storage to return the file as an attachment.
+    window.location.assign(url);
+  } catch (error) {
+    setPdfActionMessage(error?.message || "PDF belum dapat diunduh. Periksa koneksi lalu coba lagi.");
+  } finally {
+    button.disabled = false;
+    button.textContent = originalLabel;
+  }
 }
 
 function updateAccountLinks() {
@@ -408,14 +483,31 @@ function init() {
   }));
   $("#sort-select")?.addEventListener("change", renderArticles);
   $("#article-grid")?.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-journal-comments]");
-    if (button) openJournalComments(button.dataset.journalComments);
+    const readButton = event.target.closest("[data-read-pdf]");
+    if (readButton) {
+      const article = APPROVED_ARTICLES.find((item) => String(item.id) === readButton.dataset.readPdf);
+      if (article) void openArticlePdf(article);
+      return;
+    }
+    const downloadButton = event.target.closest("[data-download-pdf]");
+    if (downloadButton) {
+      const article = APPROVED_ARTICLES.find((item) => String(item.id) === downloadButton.dataset.downloadPdf);
+      if (article) void downloadArticlePdf(article, downloadButton);
+      return;
+    }
+    const commentButton = event.target.closest("[data-journal-comments]");
+    if (commentButton) openJournalComments(commentButton.dataset.journalComments);
   });
 
   $("#discussion-form")?.addEventListener("submit", (event) =>
     submitComment(event, null, $("#discussion-body"), $("#discussion-message"), $("#discussion-submit")));
   $("#journal-comment-form")?.addEventListener("submit", (event) =>
     submitComment(event, activeJournalId, $("#journal-comment-body"), $("#journal-comment-message"), $("#journal-comment-submit")));
+  $("#close-pdf-viewer")?.addEventListener("click", () => $("#pdf-viewer-dialog").close());
+  $("#pdf-viewer-dialog")?.addEventListener("close", () => $("#pdf-viewer-frame")?.removeAttribute("src"));
+  $("#pdf-viewer-dialog")?.addEventListener("click", (event) => {
+    if (event.target === $("#pdf-viewer-dialog")) $("#pdf-viewer-dialog").close();
+  });
   $("#close-journal-comments")?.addEventListener("click", () => $("#journal-comments-dialog").close());
   $("#journal-comments-dialog")?.addEventListener("click", (event) => {
     if (event.target === $("#journal-comments-dialog")) $("#journal-comments-dialog").close();
