@@ -134,32 +134,43 @@ returns jsonb language plpgsql security definer set search_path = ''
 as $$
 declare
   v_user uuid:=auth.uid(); v_invite public.ludo_invites%rowtype; v_room public.ludo_rooms%rowtype;
-  v_name text; v_seat integer;
+  v_invite_room_id uuid; v_name text; v_seat integer;
 begin
   if v_user is null then raise exception 'Masuk ke akun LightJurnal terlebih dahulu.'; end if;
   if p_token is null or p_token !~ '^[a-f0-9]{48}$' then raise exception 'Tautan undangan tidak valid.'; end if;
+
+  -- Lock in the same order as room close/start: room first, then invitation.
+  select room_id into v_invite_room_id from public.ludo_invites where token=lower(p_token);
+  if not found then raise exception 'Undangan tidak ditemukan atau sudah tidak berlaku.'; end if;
+  select * into v_room from public.ludo_rooms where id=v_invite_room_id for update;
+  if not found then raise exception 'Room tidak ditemukan.'; end if;
   select * into v_invite from public.ludo_invites where token=lower(p_token) for update;
   if not found then raise exception 'Undangan tidak ditemukan atau sudah tidak berlaku.'; end if;
-  if v_invite.status='used' and v_invite.used_by=v_user then
-    select * into v_room from public.ludo_rooms where id=v_invite.room_id;
-    if exists(select 1 from public.ludo_players p where p.room_id=v_invite.room_id and p.user_id=v_user) then
-      return jsonb_build_object('room_id',v_room.id,'code',v_room.code,'status',v_room.status);
-    end if;
+
+  if v_invite.status='used' and v_invite.used_by=v_user
+     and exists(select 1 from public.ludo_players p where p.room_id=v_invite.room_id and p.user_id=v_user) then
+    return jsonb_build_object('room_id',v_room.id,'code',v_room.code,'status',v_room.status);
   end if;
-  if v_invite.status<>'active' or v_invite.expires_at<=now() then raise exception 'Undangan sudah dipakai atau kedaluwarsa. Minta tautan baru kepada pemilik room.'; end if;
-  select * into v_room from public.ludo_rooms where id=v_invite.room_id for update;
-  if not found or v_room.status<>'waiting' then raise exception 'Room tidak lagi menerima pemain.'; end if;
+  if v_invite.status<>'active' or v_invite.expires_at<=now() then
+    raise exception 'Undangan sudah dipakai atau kedaluwarsa. Minta tautan baru kepada pemilik room.';
+  end if;
+  if v_room.status<>'waiting' then raise exception 'Room tidak lagi menerima pemain.'; end if;
   if exists(select 1 from public.ludo_players p where p.room_id=v_room.id and p.user_id=v_user) then
     update public.ludo_invites set status='used',used_by=v_user where id=v_invite.id;
     return jsonb_build_object('room_id',v_room.id,'code',v_room.code,'status',v_room.status);
   end if;
-  if (select count(*) from public.ludo_players where room_id=v_room.id)>=v_room.max_players then raise exception 'Room sudah penuh.'; end if;
+  if (select count(*) from public.ludo_players where room_id=v_room.id)>=v_room.max_players then
+    raise exception 'Room sudah penuh.';
+  end if;
   select coalesce(nullif(btrim(p.display_name),''),nullif(split_part(coalesce(p.email,''),'@',1),''),'Pemain')
     into v_name from public.profiles p where p.id=v_user;
+  if v_name is null then raise exception 'Profil akun belum siap.'; end if;
   select slots.seat into v_seat from generate_series(0,3) as slots(seat)
     where not exists(select 1 from public.ludo_players p where p.room_id=v_room.id and p.seat=slots.seat)
     order by slots.seat limit 1;
-  insert into public.ludo_players(room_id,user_id,display_name,seat) values(v_room.id,v_user,v_name,v_seat);
+  if v_seat is null then raise exception 'Tidak ada slot kosong di room ini.'; end if;
+  insert into public.ludo_players(room_id,user_id,display_name,seat)
+    values(v_room.id,v_user,v_name,v_seat);
   update public.ludo_invites set status='used',used_by=v_user where id=v_invite.id;
   return jsonb_build_object('room_id',v_room.id,'code',v_room.code,'status',v_room.status);
 end;
@@ -197,24 +208,35 @@ returns jsonb language plpgsql security definer set search_path = ''
 as $$
 declare
   v_request public.ludo_join_requests%rowtype; v_room public.ludo_rooms%rowtype;
-  v_name text; v_seat integer;
+  v_room_id uuid; v_name text; v_seat integer;
 begin
   if auth.uid() is null then raise exception 'Masuk terlebih dahulu.'; end if;
+
+  -- Lock the room before the request so approval cannot deadlock with start/close.
+  select room_id into v_room_id from public.ludo_join_requests where id=p_request_id;
+  if not found then raise exception 'Permintaan tidak ditemukan.'; end if;
+  select * into v_room from public.ludo_rooms where id=v_room_id for update;
+  if not found or v_room.owner_id<>auth.uid() then
+    raise exception 'Hanya pemilik room yang dapat meninjau permintaan.';
+  end if;
   select * into v_request from public.ludo_join_requests where id=p_request_id for update;
   if not found then raise exception 'Permintaan tidak ditemukan.'; end if;
-  select * into v_room from public.ludo_rooms where id=v_request.room_id for update;
-  if not found or v_room.owner_id<>auth.uid() then raise exception 'Hanya pemilik room yang dapat meninjau permintaan.'; end if;
+  if v_request.room_id<>v_room.id then raise exception 'Permintaan room tidak cocok.'; end if;
   if v_request.status<>'pending' then raise exception 'Permintaan ini sudah ditinjau.'; end if;
+
   if p_approve then
     if v_room.status<>'waiting' then raise exception 'Room sudah dimulai; permintaan tidak bisa disetujui.'; end if;
     if exists(select 1 from public.ludo_players p where p.room_id=v_room.id and p.user_id=v_request.user_id) then
       update public.ludo_join_requests set status='approved',updated_at=now() where id=v_request.id;
       return jsonb_build_object('status','approved','room_id',v_room.id);
     end if;
-    if (select count(*) from public.ludo_players where room_id=v_room.id)>=v_room.max_players then raise exception 'Room sudah penuh. Permintaan belum disetujui.'; end if;
+    if (select count(*) from public.ludo_players where room_id=v_room.id)>=v_room.max_players then
+      raise exception 'Room sudah penuh. Permintaan belum disetujui.';
+    end if;
     select slots.seat into v_seat from generate_series(0,3) as slots(seat)
       where not exists(select 1 from public.ludo_players p where p.room_id=v_room.id and p.seat=slots.seat)
       order by slots.seat limit 1;
+    if v_seat is null then raise exception 'Tidak ada slot kosong di room ini.'; end if;
     select coalesce(nullif(btrim(p.display_name),''),nullif(split_part(coalesce(p.email,''),'@',1),''),v_request.display_name,'Pemain')
       into v_name from public.profiles p where p.id=v_request.user_id;
     insert into public.ludo_players(room_id,user_id,display_name,seat)
@@ -281,6 +303,9 @@ begin
   v_state:=jsonb_build_object('version',1,'players',v_players,'tokens',v_tokens,'current_player_id',v_first,
     'pending_roll',null,'last_roll',null,'consecutive_sixes',0,'winner_id',null,'turn_number',1,
     'last_action','Permainan dimulai. Lempar dadu untuk bermain.');
+  update public.ludo_invites set status='revoked' where room_id=p_room_id and status='active';
+  update public.ludo_join_requests set status='rejected',updated_at=now()
+    where room_id=p_room_id and status='pending';
   update public.ludo_rooms set status='playing',game_state=v_state,updated_at=now() where id=p_room_id;
   return v_state;
 end;
