@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101522">
+  <meta name="description" content="Mabar Ludo online bersama teman di LightJurnal. Buat room privat, undang teman, atau ajukan permintaan bergabung.">
+  <title>Mabar Ludo — LightJurnal</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css?v=20261017-ludo-1">
+  <link rel="stylesheet" href="ludo.css?v=20261017-ludo-1">
+  <script>try{if(localStorage.getItem('lj-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
+</head>
+<body class="ludo-page">
+  <header class="site-header ludo-header">
+    <div class="nav-wrap">
+      <a class="brand" href="./" aria-label="LightJurnal beranda"><span class="brand-mark">L<span>J</span></span><span class="brand-copy">light<span>jurnal</span><small>RUANG KARYA AKADEMIK</small></span></a>
+      <div class="nav-actions">
+        <button class="icon-btn" id="theme-toggle" type="button" aria-label="Aktifkan mode gelap"><span id="theme-icon">☾</span></button>
+        <a class="button button-outline ludo-back-link" href="./">← Beranda</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="ludo-main">
+    <section class="ludo-hero">
+      <div class="ludo-hero-copy">
+        <span class="section-kicker">LIGHTJURNAL ARCADE</span>
+        <h1>Mabar <span>Ludo.</span></h1>
+        <p>Buat room privat, undang teman lewat tautan khusus, atau izinkan pemain lain masuk setelah kamu menyetujui permintaannya.</p>
+      </div>
+      <div class="ludo-hero-mark" aria-hidden="true"><span>✦</span><strong>4</strong><small>PLAYERS</small></div>
+    </section>
+
+    <div id="ludo-config-warning" class="ludo-alert ludo-alert-warning" hidden>
+      <strong>Game belum tersambung.</strong>
+      <p>Pastikan konfigurasi Supabase LightJurnal sudah aktif dan jalankan <code>supabase-ludo-migration.sql</code> di Supabase SQL Editor.</p>
+    </div>
+    <div id="ludo-auth-required" class="ludo-auth-card" hidden>
+      <div class="ludo-lock-icon">♙</div>
+      <div><h2>Masuk dulu untuk mabar</h2><p>Gunakan akun LightJurnal. Kalau kamu membuka undangan, tautannya akan tetap dibawa setelah login.</p><a id="ludo-login-link" class="button button-primary" href="login.html">Masuk / Buat akun ↗</a></div>
+    </div>
+    <div id="ludo-app" hidden>
+      <div id="ludo-notice" class="ludo-alert" role="status" aria-live="polite" hidden></div>
+
+      <section id="ludo-lobby" class="ludo-lobby-grid">
+        <article class="ludo-panel ludo-create-panel">
+          <div class="ludo-panel-icon">＋</div>
+          <span class="section-kicker">PEMILIK ROOM</span>
+          <h2>Buat room privat</h2>
+          <p>Room tidak muncul untuk publik. Pemilik mengundang teman atau menyetujui permintaan pemain lain.</p>
+          <form id="ludo-create-form" class="ludo-form">
+            <label for="ludo-room-title">Nama room</label>
+            <input id="ludo-room-title" type="text" maxlength="50" minlength="2" value="Mabar Ludo" required>
+            <label for="ludo-player-limit">Jumlah pemain</label>
+            <select id="ludo-player-limit"><option value="2">2 pemain</option><option value="3">3 pemain</option><option value="4" selected>4 pemain</option></select>
+            <button id="ludo-create-submit" class="button button-primary ludo-full-button" type="submit">Buat room ↗</button>
+          </form>
+        </article>
+
+        <article class="ludo-panel">
+          <div class="ludo-panel-icon">⌁</div>
+          <span class="section-kicker">PUNYA KODE ROOM?</span>
+          <h2>Minta bergabung</h2>
+          <p>Masukkan kode yang dibagikan pemilik. Kamu belum masuk sampai pemilik menyetujui permintaanmu.</p>
+          <form id="ludo-request-form" class="ludo-form">
+            <label for="ludo-room-code">Kode room (6 karakter)</label>
+            <input id="ludo-room-code" type="text" maxlength="6" minlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Contoh: A31F8C" required>
+            <button id="ludo-request-submit" class="button button-dark ludo-full-button" type="submit">Kirim permintaan</button>
+          </form>
+          <div class="ludo-mini-note"><span>🔒</span> Kode room hanya mengajukan permintaan, bukan akses otomatis.</div>
+        </article>
+      </section>
+
+      <section id="ludo-my-requests-panel" class="ludo-panel ludo-requests-tracker" hidden>
+        <div class="ludo-panel-heading"><div><span class="section-kicker">STATUS PERMINTAAN</span><h2>Permintaan bergabung</h2></div><button id="ludo-refresh-requests" class="ludo-small-button" type="button">Muat ulang</button></div>
+        <div id="ludo-my-requests" class="ludo-my-requests"></div>
+      </section>
+
+      <section id="ludo-my-rooms-panel" class="ludo-panel ludo-rooms-panel">
+        <div class="ludo-panel-heading"><div><span class="section-kicker">ROOM MILIKMU</span><h2>Room dan permainan</h2></div><button id="ludo-refresh-rooms" class="ludo-small-button" type="button">Muat ulang</button></div>
+        <div id="ludo-my-rooms" class="ludo-room-list"><div class="ludo-empty">Memuat room…</div></div>
+      </section>
+
+      <section id="ludo-room-view" hidden>
+        <div class="ludo-room-top">
+          <button id="ludo-back-lobby" type="button" class="ludo-back-button">← Daftar room</button>
+          <span id="ludo-room-status" class="ludo-status-pill">Menunggu pemain</span>
+        </div>
+        <div class="ludo-room-heading">
+          <div><span class="section-kicker">ROOM PRIVAT</span><h2 id="ludo-room-name">Mabar Ludo</h2><p id="ludo-room-subtitle">Atur undangan sebelum memulai.</p></div>
+          <div class="ludo-code-box"><span>KODE ROOM</span><strong id="ludo-room-code">------</strong><button id="ludo-copy-code" type="button">Salin kode</button></div>
+        </div>
+
+        <div id="ludo-room-controls" class="ludo-panel ludo-room-controls">
+          <div id="ludo-owner-controls" class="ludo-owner-controls" hidden>
+            <div><strong>Kelola akses room</strong><p>Buat tautan undangan khusus. Setiap tautan berlaku 24 jam dan hanya bisa dipakai sekali.</p></div>
+            <button id="ludo-create-invite" class="button button-primary" type="button">＋ Buat tautan undangan</button>
+            <div id="ludo-invite-result" class="ludo-invite-result" hidden><label for="ludo-invite-url">Tautan undangan (salin dan kirim ke teman)</label><div class="ludo-invite-copy-row"><input id="ludo-invite-url" type="text" readonly><button id="ludo-copy-invite" type="button">Salin</button></div><small>Buat tautan baru untuk setiap orang yang ingin diundang.</small></div>
+            <div id="ludo-pending-requests" class="ludo-pending-requests" hidden><h3>Permintaan masuk <span id="ludo-pending-count">0</span></h3><div id="ludo-pending-list"></div></div>
+            <button id="ludo-start-game" class="button button-dark" type="button" disabled>Mulai permainan</button>
+            <button id="ludo-close-room" class="ludo-danger-button" type="button">Tutup room</button>
+          </div>
+          <div id="ludo-guest-waiting" hidden><strong>Menunggu pemilik memulai…</strong><p>Bagikan kode atau undangan kepada teman lain. Hanya anggota room ini yang bisa melihat papan.</p></div>
+          <div class="ludo-roster"><div class="ludo-roster-heading"><h3>Pemain</h3><span id="ludo-player-count">0/4</span></div><div id="ludo-player-list" class="ludo-player-list"></div></div>
+        </div>
+
+        <section id="ludo-game-panel" class="ludo-game-layout" hidden>
+          <div class="ludo-game-main ludo-panel">
+            <div class="ludo-game-heading"><div><span class="section-kicker">PERTANDINGAN REAL-TIME</span><h2 id="ludo-turn-heading">Giliran pemain</h2></div><div class="ludo-dice-result" id="ludo-dice-result" aria-live="polite">—</div></div>
+            <p id="ludo-last-action" class="ludo-last-action">Lempar dadu untuk mulai.</p>
+            <div class="ludo-board-wrap"><div id="ludo-board" class="ludo-board" aria-label="Papan permainan Ludo"></div></div>
+            <div id="ludo-game-message" class="ludo-game-message" role="status" aria-live="polite">Pilih pion setelah hasil dadu muncul.</div>
+            <div class="ludo-game-actions">
+              <button id="ludo-roll-dice" class="button button-primary" type="button">🎲 Lempar dadu</button>
+              <button id="ludo-skip-turn" class="ludo-small-button" type="button" hidden>Lewati giliran</button>
+            </div>
+            <p class="ludo-rules-note">Aturan utama: angka 6 untuk mengeluarkan pion dari rumah, angka pas untuk mencapai finis, petak aman melindungi pion, tiga kali 6 berturut-turut mengakhiri giliran.</p>
+          </div>
+          <aside class="ludo-side-panel">
+            <div class="ludo-panel"><span class="section-kicker">POSISI PEMAIN</span><h3>Pemain dalam room</h3><div id="ludo-score-list" class="ludo-score-list"></div></div>
+            <div class="ludo-panel ludo-help-panel"><span class="section-kicker">CARA BERMAIN</span><ol><li>Tunggu giliranmu dan lempar dadu.</li><li>Ketuk salah satu pion yang menyala untuk melangkah.</li><li>Angka 6 memberi kesempatan lempar lagi.</li><li>Habiskan angka tepat agar semua pion mencapai finis.</li></ol><p>Permainan berjalan berdasarkan giliran yang divalidasi server supaya perubahan dari beberapa pemain tidak saling menimpa.</p></div>
+          </aside>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer ludo-footer"><div class="footer-bottom"><span>© <span id="ludo-year"></span> LightJurnal Arcade</span><span>Main santai · Hormati sesama pemain</span></div></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="ludo.js?v=20261017-ludo-1" defer></script>
+</body>
+</html>
