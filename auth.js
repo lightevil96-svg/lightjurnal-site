@@ -27,6 +27,18 @@ async function routeSignedInUser(user) {
     .select("role")
     .eq("id", user.id)
     .maybeSingle();
+
+  // Preserve Ludo invitation links through login, without allowing external redirects.
+  const requested = new URLSearchParams(window.location.search).get("returnTo");
+  if (requested) {
+    try {
+      const target = new URL(requested, window.location.origin);
+      if (target.origin === window.location.origin && target.pathname === "/ludo.html") {
+        window.location.replace("ludo.html" + target.search + target.hash);
+        return;
+      }
+    } catch (_) {}
+  }
   window.location.replace(data?.role === "admin" ? "admin.html" : "dashboard.html");
 }
 
