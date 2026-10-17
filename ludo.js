@@ -430,6 +430,8 @@
       addSvg(groupEl,"circle",{cx:x,cy:y,r:10.5,fill:color.main,stroke:color.main,"stroke-width":1});
       addSvg(groupEl,"text",{x,y:y+3.8,"text-anchor":"middle","font-size":10,"font-weight":900,fill:"#ffffff","pointer-events":"none"},String(token.index+1));
       if(canMove)addSvg(groupEl,"circle",{cx:x,cy:y,r:18,fill:"none",stroke:"#ffffff","stroke-width":2,"stroke-dasharray":"3 3","pointer-events":"none"});
+      // Larger transparent hit target improves tapping on small phone screens.
+      if(canMove)addSvg(groupEl,"circle",{cx:x,cy:y,r:25,fill:"#ffffff","fill-opacity":".001",stroke:"none","pointer-events":"all","aria-hidden":"true"});
     }));
     container.append(svg);
     container.onclick=(event) => {
@@ -454,8 +456,9 @@
 
   function hasLegalMove() {
     const gs=gameState();
+    if(gs.pending_roll===null||gs.pending_roll===undefined||gs.current_player_id!==state.user.id)return false;
     const roll=Number(gs.pending_roll);
-    if(!Number.isInteger(roll)||gs.current_player_id!==state.user.id)return false;
+    if(!Number.isInteger(roll)||roll<1||roll>6)return false;
     const tokenList=currentTokens().filter((t)=>t.userId===state.user.id);
     return tokenList.some((t)=>t.progress===-1?roll===6:(t.progress>=0&&t.progress<57&&t.progress+roll<=57));
   }
