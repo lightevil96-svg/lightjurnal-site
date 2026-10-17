@@ -156,9 +156,9 @@ begin
   if (select count(*) from public.ludo_players where room_id=v_room.id)>=v_room.max_players then raise exception 'Room sudah penuh.'; end if;
   select coalesce(nullif(btrim(p.display_name),''),nullif(split_part(coalesce(p.email,''),'@',1),''),'Pemain')
     into v_name from public.profiles p where p.id=v_user;
-  select s from generate_series(0,3) as s
-    where not exists(select 1 from public.ludo_players p where p.room_id=v_room.id and p.seat=s)
-    order by s limit 1 into v_seat;
+  select slots.seat into v_seat from generate_series(0,3) as slots(seat)
+    where not exists(select 1 from public.ludo_players p where p.room_id=v_room.id and p.seat=slots.seat)
+    order by slots.seat limit 1;
   insert into public.ludo_players(room_id,user_id,display_name,seat) values(v_room.id,v_user,v_name,v_seat);
   update public.ludo_invites set status='used',used_by=v_user where id=v_invite.id;
   return jsonb_build_object('room_id',v_room.id,'code',v_room.code,'status',v_room.status);
@@ -212,9 +212,9 @@ begin
       return jsonb_build_object('status','approved','room_id',v_room.id);
     end if;
     if (select count(*) from public.ludo_players where room_id=v_room.id)>=v_room.max_players then raise exception 'Room sudah penuh. Permintaan belum disetujui.'; end if;
-    select s from generate_series(0,3) as s
-      where not exists(select 1 from public.ludo_players p where p.room_id=v_room.id and p.seat=s)
-      order by s limit 1 into v_seat;
+    select slots.seat into v_seat from generate_series(0,3) as slots(seat)
+      where not exists(select 1 from public.ludo_players p where p.room_id=v_room.id and p.seat=slots.seat)
+      order by slots.seat limit 1;
     select coalesce(nullif(btrim(p.display_name),''),nullif(split_part(coalesce(p.email,''),'@',1),''),v_request.display_name,'Pemain')
       into v_name from public.profiles p where p.id=v_request.user_id;
     insert into public.ludo_players(room_id,user_id,display_name,seat)
@@ -240,6 +240,22 @@ begin
   update public.ludo_rooms set status='closed',updated_at=now() where id=p_room_id;
   update public.ludo_invites set status='revoked' where room_id=p_room_id and status='active';
   return jsonb_build_object('status','closed');
+end;
+$$;
+
+create or replace function public.ludo_leave_room(p_room_id uuid)
+returns jsonb language plpgsql security definer set search_path = ''
+as $$
+declare v_room public.ludo_rooms%rowtype; v_user uuid:=auth.uid();
+begin
+  if v_user is null then raise exception 'Masuk terlebih dahulu.'; end if;
+  select * into v_room from public.ludo_rooms where id=p_room_id for update;
+  if not found then raise exception 'Room tidak ditemukan.'; end if;
+  if v_room.owner_id=v_user then raise exception 'Pemilik room harus menutup room, bukan keluar sendiri.'; end if;
+  if v_room.status<>'waiting' then raise exception 'Permainan yang sudah dimulai tidak bisa ditinggalkan melalui tombol ini.'; end if;
+  delete from public.ludo_join_requests where room_id=p_room_id and user_id=v_user;
+  delete from public.ludo_players where room_id=p_room_id and user_id=v_user;
+  return jsonb_build_object('status','left','room_id',p_room_id);
 end;
 $$;
 
@@ -418,6 +434,7 @@ revoke all on function public.ludo_join_invite(text) from public,anon;
 revoke all on function public.ludo_request_join(text) from public,anon;
 revoke all on function public.ludo_review_join_request(uuid,boolean) from public,anon;
 revoke all on function public.ludo_close_room(uuid) from public,anon;
+revoke all on function public.ludo_leave_room(uuid) from public,anon;
 revoke all on function public.ludo_start_game(uuid) from public,anon;
 revoke all on function public.ludo_roll_dice(uuid) from public,anon;
 revoke all on function public.ludo_move_token(uuid,integer) from public,anon;
@@ -428,6 +445,7 @@ grant execute on function public.ludo_join_invite(text) to authenticated;
 grant execute on function public.ludo_request_join(text) to authenticated;
 grant execute on function public.ludo_review_join_request(uuid,boolean) to authenticated;
 grant execute on function public.ludo_close_room(uuid) to authenticated;
+grant execute on function public.ludo_leave_room(uuid) to authenticated;
 grant execute on function public.ludo_start_game(uuid) to authenticated;
 grant execute on function public.ludo_roll_dice(uuid) to authenticated;
 grant execute on function public.ludo_move_token(uuid,integer) to authenticated;
