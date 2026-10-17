@@ -100,6 +100,28 @@
 
     <section class="about section-shell" id="tentang"><div class="about-icon">✳</div><div class="about-copy"><span class="section-kicker">TENTANG LIGHTJURNAL</span><h2>Ruang belajar yang tumbuh <span>bersamamu.</span></h2><p>LightJurnal dibuat sebagai arsip digital untuk jurnal, artikel, rangkuman, dan tugas kuliah. Susun berdasarkan kategori dan tag supaya setiap ide lebih mudah ditemukan saat dibutuhkan.</p></div><div class="about-stats"><div><strong>01</strong><span>Arsip terorganisir</span></div><div><strong>02</strong><span>Pencarian praktis</span></div><div><strong>03</strong><span>Akses lintas perangkat</span></div></div></section>
   </main>
+  <dialog id="pdf-viewer-dialog" class="pdf-viewer-dialog" aria-labelledby="pdf-viewer-title">
+    <div class="pdf-viewer-shell">
+      <header class="pdf-viewer-head">
+        <div class="pdf-viewer-heading">
+          <span class="section-kicker">BACA DOKUMEN</span>
+          <h2 id="pdf-viewer-title">Pratinjau PDF</h2>
+        </div>
+        <button class="icon-btn pdf-viewer-close" id="close-pdf-viewer" type="button" aria-label="Tutup pratinjau PDF">✕</button>
+      </header>
+      <p class="pdf-viewer-status" id="pdf-viewer-status" role="status" aria-live="polite">Menyiapkan PDF…</p>
+      <iframe id="pdf-viewer-frame" class="pdf-viewer-frame" title="Pratinjau dokumen PDF" loading="eager"></iframe>
+      <footer class="pdf-viewer-footer">
+        <span>Jika pratinjau tidak muncul di HP, buka PDF di tab baru atau unduh berkasnya.</span>
+        <div class="pdf-viewer-actions">
+          <a id="pdf-open-new-tab" class="pdf-action" href="#" target="_blank" rel="noopener noreferrer" hidden>Buka tab baru ↗</a>
+          <a id="pdf-download-link" class="pdf-action pdf-action-secondary" href="#" download hidden>Unduh PDF ↓</a>
+        </div>
+      </footer>
+    </div>
+  </dialog>
+  <div id="pdf-action-message" class="pdf-action-message" role="status" aria-live="polite" hidden></div>
+
   <footer class="site-footer"><div class="footer-top"><a class="brand footer-brand" href="./"><span class="brand-mark">L<span>J</span></span><span class="brand-copy">light<span>jurnal</span><small>RUANG KARYA AKADEMIK</small></span></a><p>Tempat menyimpan proses, bukan hanya hasil.</p><a href="admin.html" class="footer-admin">Ruang pengelola ↗</a></div><div class="footer-bottom"><span>© <span id="year"></span> LightJurnal. Dibuat untuk perjalanan akademik.</span><span>Belajar · Menulis · Bertumbuh</span></div></footer>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
