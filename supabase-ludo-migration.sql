@@ -83,7 +83,7 @@ drop policy if exists "Requesters and room owners read join requests" on public.
 create policy "Requesters and room owners read join requests" on public.ludo_join_requests
 for select to authenticated using (user_id=(select auth.uid()) or private.is_ludo_owner(room_id));
 
-revoke all on table public.ludo_rooms, public.ludo_players, public.ludo_invites, public.ludo_join_requests from anon, authenticated;
+revoke all on table public.ludo_rooms, public.ludo_players, public.ludo_invites, public.ludo_join_requests from public, anon, authenticated;
 grant select on public.ludo_rooms, public.ludo_players, public.ludo_join_requests to authenticated;
 -- Writes are only through validated security-definer RPCs.
 
@@ -101,7 +101,7 @@ begin
     into v_name from public.profiles p where p.id=v_user;
   if v_name is null then raise exception 'Profil akun belum siap. Muat ulang lalu coba lagi.'; end if;
   for v_try in 1..10 loop
-    v_code:=upper(substr(encode(gen_random_bytes(4),'hex'),1,6));
+    v_code:=upper(substr(upper(replace(gen_random_uuid()::text,'-','')),1,6));
     begin
       insert into public.ludo_rooms(code,owner_id,title,max_players) values(v_code,v_user,v_title,p_max_players) returning id into v_id;
       exit;
@@ -117,7 +117,7 @@ $$;
 create or replace function public.ludo_create_invite(p_room_id uuid)
 returns text language plpgsql security definer set search_path = ''
 as $$
-declare v_token text:=encode(gen_random_bytes(24),'hex'); v_room public.ludo_rooms%rowtype;
+declare v_token text:=substr(replace(gen_random_uuid()::text||gen_random_uuid()::text,'-',''),1,48); v_room public.ludo_rooms%rowtype;
 begin
   if auth.uid() is null then raise exception 'Masuk terlebih dahulu.'; end if;
   select * into v_room from public.ludo_rooms where id=p_room_id for update;
