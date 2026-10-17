@@ -189,7 +189,7 @@ body { min-width:0; }
 .pdf-viewer-title,.pdf-viewer-heading h2{margin:5px 0 0;font-size:19px;line-height:1.35;letter-spacing:-.4px;overflow-wrap:anywhere}
 .pdf-viewer-close{flex:0 0 40px;width:40px;height:40px}
 .pdf-viewer-status{margin:0;padding:8px 20px;background:var(--surface-soft);color:var(--muted);font-size:10px;line-height:1.55}
-.pdf-viewer-frame{display:block;flex:1;width:100%;min-height:260px;border:0;background:#fff}
+.pdf-viewer-pages{display:block}
 .pdf-viewer-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 18px;border-top:1px solid var(--line);background:var(--surface)}
 .pdf-viewer-footer>span{max-width:520px;color:var(--muted);font-size:10px;line-height:1.6}
 .pdf-viewer-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
@@ -201,7 +201,7 @@ body { min-width:0; }
   .pdf-viewer-heading h2{font-size:16px}
   .pdf-viewer-close{width:42px;height:42px;flex-basis:42px}
   .pdf-viewer-status{padding:8px 14px}
-  .pdf-viewer-frame{min-height:0}
+  .pdf-viewer-pages{min-height:0}
   .pdf-viewer-footer{align-items:stretch;flex-direction:column;gap:9px;padding:11px 14px max(12px,env(safe-area-inset-bottom))}
   .pdf-viewer-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .pdf-viewer-actions .pdf-action{width:100%;min-height:44px;padding:10px 7px;white-space:normal;text-align:center}
@@ -211,4 +211,19 @@ body { min-width:0; }
 @media(max-width:360px){
   .pdf-viewer-actions{grid-template-columns:1fr}
   .pdf-card-actions{grid-template-columns:1fr}
+}
+
+
+/* PDF.js renderer: render document pages inside LightJurnal instead of relying on
+   each device's built-in PDF plugin or iframe support. */
+.pdf-viewer-pages{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;background:#2a2d35;padding:16px 12px 28px;scrollbar-gutter:stable}
+.pdf-rendered-page{width:fit-content;max-width:100%;margin:0 auto 18px;background:#fff;box-shadow:0 5px 24px rgba(0,0,0,.28);overflow:hidden}
+.pdf-rendered-page-label{padding:6px 10px;background:#f1f2f5;color:#50566a;font:600 10px/1.4 system-ui,sans-serif;border-bottom:1px solid #d8dbe3}
+.pdf-rendered-canvas{display:block;height:auto;background:#fff}
+.pdf-render-error{max-width:560px;margin:28px auto;padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);font-size:13px;line-height:1.7;text-align:center}
+.pdf-viewer-pages:focus-visible{outline:3px solid var(--primary);outline-offset:-3px}
+@media(max-width:680px){
+  .pdf-viewer-pages{padding:10px 5px 18px;scrollbar-gutter:auto}
+  .pdf-rendered-page{margin-bottom:12px}
+  .pdf-rendered-page-label{font-size:9px;padding:5px 8px}
 }
