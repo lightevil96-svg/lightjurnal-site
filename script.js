@@ -589,20 +589,33 @@ function init() {
     renderArticles();
   }));
   $("#sort-select")?.addEventListener("change", renderArticles);
-  $("#article-grid")?.addEventListener("click", (event) => {
-    const readButton = event.target.closest("[data-read-pdf]");
+  // Delegate PDF controls at document level so clicks keep working if the card grid is rerendered.
+  document.addEventListener("click", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+    const readButton = target.closest("[data-read-pdf]");
     if (readButton) {
+      event.preventDefault();
       const article = APPROVED_ARTICLES.find((item) => String(item.id) === readButton.dataset.readPdf);
-      if (article) void openArticlePdf(article);
+      if (article) {
+        void openArticlePdf(article);
+      } else {
+        setPdfActionMessage("Data jurnal belum siap. Muat ulang halaman lalu coba lagi.");
+      }
       return;
     }
-    const downloadButton = event.target.closest("[data-download-pdf]");
+    const downloadButton = target.closest("[data-download-pdf]");
     if (downloadButton) {
+      event.preventDefault();
       const article = APPROVED_ARTICLES.find((item) => String(item.id) === downloadButton.dataset.downloadPdf);
-      if (article) void downloadArticlePdf(article, downloadButton);
+      if (article) {
+        void downloadArticlePdf(article, downloadButton);
+      } else {
+        setPdfActionMessage("Data jurnal belum siap. Muat ulang halaman lalu coba lagi.");
+      }
       return;
     }
-    const commentButton = event.target.closest("[data-journal-comments]");
+    const commentButton = target.closest("[data-journal-comments]");
     if (commentButton) openJournalComments(commentButton.dataset.journalComments);
   });
 
