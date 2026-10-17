@@ -118,7 +118,6 @@
       return;
     }
     container.innerHTML = rooms.map((room) => {
-      const statusClass = room.status === "playing" ? "playing" : room.status === "finished" ? "finished" : "";
       return '<article class="ludo-room-card"><div class="ludo-room-avatar" aria-hidden="true">♟</div><div class="ludo-room-card-copy"><strong>' + escapeHTML(room.title) + '</strong><small>Kode ' + escapeHTML(room.code) + ' · ' + escapeHTML(statusLabel(room.status)) + '<br>Maks. ' + escapeHTML(room.max_players) + ' pemain</small></div><button class="ludo-small-button" type="button" data-open-room="' + escapeHTML(room.id) + '" data-room-status="' + escapeHTML(room.status) + '">Buka ↗</button></article>';
     }).join("");
   }
@@ -288,7 +287,6 @@
     $("#ludo-owner-controls").hidden = !isOwner || (!waiting && !finished);
     $("#ludo-guest-waiting").hidden = isOwner || !waiting;
     $("#ludo-create-invite").hidden = !waiting;
-    $("#ludo-invite-result").hidden = true;
     $("#ludo-pending-requests").hidden = !waiting || !isOwner || !state.requests.length;
     $("#ludo-start-game").hidden = !waiting;
     $("#ludo-start-game").disabled = state.players.length < 2 || state.players.length > room.max_players;
@@ -569,6 +567,7 @@
       state.room=room;
       state.players=players||[];
       state.requests=[];
+      $("#ludo-invite-result").hidden=true;
       $("#ludo-room-view").hidden=false;
       $("#ludo-lobby").hidden=true;
       $("#ludo-my-rooms-panel").hidden=true;
@@ -711,6 +710,27 @@
     finally{state.actionBusy=false;setButtonBusy(button,false);renderGame();}
   }
 
+  async function leaveRoom() {
+    if (state.actionBusy || !state.room) return;
+    if (!window.confirm("Keluar dari room ini? Kamu bisa meminta bergabung lagi jika room masih menunggu.")) return;
+    const button=$("#ludo-leave-room");
+    state.actionBusy=true;
+    setButtonBusy(button,true,"Keluar…");
+    try{
+      await rpc("ludo_leave_room",{p_room_id:state.room.id});
+      stopRoomLiveUpdates();
+      state.room=null;state.players=[];state.requests=[];
+      $("#ludo-room-view").hidden=true;
+      $("#ludo-lobby").hidden=false;
+      $("#ludo-my-rooms-panel").hidden=false;
+      window.history.replaceState({}, "", "ludo.html");
+      await loadMyRooms();
+      await loadMyRequests();
+      showNotice("Kamu sudah keluar dari room.","success");
+    }catch(error){showNotice(error.message||"Belum bisa keluar dari room.","error");}
+    finally{state.actionBusy=false;setButtonBusy(button,false);}
+  }
+
   async function closeRoom() {
     if(state.actionBusy||!state.room)return;
     if(!window.confirm("Tutup room ini? Pemain tidak bisa melanjutkan atau memakai undangan lama."))return;
@@ -775,6 +795,7 @@
     $("#ludo-roll-dice").addEventListener("click",()=>void rollDice());
     $("#ludo-skip-turn").addEventListener("click",()=>void skipTurn());
     $("#ludo-close-room").addEventListener("click",()=>void closeRoom());
+    $("#ludo-leave-room").addEventListener("click",()=>void leaveRoom());
     $("#ludo-room-code").addEventListener("click",()=>void copyWithFeedback($("#ludo-room-code").textContent,"Kode room disalin."));
     $("#ludo-my-rooms").addEventListener("click",(event)=>{
       const button=event.target.closest("[data-open-room]");
