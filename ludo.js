@@ -636,7 +636,7 @@
     event.preventDefault();
     const button=$("#ludo-request-submit");
     if(state.requestBusy)return;
-    const code=$("#ludo-room-code").value.trim().toUpperCase();
+    const code=$("#ludo-room-code-input").value.trim().toUpperCase();
     if(!/^[A-F0-9]{6}$/.test(code)){showNotice("Masukkan kode room 6 karakter yang valid.","error");return;}
     state.requestBusy=true;setButtonBusy(button,true,"Mengirim…");
     try {
@@ -646,7 +646,7 @@
         showNotice("Kamu sudah menjadi anggota room ini.","success");
       }else{
         showNotice("Permintaan bergabung terkirim. Kamu baru bisa masuk setelah pemilik menyetujuinya.","success");
-        $("#ludo-room-code").value="";
+        $("#ludo-room-code-input").value="";
         await loadMyRequests();
       }
     }catch(error){
