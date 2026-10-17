@@ -95,19 +95,14 @@ async function loadMyJournals() {
     return;
   }
 
-  const cards = await Promise.all(journals.map(async (item) => {
-    let signedUrl = "";
-    const { data: signed } = await window.ljSupabase.storage
-      .from("journal-pdfs")
-      .createSignedUrl(item.file_path, 3600);
-    if (signed?.signedUrl) signedUrl = signed.signedUrl;
-
+  const cards = journals.map((item) => {
     const note = item.admin_note
       ? '<p><strong>Catatan admin:</strong> ' + escapeHTML(item.admin_note) + '</p>'
       : "";
-    const fileLink = signedUrl
-      ? '<a class="portal-small-button" href="' + escapeHTML(signedUrl) + '" target="_blank" rel="noopener noreferrer">Buka PDF ↗</a>'
-      : "";
+    const fileControls = item.file_path
+      ? '<button type="button" class="portal-small-button" data-open-pdf data-pdf-path="' + escapeHTML(item.file_path) + '" data-pdf-name="' + escapeHTML(item.original_filename || "jurnal.pdf") + '">Baca PDF ↗</button>' +
+        '<button type="button" class="portal-small-button" data-download-pdf data-pdf-path="' + escapeHTML(item.file_path) + '" data-pdf-name="' + escapeHTML(item.original_filename || "jurnal.pdf") + '">Unduh PDF ↓</button>'
+      : '<span class="portal-file-missing">Berkas PDF belum tersedia.</span>';
     const tagLine = Array.isArray(item.tags) && item.tags.length
       ? '<p>Tag: ' + escapeHTML(item.tags.join(", ")) + '</p>'
       : "";
@@ -117,8 +112,8 @@ async function loadMyJournals() {
       '<br>Penulis: ' + escapeHTML(item.author_name) + '</div></div>' +
       '<span class="portal-status ' + escapeHTML(item.status) + '">' + escapeHTML(statusLabel(item.status)) + '</span></div>' +
       '<p class="portal-article-desc">' + escapeHTML(item.description) + '</p>' + tagLine + note +
-      '<div class="portal-item-actions">' + fileLink + '</div></article>';
-  }));
+      '<div class="portal-item-actions">' + fileControls + '</div></article>';
+  });
   container.innerHTML = cards.join("");
   showMessage($("#list-message"), "");
 }
@@ -309,6 +304,55 @@ async function initDashboard() {
   });
 
   $("#refresh-list")?.addEventListener("click", () => loadMyJournals());
+
+  $("#my-journals")?.addEventListener("click", async (event) => {
+    const openButton = event.target.closest("[data-open-pdf]");
+    const downloadButton = event.target.closest("[data-download-pdf]");
+    const button = openButton || downloadButton;
+    if (!button || !window.ljSupabase) return;
+    const filePath = button.dataset.pdfPath;
+    const fileName = button.dataset.pdfName || "jurnal.pdf";
+    if (!filePath) return;
+
+    // Open the tab synchronously from the tap so mobile browsers are less likely to block it.
+    let previewTab = null;
+    if (openButton) {
+      previewTab = window.open("about:blank", "_blank");
+      if (previewTab) {
+        previewTab.opener = null;
+        try { previewTab.document.title = "LightJurnal — Menyiapkan PDF"; } catch (_) {}
+      }
+    }
+
+    const originalLabel = button.textContent;
+    button.disabled = true;
+    button.textContent = "Menyiapkan…";
+    try {
+      const options = downloadButton ? { download: fileName || true } : undefined;
+      const { data, error } = await window.ljSupabase.storage
+        .from("journal-pdfs")
+        .createSignedUrl(filePath, 300, options);
+      if (error) throw error;
+      if (!data?.signedUrl) throw new Error("Tautan PDF tidak tersedia.");
+
+      if (openButton) {
+        if (previewTab && !previewTab.closed) {
+          previewTab.location.href = data.signedUrl;
+        } else {
+          showMessage($("#list-message"), "Peramban memblokir tab PDF. Izinkan pop-up lalu tekan Baca PDF lagi.", "error");
+        }
+      } else {
+        window.location.assign(data.signedUrl);
+      }
+    } catch (error) {
+      if (previewTab && !previewTab.closed) previewTab.close();
+      showMessage($("#list-message"), error?.message || "PDF belum dapat dibuka atau diunduh. Coba lagi.", "error");
+    } finally {
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
+  });
+
   $("#upload-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const button = $("#upload-submit");
