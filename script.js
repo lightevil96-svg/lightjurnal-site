@@ -106,6 +106,39 @@ function renderArticles() {
       : String(b.date || "").localeCompare(String(a.date || "")));
 
   grid.innerHTML = list.map(articleCard).join("");
+
+  grid.querySelectorAll("[data-read-pdf]").forEach((button) => {
+    button.addEventListener("click", async (event) => {
+      event.preventDefault();
+      const article = APPROVED_ARTICLES.find((item) => String(item.id) === button.dataset.readPdf);
+      if (!article) {
+        setPdfActionMessage("Data jurnal belum siap. Muat ulang halaman lalu coba lagi.");
+        return;
+      }
+      button.disabled = true;
+      const oldLabel = button.textContent;
+      button.textContent = "Membuka PDF…";
+      try {
+        await openArticlePdf(article);
+      } catch (error) {
+        console.error("LightJurnal: tombol Baca PDF gagal.", error);
+        setPdfActionMessage(error?.message || "PDF belum bisa dibuka. Silakan coba Unduh PDF.");
+      } finally {
+        button.disabled = false;
+        button.textContent = oldLabel;
+      }
+    });
+  });
+
+  grid.querySelectorAll("[data-download-pdf]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      const article = APPROVED_ARTICLES.find((item) => String(item.id) === button.dataset.downloadPdf);
+      if (article) void downloadArticlePdf(article, button);
+      else setPdfActionMessage("Data jurnal belum siap. Muat ulang halaman lalu coba lagi.");
+    });
+  });
+
   $("#result-count").textContent = list.length + " karya";
   $("#empty-state").hidden = list.length !== 0;
   grid.hidden = list.length === 0;
@@ -589,33 +622,10 @@ function init() {
     renderArticles();
   }));
   $("#sort-select")?.addEventListener("change", renderArticles);
-  // Delegate PDF controls at document level so clicks keep working if the card grid is rerendered.
+  // Comments continue to use delegation; PDF controls are bound directly as each card is rendered.
   document.addEventListener("click", (event) => {
     const target = event.target instanceof Element ? event.target : null;
-    if (!target) return;
-    const readButton = target.closest("[data-read-pdf]");
-    if (readButton) {
-      event.preventDefault();
-      const article = APPROVED_ARTICLES.find((item) => String(item.id) === readButton.dataset.readPdf);
-      if (article) {
-        void openArticlePdf(article);
-      } else {
-        setPdfActionMessage("Data jurnal belum siap. Muat ulang halaman lalu coba lagi.");
-      }
-      return;
-    }
-    const downloadButton = target.closest("[data-download-pdf]");
-    if (downloadButton) {
-      event.preventDefault();
-      const article = APPROVED_ARTICLES.find((item) => String(item.id) === downloadButton.dataset.downloadPdf);
-      if (article) {
-        void downloadArticlePdf(article, downloadButton);
-      } else {
-        setPdfActionMessage("Data jurnal belum siap. Muat ulang halaman lalu coba lagi.");
-      }
-      return;
-    }
-    const commentButton = target.closest("[data-journal-comments]");
+    const commentButton = target?.closest("[data-journal-comments]");
     if (commentButton) openJournalComments(commentButton.dataset.journalComments);
   });
 
