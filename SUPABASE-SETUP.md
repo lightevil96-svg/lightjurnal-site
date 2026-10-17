@@ -58,3 +58,17 @@ Pendaftaran biasa selalu membuat peran `user`. Perubahan peran hanya dilakukan m
 - Setelah mengganti konfigurasi, uji menggunakan akun pengguna biasa dan akun admin yang berbeda: pengguna biasa harus gagal mengakses dashboard admin dan jurnal tertunda tidak boleh terlihat di halaman publik.
 
 Jika konfigurasi Supabase belum diisi, halaman tetap terbuka tetapi fungsi akun/unggah akan menampilkan petunjuk konfigurasi dan tidak menyimpan unggahan lokal sebagai jurnal publik.
+
+## 7. Mengaktifkan Mabar Ludo
+
+Fitur Ludo online menggunakan akun LightJurnal yang sama dan membutuhkan tabel serta fungsi database tambahan.
+
+1. Buka **Supabase Dashboard → SQL Editor** pada project LightJurnal.
+2. Buka file [`supabase-ludo-migration.sql`](supabase-ludo-migration.sql) di repository ini, salin seluruh isinya, lalu jalankan sekali di SQL Editor.
+3. Tunggu sampai SQL selesai tanpa error. Jangan memasukkan `service_role` key ke file frontend.
+4. Buka `https://lightjurnal.my.id/ludo.html`, masuk menggunakan akun LightJurnal, lalu buat room.
+5. Untuk teman yang diundang, gunakan **Buat tautan undangan** dan kirim tautan itu secara pribadi. Tautan undangan berlaku 24 jam dan hanya dapat dipakai sekali.
+6. Untuk pemain yang belum diundang, bagikan **kode room**. Kode hanya mengirim permintaan; pemain baru bisa masuk setelah pemilik menekan **Terima**.
+7. Agar sinkronisasi real-time aktif, project Supabase harus mengizinkan Realtime. Migrasi akan menambahkan tabel permainan ke publication `supabase_realtime` jika publication tersebut tersedia.
+
+**Catatan aturan permainan:** status giliran, lemparan dadu, pemindahan pion, pemakanan pion, dan kemenangan divalidasi oleh fungsi database. Uji dua akun berbeda dan beberapa browser sebelum memakai game bersama teman. Permainan Ludo memiliki variasi aturan; implementasi awal LightJurnal memakai aturan dasar keluar rumah dengan angka 6, langkah finis harus pas, petak aman, giliran ekstra pada 6, dan penalti tiga kali 6 beruntun.
