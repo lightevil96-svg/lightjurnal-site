@@ -128,6 +128,7 @@
     const { data, error } = await window.ljSupabase
       .from("ludo_rooms")
       .select("id,code,title,status,max_players,owner_id,created_at")
+      .neq("status", "closed")
       .order("created_at", { ascending: false })
       .limit(30);
     if (error) {
