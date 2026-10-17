@@ -198,3 +198,5 @@
  .ludo-auth-card h2{font-size:19px}
 }
 @media(prefers-reduced-motion:reduce){.ludo-token{transition:none}}
+
+.ludo-guest-waiting .ludo-danger-button{margin-top:12px}
