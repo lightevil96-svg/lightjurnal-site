@@ -9,7 +9,7 @@
   <title>Mabar Ludo — LightJurnal</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css?v=20261017-ludo-2">
-  <link rel="stylesheet" href="ludo.css?v=20261017-ludo-2">
+  <link rel="stylesheet" href="ludo.css?v=20261017-ludo-3">
   <script>try{if(localStorage.getItem('lj-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
 </head>
 <body class="ludo-page">
@@ -65,8 +65,8 @@
           <h2>Minta bergabung</h2>
           <p>Masukkan kode yang dibagikan pemilik. Kamu belum masuk sampai pemilik menyetujui permintaanmu.</p>
           <form id="ludo-request-form" class="ludo-form">
-            <label for="ludo-room-code">Kode room (6 karakter)</label>
-            <input id="ludo-room-code" type="text" maxlength="6" minlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Contoh: A31F8C" required>
+            <label for="ludo-room-code-input">Kode room (6 karakter)</label>
+            <input id="ludo-room-code-input" type="text" maxlength="6" minlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Contoh: A31F8C" required>
             <button id="ludo-request-submit" class="button button-dark ludo-full-button" type="submit">Kirim permintaan</button>
           </form>
           <div class="ludo-mini-note"><span>🔒</span> Kode room hanya mengajukan permintaan, bukan akses otomatis.</div>
@@ -131,6 +131,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="ludo.js?v=20261017-ludo-2" defer></script>
+  <script src="ludo.js?v=20261017-ludo-3" defer></script>
 </body>
 </html>
