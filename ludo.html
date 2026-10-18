@@ -9,7 +9,7 @@
   <title>Mabar Ludo — LightJurnal</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css?v=20261017-ludo-2">
-  <link rel="stylesheet" href="ludo.css?v=20261017-ludo-3">
+  <link rel="stylesheet" href="ludo.css?v=20261018-ludo-bot-1">
   <script>try{if(localStorage.getItem('lj-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
 </head>
 <body class="ludo-page">
@@ -49,12 +49,18 @@
           <div class="ludo-panel-icon">＋</div>
           <span class="section-kicker">PEMILIK ROOM</span>
           <h2>Buat room privat</h2>
-          <p>Room tidak muncul untuk publik. Pemilik mengundang teman atau menyetujui permintaan pemain lain.</p>
+          <p>Pilih mabar online dengan teman atau main sendiri melawan tiga bot.</p>
           <form id="ludo-create-form" class="ludo-form">
-            <label for="ludo-room-title">Nama room</label>
+            <label for="ludo-game-mode">Mode permainan</label>
+            <select id="ludo-game-mode">
+              <option value="online" selected>Mabar online</option>
+              <option value="bot">Lawan 3 bot (4 pemain)</option>
+            </select>
+            <label for="ludo-room-title">Nama permainan / room</label>
             <input id="ludo-room-title" type="text" maxlength="50" minlength="2" value="Mabar Ludo" required>
             <label for="ludo-player-limit">Jumlah pemain</label>
             <select id="ludo-player-limit"><option value="2">2 pemain</option><option value="3">3 pemain</option><option value="4" selected>4 pemain</option></select>
+            <p id="ludo-mode-note" class="ludo-mini-note">Mabar online membuat room privat yang bisa dibagikan kepada teman.</p>
             <button id="ludo-create-submit" class="button button-primary ludo-full-button" type="submit">Buat room ↗</button>
           </form>
         </article>
@@ -131,6 +137,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="ludo.js?v=20261018-ludo-4" defer></script>
+  <script src="ludo.js?v=20261018-ludo-bot-1" defer></script>
 </body>
 </html>
