@@ -200,3 +200,7 @@
 @media(prefers-reduced-motion:reduce){.ludo-token{transition:none}}
 
 .ludo-guest-waiting .ludo-danger-button{margin-top:12px}
+
+/* Local solo mode hides the online room invitation/code panel. */
+#ludo-room-view.ludo-bot-mode .ludo-code-box{display:none!important}
+#ludo-room-view.ludo-bot-mode .ludo-room-heading{justify-content:flex-start}
