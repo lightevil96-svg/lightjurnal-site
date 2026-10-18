@@ -395,18 +395,29 @@
   }
 
   async function moveToken(userId,tokenIndex,buttonNode) {
-    if (state.actionBusy) return;
+    if (state.actionBusy || !state.room || !state.user) return;
     if (userId!==state.user.id) return;
     state.actionBusy=true;
     showGameMessage("Memindahkan pion…");
+    renderGame();
     try {
-      await rpc("ludo_move_token",{p_room_id:state.room.id,p_token_index:tokenIndex});
+      // The RPC returns the authoritative game state. Apply it immediately so
+      // a concurrent Realtime refresh cannot leave the board showing old pieces.
+      const nextGameState=await rpc("ludo_move_token",{p_room_id:state.room.id,p_token_index:tokenIndex});
+      if(nextGameState&&typeof nextGameState==="object") {
+        state.room.game_state=nextGameState;
+        if(nextGameState.winner_id)state.room.status="finished";
+        renderGame();
+      }
       await refreshRoom();
     } catch (error) {
-      showGameMessage(error.message||"Pion belum dapat dipindahkan. Coba muat ulang room.");
+      // renderGame() recalculates the turn message, so keep RPC errors in the
+      // persistent room notice instead of letting a refresh hide the failure.
+      showNotice(error?.message||"Pion belum dapat dipindahkan. Coba muat ulang room.","error");
       await refreshRoom();
     } finally {
       state.actionBusy=false;
+      renderGame();
     }
   }
 
@@ -547,7 +558,13 @@
   }
 
   async function refreshRoom() {
-    if(!state.room||state.refreshBusy)return;
+    if(!state.room)return;
+    // Do not drop a refresh requested by a Realtime event or a game action.
+    // Queue it and run once the in-flight read has completed.
+    if(state.refreshBusy) {
+      state.refreshPending=true;
+      return;
+    }
     state.refreshBusy=true;
     try {
       const roomId=state.room.id;
