@@ -297,16 +297,17 @@
 
   function updateRoomControls() {
     const room = state.room;
+    const isBotGame = room.bot_mode === true;
     const isOwner = room.owner_id === state.user.id;
     const waiting = room.status === "waiting";
     const finished = room.status === "finished";
-    $("#ludo-owner-controls").hidden = !isOwner || (!waiting && !finished);
-    $("#ludo-guest-waiting").hidden = isOwner || !waiting;
-    $("#ludo-create-invite").hidden = !waiting;
-    $("#ludo-pending-requests").hidden = !waiting || !isOwner || !state.requests.length;
-    $("#ludo-start-game").hidden = !waiting;
-    $("#ludo-start-game").disabled = state.players.length < 2 || state.players.length > room.max_players;
-    $("#ludo-close-room").hidden = !isOwner || (!waiting && !finished);
+    $("#ludo-owner-controls").hidden = isBotGame || !isOwner || (!waiting && !finished);
+    $("#ludo-guest-waiting").hidden = isBotGame || isOwner || !waiting;
+    $("#ludo-create-invite").hidden = isBotGame || !waiting;
+    $("#ludo-pending-requests").hidden = isBotGame || !waiting || !isOwner || !state.requests.length;
+    $("#ludo-start-game").hidden = isBotGame || !waiting;
+    $("#ludo-start-game").disabled = isBotGame || state.players.length < 2 || state.players.length > room.max_players;
+    $("#ludo-close-room").hidden = isBotGame || !isOwner || (!waiting && !finished);
     $("#ludo-start-game").textContent = "Mulai permainan";
   }
 
