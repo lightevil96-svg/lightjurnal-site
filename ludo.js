@@ -81,6 +81,17 @@
     return data;
   }
 
+  function friendlyLudoDatabaseError(error, fallback) {
+    const message = String(error?.message || "").trim();
+    if (/schema cache/i.test(message) && /ludo_/i.test(message)) {
+      return "Fungsi Ludo belum dikenali oleh Supabase. Jalankan seluruh file supabase-ludo-migration.sql di Supabase Dashboard → SQL Editor, tunggu hingga selesai tanpa error, lalu muat ulang halaman.";
+    }
+    if (/relation .*ludo_.* does not exist/i.test(message)) {
+      return "Tabel Ludo belum tersedia. Jalankan seluruh file supabase-ludo-migration.sql di Supabase Dashboard → SQL Editor, tunggu hingga selesai tanpa error, lalu muat ulang halaman.";
+    }
+    return message || fallback;
+  }
+
   async function copyText(text) {
     if (!text) throw new Error("Tidak ada teks untuk disalin.");
     if (navigator.clipboard && window.isSecureContext) {
@@ -132,7 +143,10 @@
       .order("created_at", { ascending: false })
       .limit(30);
     if (error) {
-      if (container) container.innerHTML = '<div class="ludo-empty">Room belum bisa dimuat. Pastikan <code>supabase-ludo-migration.sql</code> sudah dijalankan.</div>';
+      if (container) {
+        const message = friendlyLudoDatabaseError(error, "Room belum bisa dimuat. Pastikan migrasi Ludo di Supabase sudah dijalankan.");
+        container.innerHTML = '<div class="ludo-empty">' + escapeHTML(message) + '</div>';
+      }
       return;
     }
     renderRooms(data || []);
@@ -626,7 +640,7 @@
       await openRoom(result.room_id);
       showNotice("Room berhasil dibuat. Buat tautan undangan untuk mengajak teman.","success");
     } catch(error) {
-      showNotice(error.message||"Room belum bisa dibuat. Pastikan migrasi Ludo di Supabase sudah dijalankan.","error");
+      showNotice(friendlyLudoDatabaseError(error, "Room belum bisa dibuat. Pastikan migrasi Ludo di Supabase sudah dijalankan."), "error");
     } finally {
       state.actionBusy=false;setButtonBusy(button,false);
     }

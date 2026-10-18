@@ -492,3 +492,6 @@ begin
     end loop;
   end if;
 end $$;
+
+-- Refresh PostgREST's schema cache so the RPC functions are available immediately.
+notify pgrst, 'reload schema';
