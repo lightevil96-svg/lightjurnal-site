@@ -22,7 +22,8 @@
     user: null, profileName: "Pemain", room: null, players: [], requests: [],
     roomsChannel: null, userRequestChannel: null, roomChannel: null,
     roomPollTimer: null, requestPollTimer: null, refreshBusy: false,
-    refreshPending: false, actionBusy: false, requestBusy: false, openingRoom: false
+    refreshPending: false, actionBusy: false, requestBusy: false, openingRoom: false,
+    botTurnTimer: null
   };
 
   function escapeHTML(value) {
@@ -397,6 +398,16 @@
   async function moveToken(userId,tokenIndex,buttonNode) {
     if (state.actionBusy || !state.room || !state.user) return;
     if (userId!==state.user.id) return;
+    if(isBotRoom()) {
+      state.actionBusy=true;
+      try {
+        if(!localMoveToken(userId,tokenIndex))showGameMessage("Pion belum dapat dipindahkan. Pilih pion yang menyala.");
+      } finally {
+        state.actionBusy=false;
+        renderGame();
+      }
+      return;
+    }
     state.actionBusy=true;
     showGameMessage("Memindahkan pion…");
     renderGame();
@@ -479,13 +490,238 @@
     };
   }
 
+  function getLegalMoves(userId,rollValue) {
+    const roll=Number(rollValue);
+    if(!userId||!Number.isInteger(roll)||roll<1||roll>6)return [];
+    return currentTokens().filter((token)=>token.userId===userId&&(
+      token.progress===-1?roll===6:
+      token.progress>=0&&token.progress<57&&token.progress+roll<=57
+    ));
+  }
+
   function hasLegalMove() {
     const gs=gameState();
     if(gs.pending_roll===null||gs.pending_roll===undefined||gs.current_player_id!==state.user.id)return false;
+    return getLegalMoves(state.user.id,gs.pending_roll).length>0;
+  }
+
+  function isBotRoom() {
+    return state.room?.bot_mode===true;
+  }
+
+  function stopBotTurnTimer() {
+    if(state.botTurnTimer!==null)window.clearTimeout(state.botTurnTimer);
+    state.botTurnTimer=null;
+  }
+
+  function nextLocalPlayerId(userId) {
+    const ordered=state.players.slice().sort((a,b)=>a.seat-b.seat);
+    const current=ordered.find((player)=>player.user_id===userId);
+    if(!current||!ordered.length)return state.user.id;
+    return (ordered.find((player)=>player.seat>current.seat)||ordered[0]).user_id;
+  }
+
+  function localRollDice() {
+    if(!isBotRoom()||state.room.status!=="playing")return;
+    const gs=gameState();
+    const currentId=gs.current_player_id;
+    if(!currentId||(gs.pending_roll!==null&&gs.pending_roll!==undefined))return;
+    const name=playerName(currentId);
+    const dice=Math.floor(Math.random()*6)+1;
+    const consecutive=Number(gs.consecutive_sixes)||0;
+    gs.last_roll=dice;
+    if(dice===6&&consecutive>=2) {
+      const nextId=nextLocalPlayerId(currentId);
+      gs.pending_roll=null;
+      gs.consecutive_sixes=0;
+      gs.current_player_id=nextId;
+      gs.turn_number=(Number(gs.turn_number)||1)+1;
+      gs.last_action=name+" mendapat enam untuk ketiga kalinya. Giliran berpindah ke "+playerName(nextId)+".";
+    } else {
+      gs.pending_roll=dice;
+      gs.consecutive_sixes=dice===6?consecutive+1:0;
+      gs.last_action=name+" mendapat angka "+dice+".";
+    }
+    state.room.game_state=gs;
+    renderGame();
+  }
+
+  function localSkipTurn() {
+    if(!isBotRoom()||state.room.status!=="playing")return false;
+    const gs=gameState();
+    const currentId=gs.current_player_id;
+    if(gs.pending_roll===null||gs.pending_roll===undefined)return false;
     const roll=Number(gs.pending_roll);
-    if(!Number.isInteger(roll)||roll<1||roll>6)return false;
-    const tokenList=currentTokens().filter((t)=>t.userId===state.user.id);
-    return tokenList.some((t)=>t.progress===-1?roll===6:(t.progress>=0&&t.progress<57&&t.progress+roll<=57));
+    if(getLegalMoves(currentId,roll).length) {
+      if(currentId===state.user.id)showGameMessage("Masih ada pion yang dapat dijalankan.");
+      return false;
+    }
+    const name=playerName(currentId);
+    const nextId=nextLocalPlayerId(currentId);
+    gs.pending_roll=null;
+    gs.current_player_id=nextId;
+    gs.consecutive_sixes=0;
+    gs.turn_number=(Number(gs.turn_number)||1)+1;
+    gs.last_action=name+" tidak punya langkah yang valid. Giliran "+playerName(nextId)+".";
+    state.room.game_state=gs;
+    renderGame();
+    return true;
+  }
+
+  function chooseBotMove(choices,roll) {
+    const gs=gameState();
+    const botId=gs.current_player_id;
+    const seat=seatForPlayer(botId);
+    const start=COLORS[seat]?.start??0;
+    const opponentTokens=state.players.filter((player)=>player.user_id!==botId).map((player)=>({
+      seat:player.seat, progress:gs.tokens?.[player.user_id]||[-1,-1,-1,-1]
+    }));
+    const scored=choices.map((token)=>{
+      const nextProgress=token.progress===-1?0:token.progress+Number(roll);
+      let score=Math.random()*2+nextProgress*.04;
+      if(nextProgress===57)score+=10000;
+      if(token.progress===-1)score+=42;
+      if(token.progress>=52&&token.progress<=56)score+=8;
+      if(nextProgress>=52&&nextProgress<=56)score+=32;
+      if(nextProgress<=51) {
+        const destination=(start+nextProgress)%52;
+        if(SAFE_CELLS.has(destination))score+=10;
+        else {
+          for(const opponent of opponentTokens) {
+            const enemyStart=COLORS[opponent.seat]?.start??0;
+            for(const progress of opponent.progress) {
+              const enemyProgress=Number(progress);
+              if(enemyProgress>=0&&enemyProgress<=51&&((enemyStart+enemyProgress)%52)===destination)score+=120;
+            }
+          }
+        }
+      }
+      return {token,score};
+    });
+    scored.sort((a,b)=>b.score-a.score);
+    return scored[0]?.token||choices[0];
+  }
+
+  function localMoveToken(userId,tokenIndex) {
+    if(!isBotRoom()||state.room.status!=="playing")return false;
+    const gs=gameState();
+    if(gs.current_player_id!==userId)return false;
+    const roll=Number(gs.pending_roll);
+    const token=getLegalMoves(userId,roll).find((item)=>item.index===tokenIndex);
+    if(!token)return false;
+    const oldProgress=Number(gs.tokens?.[userId]?.[tokenIndex]);
+    const newProgress=oldProgress===-1?0:oldProgress+roll;
+    const seat=seatForPlayer(userId);
+    const start=COLORS[seat]?.start??0;
+    gs.tokens[userId][tokenIndex]=newProgress;
+    let captureCount=0;
+    if(newProgress<=51) {
+      const destination=(start+newProgress)%52;
+      if(!SAFE_CELLS.has(destination)) {
+        for(const opponent of state.players) {
+          if(opponent.user_id===userId)continue;
+          const opponentProgress=gs.tokens?.[opponent.user_id];
+          if(!Array.isArray(opponentProgress))continue;
+          const opponentStart=COLORS[opponent.seat]?.start??0;
+          for(let i=0;i<opponentProgress.length;i++) {
+            const progress=Number(opponentProgress[i]);
+            if(progress>=0&&progress<=51&&((opponentStart+progress)%52)===destination) {
+              opponentProgress[i]=-1;
+              captureCount++;
+            }
+          }
+        }
+      }
+    }
+    const finished=(gs.tokens[userId]||[]).filter((progress)=>Number(progress)===57).length;
+    if(finished===4) {
+      gs.winner_id=userId;
+      gs.pending_roll=null;
+      gs.last_action=playerName(userId)+" memenangkan permainan!";
+      state.room.status="finished";
+      state.room.game_state=gs;
+      renderRoom();
+      return true;
+    }
+    const message=captureCount>0
+      ?playerName(userId)+" memakan "+captureCount+" pion lawan."
+      :playerName(userId)+" memindahkan pion.";
+    gs.pending_roll=null;
+    if(roll===6) {
+      gs.last_action=message+" Mendapat enam, jadi mendapat giliran lagi.";
+    } else {
+      const nextId=nextLocalPlayerId(userId);
+      gs.current_player_id=nextId;
+      gs.consecutive_sixes=0;
+      gs.turn_number=(Number(gs.turn_number)||1)+1;
+      gs.last_action=message+" Giliran "+playerName(nextId)+".";
+    }
+    state.room.game_state=gs;
+    renderGame();
+    return true;
+  }
+
+  function runBotTurn() {
+    if(!isBotRoom()||state.room.status!=="playing")return;
+    const gs=gameState();
+    const botId=gs.current_player_id;
+    if(!botId||botId===state.user.id)return;
+    if(gs.pending_roll===null||gs.pending_roll===undefined) {
+      localRollDice();
+      return;
+    }
+    const choices=getLegalMoves(botId,gs.pending_roll);
+    if(!choices.length) {
+      localSkipTurn();
+      return;
+    }
+    const choice=chooseBotMove(choices,gs.pending_roll);
+    localMoveToken(botId,choice.index);
+  }
+
+  function scheduleBotTurn(delay=700) {
+    if(!isBotRoom()||state.room.status!=="playing"||gameState().current_player_id===state.user.id) {
+      stopBotTurnTimer();
+      return;
+    }
+    if(state.botTurnTimer!==null)return;
+    state.botTurnTimer=window.setTimeout(()=>{
+      state.botTurnTimer=null;
+      runBotTurn();
+    },delay);
+  }
+
+  function createBotGame(title) {
+    stopRoomLiveUpdates();
+    stopBotTurnTimer();
+    const roomId="bot-local-"+Date.now();
+    const joinedAt=new Date().toISOString();
+    const players=[
+      {room_id:roomId,user_id:state.user.id,display_name:state.profileName,seat:0,joined_at:joinedAt},
+      {room_id:roomId,user_id:"bot-blue",display_name:"Bot Biru",seat:1,joined_at:joinedAt},
+      {room_id:roomId,user_id:"bot-yellow",display_name:"Bot Kuning",seat:2,joined_at:joinedAt},
+      {room_id:roomId,user_id:"bot-green",display_name:"Bot Hijau",seat:3,joined_at:joinedAt}
+    ];
+    const tokens={};
+    players.forEach((player)=>{tokens[player.user_id]=[-1,-1,-1,-1];});
+    const gamePlayers=players.map((player)=>({
+      user_id:player.user_id,seat:player.seat,display_name:player.display_name
+    }));
+    state.players=players;
+    state.requests=[];
+    state.room={
+      id:roomId,code:"BOT-4P",title,status:"playing",max_players:4,
+      owner_id:state.user.id,bot_mode:true,
+      game_state:{
+        version:1,players:gamePlayers,tokens,current_player_id:state.user.id,
+        pending_roll:null,last_roll:null,consecutive_sixes:0,winner_id:null,
+        turn_number:1,last_action:"Mode lawan bot dimulai. Lempar dadu untuk bermain."
+      }
+    };
+    const nextUrl=new URL("ludo.html",window.location.href);
+    window.history.replaceState({}, "", nextUrl);
+    renderRoom();
+    showNotice("Mode Lawan Bot aktif: kamu bermain melawan 3 bot (4 pemain). Permainan ini lokal dan tidak disimpan sebagai room online.","success");
   }
 
   function renderScoreList() {
@@ -533,6 +769,7 @@
     }
     renderBoard();
     renderScoreList();
+    if(isBotRoom())scheduleBotTurn(700);
   }
 
   function renderRoom() {
@@ -542,9 +779,15 @@
     $("#ludo-lobby").hidden=true;
     $("#ludo-my-rooms-panel").hidden=true;
     $("#ludo-my-requests-panel").hidden=true;
+    const botMode=room.bot_mode===true;
+    $("#ludo-room-view").classList.toggle("ludo-bot-mode",botMode);
+    $("#ludo-room-view .ludo-room-heading .section-kicker").textContent=botMode?"MODE LAWAN BOT":"ROOM PRIVAT";
     $("#ludo-room-name").textContent=room.title;
     $("#ludo-room-code").textContent=room.code;
-    $("#ludo-room-subtitle").textContent="Kode "+room.code+" · "+state.players.length+" dari "+room.max_players+" pemain";
+    $("#ludo-room-code").closest(".ludo-code-box").hidden=botMode;
+    $("#ludo-room-subtitle").textContent=botMode
+      ?"Kamu + 3 bot · 4 pemain. Game lokal di perangkat ini."
+      :"Kode "+room.code+" · "+state.players.length+" dari "+room.max_players+" pemain";
     $("#ludo-room-status").textContent=statusLabel(room.status);
     renderRoster();
     updateRoomControls();
@@ -558,6 +801,7 @@
   }
 
   async function refreshRoom() {
+    if(isBotRoom()){renderRoom();return;}
     if(!state.room)return;
     // Do not drop a refresh requested by a Realtime event or a game action.
     // Queue it and run once the in-flight read has completed.
@@ -589,6 +833,7 @@
 
   async function openRoom(roomId) {
     if(!roomId||state.openingRoom)return;
+    stopBotTurnTimer();
     state.openingRoom=true;
     stopRoomLiveUpdates();
     showNotice("");
@@ -629,6 +874,7 @@
 
   function returnToLobby() {
     stopRoomLiveUpdates();
+    stopBotTurnTimer();
     state.room=null;
     state.players=[];
     state.requests=[];
@@ -652,6 +898,10 @@
     state.actionBusy=true;
     setButtonBusy(button,true,"Membuat room…");
     try {
+      if($("#ludo-game-mode").value==="bot") {
+        createBotGame(title);
+        return;
+      }
       const result=await rpc("ludo_create_room",{p_title:title,p_max_players:maxPlayers});
       await loadMyRooms();
       await openRoom(result.room_id);
@@ -660,6 +910,7 @@
       showNotice(friendlyLudoDatabaseError(error, "Room belum bisa dibuat. Pastikan migrasi Ludo di Supabase sudah dijalankan."), "error");
     } finally {
       state.actionBusy=false;setButtonBusy(button,false);
+      if(isBotRoom())renderGame();
     }
   }
 
@@ -730,19 +981,33 @@
     const button=$("#ludo-roll-dice");
     state.actionBusy=true;setButtonBusy(button,true,"Melempar…");
     try{
+      if(isBotRoom()) {
+        localRollDice();
+        return;
+      }
       await rpc("ludo_roll_dice",{p_room_id:state.room.id});
       await refreshRoom();
-    }catch(error){showGameMessage(error.message||"Dadu belum bisa dilempar.");await refreshRoom();}
-    finally{state.actionBusy=false;setButtonBusy(button,false);renderGame();}
+    }catch(error){
+      showNotice(error?.message||"Dadu belum bisa dilempar.","error");
+      if(!isBotRoom())await refreshRoom();
+    }finally{state.actionBusy=false;setButtonBusy(button,false);renderGame();}
   }
 
   async function skipTurn() {
     if(state.actionBusy||!state.room)return;
     const button=$("#ludo-skip-turn");
     state.actionBusy=true;setButtonBusy(button,true,"Melanjutkan…");
-    try{await rpc("ludo_skip_turn",{p_room_id:state.room.id});await refreshRoom();}
-    catch(error){showGameMessage(error.message||"Giliran belum bisa dilewati.");await refreshRoom();}
-    finally{state.actionBusy=false;setButtonBusy(button,false);renderGame();}
+    try{
+      if(isBotRoom()) {
+        localSkipTurn();
+        return;
+      }
+      await rpc("ludo_skip_turn",{p_room_id:state.room.id});
+      await refreshRoom();
+    }catch(error){
+      showNotice(error?.message||"Giliran belum bisa dilewati.","error");
+      if(!isBotRoom())await refreshRoom();
+    }finally{state.actionBusy=false;setButtonBusy(button,false);renderGame();}
   }
 
   async function leaveRoom() {
@@ -817,8 +1082,20 @@
     sync();
   }
 
+  function updateCreateModeUi() {
+    const botMode=$("#ludo-game-mode").value==="bot";
+    $("#ludo-player-limit").disabled=botMode;
+    if(botMode)$("#ludo-player-limit").value="4";
+    $("#ludo-create-submit").textContent=botMode?"Mulai lawan bot ↗":"Buat room ↗";
+    $("#ludo-mode-note").textContent=botMode
+      ?"Mode ini langsung memulai permainan 4 pemain: kamu dan 3 bot. Tidak membuat room online."
+      :"Mabar online membuat room privat yang bisa dibagikan kepada teman.";
+  }
+
   function bindControls() {
     $("#ludo-create-form").addEventListener("submit",createRoom);
+    $("#ludo-game-mode").addEventListener("change",updateCreateModeUi);
+    updateCreateModeUi();
     $("#ludo-request-form").addEventListener("submit",requestJoin);
     $("#ludo-refresh-rooms").addEventListener("click",()=>{void loadMyRooms();});
     $("#ludo-refresh-requests").addEventListener("click",()=>{void loadMyRequests();});
