@@ -411,7 +411,9 @@
       }
       await refreshRoom();
     } catch (error) {
-      showGameMessage(error.message||"Pion belum dapat dipindahkan. Coba muat ulang room.");
+      // renderGame() recalculates the turn message, so keep RPC errors in the
+      // persistent room notice instead of letting a refresh hide the failure.
+      showNotice(error?.message||"Pion belum dapat dipindahkan. Coba muat ulang room.","error");
       await refreshRoom();
     } finally {
       state.actionBusy=false;
