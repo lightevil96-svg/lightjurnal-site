@@ -8,6 +8,74 @@
 <title>Simulasi Judol — LightJurnal</title>
 <style>
 :root{color-scheme:dark;--bg:#0b0b19;--panel:#15152a;--panel2:#1d1b38;--line:#343253;--text:#f6f4ff;--muted:#b1aecb;--purple:#a78bfa;--pink:#fb7185;--gold:#facc15;--mint:#6ee7b7}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -10%,#30205c 0,transparent 45%),var(--bg);color:var(--text);font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cursor:pointer}.wrap{width:min(1120px,calc(100% - 32px));margin:auto}.top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:20px 0}.brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:-.4px}.mark{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#a78bfa,#ec4899);color:white;font-size:20px}.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:1.5px}.back{border:1px solid var(--line);padding:9px 13px;border-radius:12px;color:var(--muted);font-size:13px}.hero{text-align:center;padding:25px 0 18px}.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid #5a437d;background:#231c3c;color:#e9d5ff;border-radius:99px;padding:6px 12px;font-size:11px;font-weight:800;letter-spacing:1px}.hero h1{font-size:clamp(34px,6vw,58px);line-height:1.05;letter-spacing:-2.5px;margin:18px 0 12px}.hero h1 span{background:linear-gradient(90deg,#c4b5fd,#f9a8d4,#fde68a);color:transparent;background-clip:text}.hero p{max-width:700px;margin:0 auto;color:var(--muted)}.notice{margin:22px auto 0;max-width:800px;text-align:left;border:1px solid #6c4b26;background:#281d1b;color:#ffe8bf;border-radius:14px;padding:12px 15px;font-size:13px}.game-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(250px,.75fr);gap:18px;margin:25px auto}.card{border:1px solid var(--line);background:linear-gradient(160deg,#1a1932,#111122);border-radius:22px;box-shadow:0 18px 50px #0003}.machine{padding:22px}.machine-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}.machine-head h2{font-size:16px;margin:0}.live{font-size:10px;color:var(--mint);font-weight:800;letter-spacing:1.2px}.balance-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px}.stat{background:#0c0c1a;border:1px solid #2d2a4b;border-radius:15px;padding:12px 14px}.stat label{display:block;color:var(--muted);font-size:11px}.stat strong{display:block;font-size:clamp(20px,3vw,28px);letter-spacing:-.8px}.coin{color:var(--gold)}.reels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:12px;border-radius:18px;background:linear-gradient(145deg,#5b3c97,#211a43 60%,#6b2d72);border:2px solid #9c79e7;box-shadow:inset 0 0 0 2px #ffffff13,0 10px 30px #7c3aed24}.reel{min-height:120px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(180deg,#fff,#e9e5ff 55%,#d6d0f7);color:#1b1734;font-size:clamp(44px,8vw,68px);text-shadow:0 3px 0 #fff;box-shadow:inset 0 0 0 1px #fff;transition:transform .14s}.reel.spinning{animation:shake .13s linear infinite alternate}@keyframes shake{from{transform:translateY(-3px)}to{transform:translateY(3px)}}.result{min-height:30px;text-align:center;font-weight:800;padding:10px 0 2px;color:var(--muted)}.result.win{color:var(--gold)}.result.loss{color:#fda4af}.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.btn{border:1px solid var(--line);border-radius:13px;padding:12px 14px;font-weight:800;background:#262344;color:var(--text)}.btn.primary{border:0;background:linear-gradient(100deg,#8b5cf6,#db2777);box-shadow:0 8px 25px #9333ea30}.btn:disabled{opacity:.55;cursor:not-allowed}.bet-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:15px;color:var(--muted);font-size:13px}.bet-tools{display:flex;align-items:center;gap:8px}.bet-tools button{border:1px solid var(--line);background:#211f3c;color:var(--text);border-radius:9px;width:32px;height:32px}.bet-tools strong{min-width:76px;text-align:center;color:var(--text)}.machine-foot{display:flex;justify-content:space-between;gap:12px;margin-top:14px;color:var(--muted);font-size:11px}.sound{background:transparent;border:1px solid var(--line);border-radius:9px;padding:6px 9px;color:var(--text)}.side{padding:20px}.side h3{margin:0 0 12px;font-size:16px}.paytable{display:grid;gap:8px}.payline{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;background:#101021;border:1px solid #2d2a4b;border-radius:12px}.payline span:first-child{font-size:22px;letter-spacing:3px}.payline b{color:var(--gold);font-size:12px}.side-note{font-size:12px;color:var(--muted);margin:14px 0 0}.audit{margin:18px auto 42px;padding:20px}.audit-head{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}.audit h2{font-size:19px;margin:0}.audit p{color:var(--muted);font-size:13px;margin:6px 0 0}.audit-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}.audit select,.audit input{background:#0c0c1a;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;max-width:100%}.audit label{display:grid;gap:5px;color:var(--muted);font-size:12px}.audit .btn{padding:10px 12px}.audit-output{display:none;margin-top:16px;border:1px solid #6850a2;background:#1c1732;border-radius:14px;padding:14px}.audit-output.show{display:block}.audit-output h3{margin:0 0 8px;color:#ddd6fe}.audit-output p{margin:6px 0;color:#e5e1f7}.audit-log{max-height:210px;overflow:auto;font:12px/1.6 ui-monospace,monospace;color:#c4b5fd;white-space:pre-wrap}.footer{text-align:center;color:#8f8ba9;padding:0 0 30px;font-size:12px}.footer a{color:#c4b5fd}.mini-tag{display:inline-block;background:#292344;border:1px solid #4c3c72;border-radius:6px;padding:2px 6px;font-size:10px;color:#d8b4fe}.toast{min-height:20px;color:var(--muted);font-size:12px;margin-top:8px}@media(max-width:780px){.game-layout{grid-template-columns:1fr}.hero{padding-top:15px}.machine{padding:15px}.reel{min-height:95px}.top{padding:13px 0}.audit{padding:15px}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;scroll-behavior:auto!important;transition:none!important}}
+
+/* Aurora motion system */
+body{isolation:isolate;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:-28%;z-index:-2;pointer-events:none;background:radial-gradient(ellipse at 18% 25%,#6d28d966 0,transparent 28%),radial-gradient(ellipse at 80% 30%,#db277755 0,transparent 28%),radial-gradient(ellipse at 55% 80%,#2563eb44 0,transparent 34%);filter:blur(34px);animation:auroraDrift 18s ease-in-out infinite alternate;will-change:transform}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.17;background-image:radial-gradient(#fff 0.65px,transparent .85px);background-size:26px 26px;mask-image:linear-gradient(180deg,#000,transparent 75%);animation:starDrift 32s linear infinite}
+@keyframes auroraDrift{0%{transform:translate3d(-2%,-1%,0) rotate(-4deg) scale(.96)}50%{transform:translate3d(2%,3%,0) rotate(3deg) scale(1.04)}100%{transform:translate3d(-1%,1%,0) rotate(6deg) scale(1.01)}}
+@keyframes starDrift{from{transform:translateY(0)}to{transform:translateY(26px)}}
+.mark{position:relative;overflow:hidden;box-shadow:0 0 26px #a78bfa55;animation:logoBreath 3.2s ease-in-out infinite}
+.mark::after{content:"";position:absolute;inset:-80% -40%;background:linear-gradient(100deg,transparent 38%,#ffffff99 50%,transparent 62%);transform:translateX(-80%) rotate(18deg);animation:logoSweep 4.8s ease-in-out infinite}
+@keyframes logoBreath{0%,100%{box-shadow:0 0 14px #a78bfa33}50%{box-shadow:0 0 30px #ec489966}}
+@keyframes logoSweep{0%,65%{transform:translateX(-85%) rotate(18deg)}85%,100%{transform:translateX(85%) rotate(18deg)}}
+.hero .pill{box-shadow:0 0 0 0 #c4b5fd33;animation:pillPulse 3s ease-out infinite}
+@keyframes pillPulse{0%{box-shadow:0 0 0 0 #c4b5fd33}70%{box-shadow:0 0 0 9px #c4b5fd00}100%{box-shadow:0 0 0 0 #c4b5fd00}}
+.hero h1 span{background-size:200% auto;animation:gradientFlow 5s linear infinite}
+@keyframes gradientFlow{to{background-position:200% center}}
+.card{position:relative;overflow:hidden;transition:border-color .35s ease,box-shadow .35s ease,transform .35s cubic-bezier(.2,.8,.2,1)}
+.side:hover,.audit:hover{border-color:#55457d;box-shadow:0 22px 58px #0005,0 0 28px #8b5cf611}
+.machine{border-color:#51417b;box-shadow:0 20px 60px #0005,0 0 35px #8b5cf719,inset 0 1px #ffffff08;animation:machineIdle 6s ease-in-out infinite}
+@keyframes machineIdle{0%,100%{box-shadow:0 20px 60px #0005,0 0 28px #8b5cf719,inset 0 1px #ffffff08}50%{box-shadow:0 24px 65px #0006,0 0 43px #db277724,inset 0 1px #ffffff0e}}
+.machine.is-spinning{border-color:#a78bfa;box-shadow:0 20px 65px #0006,0 0 42px #8b5cf766,inset 0 0 25px #8b5cf70c}
+.machine.celebrating{animation:machineCelebrate .9s cubic-bezier(.18,.8,.2,1)}
+@keyframes machineCelebrate{0%{transform:scale(1)}22%{transform:scale(1.012);box-shadow:0 0 0 2px #facc1555,0 0 65px #facc1566}55%{transform:scale(.998);box-shadow:0 0 0 7px #facc1500,0 0 55px #fb718566}100%{transform:scale(1)}}
+.machine.near-miss{animation:nearMiss .45s ease}
+@keyframes nearMiss{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+.machine-head .live{position:relative}
+.machine-head .live::before{content:"";display:inline-block;width:6px;height:6px;background:#6ee7b7;border-radius:50%;margin-right:5px;vertical-align:middle;box-shadow:0 0 10px #6ee7b7;animation:liveBlink 1.5s ease-in-out infinite}
+@keyframes liveBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.72)}}
+.reels{position:relative;isolation:isolate;overflow:hidden;box-shadow:inset 0 0 0 2px #ffffff13,0 10px 30px #7c3aed24,0 0 0 0 #c4b5fd00;transition:box-shadow .3s ease}
+.reels::before{content:"";position:absolute;inset:-80% -40%;z-index:2;pointer-events:none;background:linear-gradient(115deg,transparent 43%,#ffffff18 49%,#ffffff65 50%,#ffffff18 51%,transparent 57%);transform:translateX(-90%) rotate(8deg);animation:reelGlint 7s ease-in-out infinite}
+.reels::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:15px;box-shadow:inset 0 0 22px #fff1}
+@keyframes reelGlint{0%,50%{transform:translateX(-90%) rotate(8deg)}75%,100%{transform:translateX(90%) rotate(8deg)}}
+.reel{position:relative;overflow:hidden;transform-style:preserve-3d;backface-visibility:hidden;transition:filter .25s ease,box-shadow .25s ease}
+.reel:not(.spinning):not(.winner){animation:symbolHover 4.2s ease-in-out infinite}
+.reel:nth-child(2){animation-delay:-1.4s}.reel:nth-child(3){animation-delay:-2.8s}
+@keyframes symbolHover{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-2px) scale(1.012)}}
+.reel.spinning{filter:blur(1.5px) saturate(1.25);animation:reelRoll .095s linear infinite!important;box-shadow:inset 0 0 23px #8b5cf766}
+.reel:nth-child(2).spinning{animation-duration:.075s!important}
+.reel:nth-child(3).spinning{animation-duration:.06s!important}
+@keyframes reelRoll{0%{transform:perspective(300px) rotateX(-9deg) translateY(-7px) scaleY(.96)}50%{transform:perspective(300px) rotateX(9deg) translateY(7px) scaleY(1.04)}100%{transform:perspective(300px) rotateX(-9deg) translateY(-7px) scaleY(.96)}}
+.reel.stopping{animation:reelLand .32s cubic-bezier(.15,.82,.25,1.4)!important;filter:blur(0) saturate(1.2)}
+@keyframes reelLand{0%{transform:perspective(300px) rotateX(65deg) translateY(-15px) scaleY(.8)}58%{transform:perspective(300px) rotateX(-9deg) translateY(4px) scaleY(1.04)}78%{transform:perspective(300px) rotateX(4deg) translateY(-2px)}100%{transform:perspective(300px) rotateX(0) translateY(0) scale(1)}}
+.reel.winner{z-index:3;animation:winnerGlow .75s ease-in-out infinite alternate!important;box-shadow:inset 0 0 0 2px #fff,0 0 22px #facc15,0 0 42px #facc1544;filter:saturate(1.25)}
+@keyframes winnerGlow{from{transform:translateY(0) scale(1);text-shadow:0 2px #fff,0 0 8px #facc15}to{transform:translateY(-5px) scale(1.045);text-shadow:0 2px #fff,0 0 24px #facc15}}
+.reel.near{box-shadow:inset 0 0 0 3px #fb7185,0 0 22px #fb7185aa;animation:nearPulse .45s ease-in-out 2!important}
+@keyframes nearPulse{50%{transform:scale(1.035);filter:brightness(1.18)}}
+.result{transition:color .2s ease;animation:resultIn .35s cubic-bezier(.2,.85,.25,1.3)}
+@keyframes resultIn{from{opacity:.3;transform:translateY(5px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.result.win{animation:resultWin .55s cubic-bezier(.16,1,.3,1)}
+@keyframes resultWin{0%{transform:scale(.85);text-shadow:0 0 0 #facc1500}55%{transform:scale(1.1);text-shadow:0 0 22px #facc15aa}100%{transform:scale(1);text-shadow:0 0 10px #facc1533}}
+.fx-layer{position:absolute;top:27%;left:0;width:100%;height:170px;z-index:5;overflow:visible;pointer-events:none}
+.fx-particle{position:absolute;left:50%;top:50%;font-size:var(--size,18px);line-height:1;filter:drop-shadow(0 0 6px #facc15);animation:particleBurst .95s cubic-bezier(.12,.68,.28,1) forwards;will-change:transform,opacity}
+@keyframes particleBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(0)}12%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.25) rotate(var(--rot))}}
+.btn{position:relative;overflow:hidden;transition:transform .18s ease,box-shadow .22s ease,filter .22s ease,border-color .22s ease}
+.btn::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 30%,#ffffff22 50%,transparent 70%);transform:translateX(-120%);transition:transform .55s ease}
+.btn:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.12);border-color:#8b72bd;box-shadow:0 9px 22px #0003}
+.btn:hover::after{transform:translateX(120%)}
+.btn:active:not(:disabled){transform:translateY(1px) scale(.985)}
+.btn.primary{background-size:180% 100%;animation:buttonGradient 5s ease infinite;box-shadow:0 8px 25px #9333ea30,0 0 0 0 #c084fc00}
+.btn.primary:not(:disabled){animation:buttonGradient 5s ease infinite,buttonBreath 2.8s ease-in-out infinite}
+@keyframes buttonGradient{0%,100%{background-position:0% center}50%{background-position:100% center}}
+@keyframes buttonBreath{0%,100%{box-shadow:0 8px 25px #9333ea30,0 0 0 0 #c084fc00}50%{box-shadow:0 9px 28px #9333ea55,0 0 0 4px #c084fc0c}}
+.bet-tools button,.sound,.back{transition:transform .18s ease,border-color .2s ease,background .2s ease}
+.bet-tools button:hover,.sound:hover,.back:hover{transform:translateY(-1px);border-color:#8b72bd;background:#30274e}
+.audit-output.show{animation:auditReveal .38s cubic-bezier(.2,.8,.2,1)}
+@keyframes auditReveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.toast{transition:color .2s ease}
+@media(prefers-reduced-motion:reduce){body::before,body::after,.mark,.mark::after,.hero .pill,.hero h1 span,.machine,.machine-head .live::before,.reels::before,.reel,.btn.primary:not(:disabled){animation:none!important}.fx-particle{display:none}.btn,.card,.reel{transition:none!important}}
+
 </style>
 </head>
 <body>
@@ -15,9 +83,9 @@
 <main class="wrap">
 <section class="hero"><span class="pill">✦ SIMULATOR EDUKASI INTERAKTIF</span><h1>Di balik mesin <span>slot.</span></h1><p>Eksperimen dengan koin virtual untuk memahami bagaimana pola hasil dan tampilan near-miss dapat memengaruhi persepsi pemain. Simulator ini bukan situs judi dan tidak memakai uang sungguhan.</p><div class="notice"><strong>Tujuan edukasi:</strong> semua saldo adalah koin virtual. Mode simulasi dapat diubah oleh penyaji; tekan “Bongkar Simulasi” untuk melihat bagaimana pola hasil demo dibuat. Ini menunjukkan kemungkinan teknis, bukan bukti bahwa semua platform judi memanipulasi hasil.</div></section>
 <section class="game-layout" aria-label="Permainan slot virtual">
-<div class="card machine"><div class="machine-head"><h2>🌌 LUCKY AURORA</h2><span class="live">● DEMO AKTIF</span></div>
+<div class="card machine" id="machine"><div class="machine-head"><h2>🌌 LUCKY AURORA</h2><span class="live">● DEMO AKTIF</span></div>
 <div class="balance-row"><div class="stat"><label>Saldo koin virtual</label><strong class="coin" id="balance">100.000</strong></div><div class="stat"><label>Putaran sesi ini</label><strong id="spins">0</strong></div></div>
-<div class="reels" aria-label="Tiga gulungan slot"><div class="reel" id="r0">🍒</div><div class="reel" id="r1">⭐</div><div class="reel" id="r2">💎</div></div><div class="result" id="result" role="status" aria-live="polite">Tekan SPIN untuk memulai demonstrasi.</div>
+<div class="reels" aria-label="Tiga gulungan slot"><div class="reel" id="r0">🍒</div><div class="reel" id="r1">⭐</div><div class="reel" id="r2">💎</div></div><div class="fx-layer" id="fxLayer" aria-hidden="true"></div><div class="result" id="result" role="status" aria-live="polite">Tekan SPIN untuk memulai demonstrasi.</div>
 <div class="controls"><button class="btn primary" id="spin">🎰 SPIN</button><button class="btn" id="auto">⟳ AUTO SPIN ×100</button></div>
 <div class="bet-row"><span>Taruhan per putaran</span><div class="bet-tools"><button id="betDown" aria-label="Kurangi taruhan">−</button><strong id="bet">1.000 koin</strong><button id="betUp" aria-label="Tambah taruhan">+</button></div></div>
 <div class="machine-foot"><span>Hadiah: 3 simbol sama di garis tengah</span><button class="sound" id="sound">♫ Suara: Mati</button></div><div class="toast" id="toast" role="status"></div>
@@ -36,20 +104,33 @@ const symbols=['🍒','⭐','💎','🍀','7️⃣','🔔','🍇'];
 const multipliers={'💎':8,'7️⃣':6,'⭐':4,'🍒':3,'🍀':2,'🔔':2,'🍇':2};
 let balance=100000,bet=1000,spins=0,autoLeft=0,autoTimer=null,busy=false,soundOn=false,audio=null,mode='random',earlyWins=2,lossRun=12,nearEvery=3,cycleCount=0,lossCount=0,log=[];
 const reels=[ $('r0'),$('r1'),$('r2') ];
+const machine=$('machine');
+function burstParticles(count=26){const layer=$('fxLayer');if(!layer)return;const glyphs=['✨','✦','💫','⭐','🪙'];for(let i=0;i<count;i++){const p=document.createElement('span');p.className='fx-particle';p.textContent=glyphs[Math.floor(Math.random()*glyphs.length)];p.style.setProperty('--dx',((Math.random()-.5)*Math.min(560,window.innerWidth*.92))+'px');p.style.setProperty('--dy',(-35-Math.random()*170)+'px');p.style.setProperty('--rot',((Math.random()-.5)*400)+'deg');p.style.setProperty('--size',(12+Math.random()*18)+'px');p.style.animationDelay=(Math.random()*.12)+'s';layer.appendChild(p);window.setTimeout(()=>p.remove(),1200)}}
+function temporaryClass(el,name,duration){el.classList.add(name);window.setTimeout(()=>el.classList.remove(name),duration)}
 function render(){ $('balance').textContent=fmt(balance);$('spins').textContent=fmt(spins);$('bet').textContent=fmt(bet)+' koin'; }
 function tone(freq=440,duration=.09,type='sine'){if(!soundOn)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.06,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+duration)}catch(e){}}
 function choose(arr){return arr[Math.floor(Math.random()*arr.length)]}
 function pickResult(){if(mode==='win')return ['⭐','⭐','⭐'];if(mode==='loss')return ['🍒','💎','🍀'];if(mode==='cycle'){if(cycleCount<earlyWins){cycleCount++;return ['🍒','🍒','🍒']}lossCount++;if(nearEvery>0&&lossCount%nearEvery===0)return ['💎','💎','⭐'];if(lossCount>=lossRun){lossCount=0;cycleCount=0;return ['🍒','💎','🍀']}return [choose(symbols),choose(symbols.filter(s=>s!=='💎')),choose(symbols.filter(s=>s!=='🍒'))]}return [choose(symbols),choose(symbols),choose(symbols)]}
 function describe(result,payout,rigged){const won=payout>0;$('result').className='result '+(won?'win':'loss');$('result').textContent=won?'✨ MENANG! +'+fmt(payout)+' koin virtual':(rigged&&mode==='cycle'&&nearEvery>0&&lossCount%nearEvery===0?'Hampir! Dua simbol cocok.':'Belum menang — coba pahami peluangnya.');}
-function oneSpin(){if(busy)return false;if(mode==='cycle'&&balance<=Math.max(bet,5000)){const previous=balance;balance=100000;log.push({n:spins,mode,result:'SALDO DEMO DI-RESET',bet:0,payout:0,near:false,rigged:true,before:previous,after:balance});$('toast').textContent='Contoh pola: saldo virtual di-reset ke 100.000. Peristiwa ini tercatat untuk audit.';render()}if(balance<bet){$('result').className='result loss';$('result').textContent='Koin tidak cukup. Reset sesi untuk demonstrasi baru.';stopAuto();return false}
-busy=true;$('spin').disabled=true;balance-=bet;spins++;render();reels.forEach((r,i)=>{r.classList.add('spinning');r.textContent=choose(symbols)});tone(190,.07,'triangle');
-const chosen=pickResult();const rigged=mode!=='random';
-window.setTimeout(()=>{reels.forEach((r,i)=>{r.classList.remove('spinning');r.textContent=chosen[i]});const win=chosen.every(s=>s===chosen[0]);let payout=win?bet*(multipliers[chosen[0]]||2):0;
+function oneSpin(){if(busy)return false;
+if(mode==='cycle'&&balance<=Math.max(bet,5000)){const previous=balance;balance=100000;log.push({n:spins,mode,result:'SALDO DEMO DI-RESET',bet:0,payout:0,near:false,rigged:true,before:previous,after:balance});$('toast').textContent='Contoh pola: saldo virtual di-reset ke 100.000. Peristiwa ini tercatat untuk audit.';render()}
+if(balance<bet){$('result').className='result loss';$('result').textContent='Koin tidak cukup. Reset sesi untuk demonstrasi baru.';stopAuto();return false}
+busy=true;$('spin').disabled=true;machine.classList.add('is-spinning');balance-=bet;spins++;render();reels.forEach((r,i)=>{r.classList.remove('winner','near','stopping');r.classList.add('spinning');r.textContent=choose(symbols)});tone(190,.07,'triangle');
+const chosen=pickResult(),rigged=mode!=='random';
+const rollTimer=window.setInterval(()=>{reels.forEach(r=>{if(r.classList.contains('spinning'))r.textContent=choose(symbols)})},58);
+const stopDelays=[360,520,680];
+reels.forEach((r,i)=>window.setTimeout(()=>{r.classList.remove('spinning');r.classList.add('stopping');r.textContent=chosen[i];tone(250+i*65,.055,'triangle');window.setTimeout(()=>r.classList.remove('stopping'),380)},stopDelays[i]));
+window.setTimeout(()=>{window.clearInterval(rollTimer);machine.classList.remove('is-spinning');
+const win=chosen.every(s=>s===chosen[0]);let payout=win?bet*(multipliers[chosen[0]]||2):0;
 if(mode==='cycle'&&win&&cycleCount>earlyWins)payout=0;
-if(payout>0){balance+=payout;tone(650,.16,'sine');tone(880,.18,'sine')}
-const near=chosen[0]===chosen[1]&&chosen[1]!==chosen[2];describe(chosen,payout,rigged);log.push({n:spins,mode,result:chosen.join(' '),bet,payout,near,rigged,before:balance+payout+bet,after:balance});if(log.length>500)log.shift();render();busy=false;$('spin').disabled=false;
-if(autoLeft>0){autoLeft--;if(autoLeft===0||balance<bet&&mode!=='cycle'){stopAuto();return}$('auto').textContent='■ STOP AUTO ('+autoLeft+')';autoTimer=window.setTimeout(oneSpin,230)}
-},420);return true}
+if(payout>0){balance+=payout;tone(650,.16,'sine');window.setTimeout(()=>tone(880,.2,'sine'),75);window.setTimeout(()=>tone(1100,.22,'sine'),150);reels.forEach(r=>r.classList.add('winner'));temporaryClass(machine,'celebrating',950);burstParticles(32);window.setTimeout(()=>reels.forEach(r=>r.classList.remove('winner')),1250)}
+const near=chosen[0]===chosen[1]&&chosen[1]!==chosen[2];
+if(!payout&&near){reels[0].classList.add('near');reels[1].classList.add('near');window.setTimeout(()=>reels.forEach(r=>r.classList.remove('near')),950);temporaryClass(machine,'near-miss',480)}
+describe(chosen,payout,rigged);
+if(near&&!payout)$('result').textContent='👀 Hampir! Dua simbol cocok — near-miss.';
+log.push({n:spins,mode,result:chosen.join(' '),bet,payout,near,rigged,before:balance+payout+bet,after:balance});if(log.length>500)log.shift();render();busy=false;$('spin').disabled=false;
+if(autoLeft>0){autoLeft--;if(autoLeft===0||(balance<bet&&mode!=='cycle')){stopAuto();return}$('auto').textContent='■ STOP AUTO ('+autoLeft+')';autoTimer=window.setTimeout(oneSpin,300)}else stopAuto();
+},810);return true}
 function stopAuto(){autoLeft=0;if(autoTimer)clearTimeout(autoTimer);autoTimer=null;$('auto').textContent='⟳ AUTO SPIN ×100';$('auto').classList.remove('primary');if(!busy)$('spin').disabled=false}
 $('spin').addEventListener('click',()=>{if(autoLeft)stopAuto();oneSpin()});
 $('auto').addEventListener('click',()=>{if(autoLeft){stopAuto();$('toast').textContent='Auto-spin dihentikan.';return}if(busy)return;autoLeft=100;$('auto').textContent='■ STOP AUTO ('+autoLeft+')';$('auto').classList.add('primary');$('spin').disabled=true;$('toast').textContent='Auto-spin berjalan. Tekan STOP untuk menghentikan.';oneSpin()});
