@@ -41,14 +41,14 @@ function tone(freq=440,duration=.09,type='sine'){if(!soundOn)return;try{audio=au
 function choose(arr){return arr[Math.floor(Math.random()*arr.length)]}
 function pickResult(){if(mode==='win')return ['⭐','⭐','⭐'];if(mode==='loss')return ['🍒','💎','🍀'];if(mode==='cycle'){if(cycleCount<earlyWins){cycleCount++;return ['🍒','🍒','🍒']}lossCount++;if(nearEvery>0&&lossCount%nearEvery===0)return ['💎','💎','⭐'];if(lossCount>=lossRun){lossCount=0;cycleCount=0;return ['🍒','💎','🍀']}return [choose(symbols),choose(symbols.filter(s=>s!=='💎')),choose(symbols.filter(s=>s!=='🍒'))]}return [choose(symbols),choose(symbols),choose(symbols)]}
 function describe(result,payout,rigged){const won=payout>0;$('result').className='result '+(won?'win':'loss');$('result').textContent=won?'✨ MENANG! +'+fmt(payout)+' koin virtual':(rigged&&mode==='cycle'&&nearEvery>0&&lossCount%nearEvery===0?'Hampir! Dua simbol cocok.':'Belum menang — coba pahami peluangnya.');}
-function oneSpin(){if(busy)return false;if(balance<bet){$('result').className='result loss';$('result').textContent='Koin tidak cukup. Reset sesi untuk demonstrasi baru.';stopAuto();return false}
+function oneSpin(){if(busy)return false;if(mode==='cycle'&&balance<=Math.max(bet,5000)){const previous=balance;balance=100000;log.push({n:spins,mode,result:'SALDO DEMO DI-RESET',bet:0,payout:0,near:false,rigged:true,before:previous,after:balance});$('toast').textContent='Contoh pola: saldo virtual di-reset ke 100.000. Peristiwa ini tercatat untuk audit.';render()}if(balance<bet){$('result').className='result loss';$('result').textContent='Koin tidak cukup. Reset sesi untuk demonstrasi baru.';stopAuto();return false}
 busy=true;$('spin').disabled=true;balance-=bet;spins++;render();reels.forEach((r,i)=>{r.classList.add('spinning');r.textContent=choose(symbols)});tone(190,.07,'triangle');
 const chosen=pickResult();const rigged=mode!=='random';
 window.setTimeout(()=>{reels.forEach((r,i)=>{r.classList.remove('spinning');r.textContent=chosen[i]});const win=chosen.every(s=>s===chosen[0]);let payout=win?bet*(multipliers[chosen[0]]||2):0;
 if(mode==='cycle'&&win&&cycleCount>earlyWins)payout=0;
 if(payout>0){balance+=payout;tone(650,.16,'sine');tone(880,.18,'sine')}
 const near=chosen[0]===chosen[1]&&chosen[1]!==chosen[2];describe(chosen,payout,rigged);log.push({n:spins,mode,result:chosen.join(' '),bet,payout,near,rigged,before:balance+payout+bet,after:balance});if(log.length>500)log.shift();render();busy=false;$('spin').disabled=false;
-if(autoLeft>0){autoLeft--;if(autoLeft===0||balance<bet){stopAuto();return}autoTimer=window.setTimeout(oneSpin,230)}
+if(autoLeft>0){autoLeft--;if(autoLeft===0||balance<bet&&mode!=='cycle'){stopAuto();return}$('auto').textContent='■ STOP AUTO ('+autoLeft+')';autoTimer=window.setTimeout(oneSpin,230)}
 },420);return true}
 function stopAuto(){autoLeft=0;if(autoTimer)clearTimeout(autoTimer);autoTimer=null;$('auto').textContent='⟳ AUTO SPIN ×100';$('auto').classList.remove('primary');if(!busy)$('spin').disabled=false}
 $('spin').addEventListener('click',()=>{if(autoLeft)stopAuto();oneSpin()});
