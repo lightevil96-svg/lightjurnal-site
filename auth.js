@@ -37,6 +37,10 @@ async function routeSignedInUser(user) {
         window.location.replace("ludo.html" + target.search + target.hash);
         return;
       }
+      if (target.origin === window.location.origin && target.pathname === "/terminal.html") {
+        window.location.replace("terminal.html");
+        return;
+      }
     } catch (_) {}
   }
   window.location.replace(data?.role === "admin" ? "admin.html" : "dashboard.html");
