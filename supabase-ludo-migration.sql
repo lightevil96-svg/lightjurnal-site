@@ -138,15 +138,15 @@ declare
 begin
   if v_user is null then raise exception 'Masuk ke akun LightJurnal terlebih dahulu.'; end if;
   if p_token is null or p_token !~ '^[a-f0-9]{48}$' then raise exception 'Tautan undangan tidak valid.'; end if;
-
-  -- Lock in the same order as room close/start: room first, then invitation.
   select room_id into v_invite_room_id from public.ludo_invites where token=lower(p_token);
   if not found then raise exception 'Undangan tidak ditemukan atau sudah tidak berlaku.'; end if;
   select * into v_room from public.ludo_rooms where id=v_invite_room_id for update;
   if not found then raise exception 'Room tidak ditemukan.'; end if;
   select * into v_invite from public.ludo_invites where token=lower(p_token) for update;
   if not found then raise exception 'Undangan tidak ditemukan atau sudah tidak berlaku.'; end if;
-
+  if v_room.status='closed' then
+    raise exception 'Room ini sudah ditutup. Buat room baru untuk bermain lagi.';
+  end if;
   if v_invite.status='used' and v_invite.used_by=v_user
      and exists(select 1 from public.ludo_players p where p.room_id=v_invite.room_id and p.user_id=v_user) then
     return jsonb_build_object('room_id',v_room.id,'code',v_room.code,'status',v_room.status);
@@ -258,7 +258,7 @@ begin
   if auth.uid() is null then raise exception 'Masuk terlebih dahulu.'; end if;
   select * into v_room from public.ludo_rooms where id=p_room_id for update;
   if not found or v_room.owner_id<>auth.uid() then raise exception 'Hanya pemilik room yang dapat menutup room.'; end if;
-  if v_room.status not in ('waiting','finished') then raise exception 'Permainan yang sedang berlangsung tidak dapat ditutup dari sini.'; end if;
+  if v_room.status='closed' then return jsonb_build_object('status','closed'); end if;
   update public.ludo_rooms set status='closed',updated_at=now() where id=p_room_id;
   update public.ludo_invites set status='revoked' where room_id=p_room_id and status='active';
   update public.ludo_join_requests set status='rejected',updated_at=now()
@@ -275,11 +275,16 @@ begin
   if v_user is null then raise exception 'Masuk terlebih dahulu.'; end if;
   select * into v_room from public.ludo_rooms where id=p_room_id for update;
   if not found then raise exception 'Room tidak ditemukan.'; end if;
-  if v_room.owner_id=v_user then raise exception 'Pemilik room harus menutup room, bukan keluar sendiri.'; end if;
-  if v_room.status<>'waiting' then raise exception 'Permainan yang sudah dimulai tidak bisa ditinggalkan melalui tombol ini.'; end if;
-  delete from public.ludo_join_requests where room_id=p_room_id and user_id=v_user;
-  delete from public.ludo_players where room_id=p_room_id and user_id=v_user;
-  return jsonb_build_object('status','left','room_id',p_room_id);
+  if not exists(select 1 from public.ludo_players p where p.room_id=p_room_id and p.user_id=v_user) then
+    raise exception 'Kamu bukan anggota room ini.';
+  end if;
+  if v_room.status='closed' then return jsonb_build_object('status','closed','room_id',p_room_id); end if;
+  -- Leaving the room closes it for every player; stale codes and links cannot revive it.
+  update public.ludo_rooms set status='closed',updated_at=now() where id=p_room_id;
+  update public.ludo_invites set status='revoked' where room_id=p_room_id and status='active';
+  update public.ludo_join_requests set status='rejected',updated_at=now()
+    where room_id=p_room_id and status='pending';
+  return jsonb_build_object('status','closed','room_id',p_room_id);
 end;
 $$;
 
