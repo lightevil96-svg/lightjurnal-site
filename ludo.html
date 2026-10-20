@@ -8,8 +8,8 @@
   <meta name="description" content="Mabar Ludo online bersama teman di LightJurnal. Buat room privat, undang teman, atau ajukan permintaan bergabung.">
   <title>Mabar Ludo — LightJurnal</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=20261017-ludo-2">
-  <link rel="stylesheet" href="ludo.css?v=20261018-ludo-bot-1">
+  <link rel="stylesheet" href="style.css?v=20261020-menu-hamburger-1">
+  <link rel="stylesheet" href="ludo.css?v=20261020-animations-closure-1">
   <script>try{if(localStorage.getItem('lj-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
 </head>
 <body class="ludo-page">
@@ -106,9 +106,8 @@
             <div id="ludo-invite-result" class="ludo-invite-result" hidden><label for="ludo-invite-url">Tautan undangan (salin dan kirim ke teman)</label><div class="ludo-invite-copy-row"><input id="ludo-invite-url" type="text" readonly><button id="ludo-copy-invite" type="button">Salin</button></div><small>Buat tautan baru untuk setiap orang yang ingin diundang.</small></div>
             <div id="ludo-pending-requests" class="ludo-pending-requests" hidden><h3>Permintaan masuk <span id="ludo-pending-count">0</span></h3><div id="ludo-pending-list"></div></div>
             <button id="ludo-start-game" class="button button-dark" type="button" disabled>Mulai permainan</button>
-            <button id="ludo-close-room" class="ludo-danger-button" type="button">Tutup room</button>
           </div>
-          <div id="ludo-guest-waiting" hidden><strong>Menunggu pemilik memulai…</strong><p>Bagikan kode atau undangan kepada teman lain. Hanya anggota room ini yang bisa melihat papan.</p><button id="ludo-leave-room" class="ludo-danger-button" type="button">Keluar dari room</button></div>
+          <div id="ludo-guest-waiting" hidden><strong>Menunggu pemilik memulai…</strong><p>Bagikan kode atau undangan kepada teman lain. Hanya anggota room ini yang bisa melihat papan.</p></div>
           <div class="ludo-roster"><div class="ludo-roster-heading"><h3>Pemain</h3><span id="ludo-player-count">0/4</span></div><div id="ludo-player-list" class="ludo-player-list"></div></div>
         </div>
 
@@ -137,6 +136,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="ludo.js?v=20261018-ludo-bot-1" defer></script>
+  <script src="ludo.js?v=20261020-animations-closure-1" defer></script>
 </body>
 </html>
