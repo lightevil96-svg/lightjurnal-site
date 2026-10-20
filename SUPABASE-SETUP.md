@@ -64,13 +64,12 @@ Jika konfigurasi Supabase belum diisi, halaman tetap terbuka tetapi fungsi akun/
 Fitur Ludo online menggunakan akun LightJurnal yang sama dan membutuhkan tabel serta fungsi database tambahan.
 
 1. Buka **Supabase Dashboard → SQL Editor** pada project LightJurnal.
-2. Buka file [`supabase-ludo-migration.sql`](supabase-ludo-migration.sql) di repository ini, salin seluruh isinya, lalu jalankan sekali di SQL Editor.
-3. Tunggu sampai SQL selesai tanpa error. Di akhir migrasi, cache skema PostgREST diminta untuk dimuat ulang agar fungsi RPC Ludo segera dikenali. Jangan memasukkan `service_role` key ke file frontend.
+2. Untuk instalasi baru, jalankan seluruh file [`supabase-ludo-migration.sql`](supabase-ludo-migration.sql). Jika Ludo sudah aktif, jalankan file pembaruan [`supabase-ludo-room-closure.sql`](supabase-ludo-room-closure.sql) agar fungsi lama ikut diperbarui tanpa membuat ulang tabel.
+3. Tunggu sampai SQL selesai tanpa error. File pembaruan menutup room untuk semua pemain saat salah satu anggota memilih **Tutup room & keluar**, mencabut undangan aktif, dan menolak permintaan yang masih menunggu. Jangan memasukkan `service_role` key ke file frontend.
 4. Buka `https://lightjurnal.my.id/ludo.html`, masuk menggunakan akun LightJurnal, lalu buat room.
-5. Untuk teman yang diundang, gunakan **Buat tautan undangan** dan kirim tautan itu secara pribadi. Tautan undangan berlaku 24 jam dan hanya dapat dipakai sekali.
+5. Untuk teman yang diundang, gunakan **Buat tautan undangan** dan kirim tautan itu secara pribadi. Tautan undangan berlaku 24 jam dan hanya bisa dipakai sekali.
 6. Untuk pemain yang belum diundang, bagikan **kode room**. Kode hanya mengirim permintaan; pemain baru bisa masuk setelah pemilik menekan **Terima**.
 7. Agar sinkronisasi real-time aktif, project Supabase harus mengizinkan Realtime. Migrasi akan menambahkan tabel permainan ke publication `supabase_realtime` jika publication tersebut tersedia.
-
-**Jika muncul error `Could not find the function public.ludo_create_room(...) in the schema cache`:** pastikan migrasi selesai tanpa error. Jalankan ulang seluruh file `supabase-ludo-migration.sql` di SQL Editor, tunggu query selesai, lalu muat ulang `ludo.html`. Jangan hanya menjalankan potongan fungsi `ludo_create_room`, karena fitur ini juga membutuhkan tabel, kebijakan akses, dan fungsi RPC lain.
+**Jika muncul error `Could not find the function public.ludo_create_room(...) in the schema cache`:** pastikan migrasi selesai tanpa error. Jalankan ulang `supabase-ludo-migration.sql` untuk instalasi awal yang belum lengkap, atau jalankan `supabase-ludo-room-closure.sql` jika Ludo sudah aktif dan hanya perlu memperbarui fungsi penutupan room. Tunggu query selesai, lalu muat ulang `ludo.html`.
 
 **Catatan aturan permainan:** status giliran, lemparan dadu, pemindahan pion, pemakanan pion, dan kemenangan divalidasi oleh fungsi database. Uji dua akun berbeda dan beberapa browser sebelum memakai game bersama teman. Permainan Ludo memiliki variasi aturan; implementasi awal LightJurnal memakai aturan dasar keluar rumah dengan angka 6, langkah finis harus pas, petak aman, giliran ekstra pada 6, dan penalti tiga kali 6 beruntun.
