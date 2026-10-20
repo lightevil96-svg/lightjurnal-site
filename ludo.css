@@ -204,3 +204,17 @@
 /* Local solo mode hides the online room invitation/code panel. */
 #ludo-room-view.ludo-bot-mode .ludo-code-box{display:none!important}
 #ludo-room-view.ludo-bot-mode .ludo-room-heading{justify-content:flex-start}
+
+/* Polished, motion-aware feedback for dice rolls and token movement. */
+.ludo-game-main{animation:ludo-panel-enter .38s cubic-bezier(.2,.75,.25,1) both}
+.ludo-board-wrap{transition:box-shadow .25s ease,transform .25s ease}
+.ludo-token.can-move{animation:ludo-token-ready 1.45s ease-in-out infinite;transform-box:fill-box}
+.ludo-token.can-move:hover{filter:drop-shadow(0 0 9px rgba(78,94,232,.82))}
+.ludo-dice-result{will-change:transform,box-shadow}
+.ludo-dice-result.is-rolling{animation:ludo-dice-roll .72s cubic-bezier(.2,.75,.25,1)}
+.ludo-game-actions .button:not(:disabled){transition:transform .18s ease,box-shadow .18s ease}
+.ludo-game-actions .button:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 9px 23px rgba(78,94,232,.22)}
+@keyframes ludo-panel-enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ludo-token-ready{0%,100%{filter:drop-shadow(0 0 3px rgba(255,255,255,.88));opacity:1}50%{filter:drop-shadow(0 0 9px rgba(78,94,232,.7));opacity:.9}}
+@keyframes ludo-dice-roll{0%{transform:rotate(0) scale(1);box-shadow:0 0 0 rgba(78,94,232,0)}30%{transform:rotate(-15deg) scale(.9);box-shadow:0 0 0 7px rgba(78,94,232,.1)}62%{transform:rotate(385deg) scale(1.08);box-shadow:0 0 0 12px rgba(78,94,232,.05)}100%{transform:rotate(360deg) scale(1);box-shadow:0 0 0 rgba(78,94,232,0)}}
+@media(prefers-reduced-motion:reduce){.ludo-game-main{animation:none!important}.ludo-token.can-move{animation:none!important}.ludo-dice-result.is-rolling{animation:none!important}.ludo-game-actions .button{transition:none!important}}
