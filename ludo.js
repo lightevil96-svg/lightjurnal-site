@@ -23,7 +23,7 @@
     roomsChannel: null, userRequestChannel: null, roomChannel: null,
     roomPollTimer: null, requestPollTimer: null, refreshBusy: false,
     refreshPending: false, actionBusy: false, requestBusy: false, openingRoom: false,
-    botTurnTimer: null
+    botTurnTimer: null, tokenPositions: new Map(), lastBoardRoomId: null
   };
 
   function escapeHTML(value) {
@@ -307,7 +307,6 @@
     $("#ludo-pending-requests").hidden = isBotGame || !waiting || !isOwner || !state.requests.length;
     $("#ludo-start-game").hidden = isBotGame || !waiting;
     $("#ludo-start-game").disabled = isBotGame || state.players.length < 2 || state.players.length > room.max_players;
-    $("#ludo-close-room").hidden = isBotGame || !isOwner || (!waiting && !finished);
     $("#ludo-start-game").textContent = "Mulai permainan";
   }
 
@@ -435,6 +434,10 @@
 
   function renderBoard() {
     const container=$("#ludo-board");
+    if(state.lastBoardRoomId!==state.room?.id) {
+      state.tokenPositions.clear();
+      state.lastBoardRoomId=state.room?.id||null;
+    }
     container.replaceChildren();
     const svg=svgElement("svg",{viewBox:"0 0 600 600",role:"group","aria-label":"Papan Ludo. Ketuk pion yang menyala ketika giliranmu."});
     addSvg(svg,"title",{},"Papan Ludo LightJurnal");
@@ -454,6 +457,8 @@
       const color=COLORS[token.seat]||COLORS[0];
       const nudge=group.length>1?OFFSETS[index%OFFSETS.length]:[0,0];
       const x=token.point.x+nudge[0],y=token.point.y+nudge[1];
+      const tokenPositionKey=token.userId+":"+token.index;
+      const previousPosition=state.tokenPositions.get(tokenPositionKey);
       const canMove=legalMove(token);
       const groupEl=addSvg(svg,"g",{
         class:"ludo-token"+(canMove?" can-move":""),
@@ -467,6 +472,19 @@
       addSvg(groupEl,"circle",{cx:x,cy:y,r:10.5,fill:color.main,stroke:color.main,"stroke-width":1});
       addSvg(groupEl,"text",{x,y:y+3.8,"text-anchor":"middle","font-size":10,"font-weight":900,fill:"#ffffff","pointer-events":"none"},String(token.index+1));
       if(canMove)addSvg(groupEl,"circle",{cx:x,cy:y,r:18,fill:"none",stroke:"#ffffff","stroke-width":2,"stroke-dasharray":"3 3","pointer-events":"none"});
+      // Interpolate the piece from its previous cell without redrawing the board layout.
+      if(previousPosition&&(!window.matchMedia||!window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+        const dx=previousPosition.x-x,dy=previousPosition.y-y;
+        if(Math.abs(dx)>1||Math.abs(dy)>1) {
+          addSvg(groupEl,"animateTransform",{
+            attributeName:"transform",attributeType:"XML",type:"translate",
+            from:dx+" "+dy,to:"0 0",
+            dur:Math.round(Math.min(680,280+Math.hypot(dx,dy)*1.8))+"ms",
+            calcMode:"spline",keyTimes:"0;1",keySplines:"0.22 1 0.36 1",fill:"freeze"
+          });
+        }
+      }
+      state.tokenPositions.set(tokenPositionKey,{x,y});
       // Larger transparent hit target improves tapping on small phone screens.
       if(canMove)addSvg(groupEl,"circle",{cx:x,cy:y,r:25,fill:"#ffffff","fill-opacity":".001",stroke:"none","pointer-events":"all","aria-hidden":"true"});
     }));
@@ -710,6 +728,7 @@
     }));
     state.players=players;
     state.requests=[];
+    state.tokenPositions.clear(); state.lastBoardRoomId=null;
     state.room={
       id:roomId,code:"BOT-4P",title,status:"playing",max_players:4,
       owner_id:state.user.id,bot_mode:true,
@@ -781,6 +800,9 @@
     $("#ludo-my-rooms-panel").hidden=true;
     $("#ludo-my-requests-panel").hidden=true;
     const botMode=room.bot_mode===true;
+    const backButton=$("#ludo-back-lobby");
+    backButton.textContent=botMode?"← Kembali ke menu":"Tutup room & keluar";
+    backButton.setAttribute("aria-label",botMode?"Kembali ke menu Ludo":"Tutup room untuk semua pemain dan kembali ke menu");
     $("#ludo-room-view").classList.toggle("ludo-bot-mode",botMode);
     $("#ludo-room-view .ludo-room-heading .section-kicker").textContent=botMode?"MODE LAWAN BOT":"ROOM PRIVAT";
     $("#ludo-room-name").textContent=room.title;
@@ -799,6 +821,21 @@
   function renderRoomRequestsFallback() {
     const owner=state.room?.owner_id===state.user.id;
     $("#ludo-pending-requests").hidden=!owner||state.room.status!=="waiting"||!state.requests.length;
+  }
+
+  function handleClosedRoom() {
+    stopRoomLiveUpdates();
+    stopBotTurnTimer();
+    state.room=null; state.players=[]; state.requests=[];
+    state.tokenPositions.clear(); state.lastBoardRoomId=null;
+    $("#ludo-room-view").hidden=true;
+    $("#ludo-lobby").hidden=false;
+    $("#ludo-my-rooms-panel").hidden=false;
+    const nextUrl=new URL("ludo.html",window.location.href);
+    window.history.replaceState({}, "", nextUrl);
+    showNotice("Room ini sudah ditutup. Room lama tidak bisa dimainkan lagi; buat room baru untuk bermain lagi.","error");
+    void loadMyRooms();
+    void loadMyRequests();
   }
 
   async function refreshRoom() {
@@ -820,6 +857,7 @@
       if(roomError)throw roomError;
       if(playersError)throw playersError;
       if(state.room?.id!==roomId)return;
+      if(room.status==="closed") { handleClosedRoom(); return; }
       state.room=room;
       state.players=players||[];
       renderRoom();
@@ -845,6 +883,7 @@
       ]);
       if(roomError)throw roomError;
       if(playersError)throw playersError;
+      if(room.status==="closed")throw new Error("Room ini sudah ditutup. Buat room baru untuk bermain lagi.");
       state.room=room;
       state.players=players||[];
       state.requests=[];
@@ -863,9 +902,12 @@
     } catch(error) {
       state.room=null;
       state.players=[];
+      state.tokenPositions.clear(); state.lastBoardRoomId=null;
       $("#ludo-room-view").hidden=true;
       $("#ludo-lobby").hidden=false;
       $("#ludo-my-rooms-panel").hidden=false;
+      const nextUrl=new URL("ludo.html",window.location.href);
+      window.history.replaceState({}, "", nextUrl);
       showNotice(error?.message||"Room tidak ditemukan atau akunmu belum menjadi anggotanya.", "error");
       await loadMyRooms();
     } finally {
@@ -879,6 +921,7 @@
     state.room=null;
     state.players=[];
     state.requests=[];
+    state.tokenPositions.clear(); state.lastBoardRoomId=null;
     $("#ludo-room-view").hidden=true;
     $("#ludo-lobby").hidden=false;
     $("#ludo-my-rooms-panel").hidden=false;
@@ -979,6 +1022,10 @@
 
   async function rollDice() {
     if(state.actionBusy||!state.room)return;
+    const diceDisplay=$("#ludo-dice-result");
+    diceDisplay.classList.remove("is-rolling");
+    void diceDisplay.offsetWidth;
+    diceDisplay.classList.add("is-rolling");
     const button=$("#ludo-roll-dice");
     state.actionBusy=true;setButtonBusy(button,true,"Melempar…");
     try{
@@ -1012,43 +1059,33 @@
   }
 
   async function leaveRoom() {
-    if (state.actionBusy || !state.room) return;
-    if (!window.confirm("Keluar dari room ini? Kamu bisa meminta bergabung lagi jika room masih menunggu.")) return;
-    const button=$("#ludo-leave-room");
+    if(state.actionBusy||!state.room)return;
+    if(isBotRoom()) { returnToLobby(); return; }
+    if(!window.confirm("Tutup room ini untuk semua pemain? Room lama tidak bisa dimainkan lagi. Untuk bermain lagi, buat room baru."))return;
+    const button=$("#ludo-back-lobby");
     state.actionBusy=true;
-    setButtonBusy(button,true,"Keluar…");
-    try{
+    setButtonBusy(button,true,"Menutup room…");
+    try {
       await rpc("ludo_leave_room",{p_room_id:state.room.id});
       stopRoomLiveUpdates();
-      state.room=null;state.players=[];state.requests=[];
+      stopBotTurnTimer();
+      state.room=null; state.players=[]; state.requests=[];
+      state.tokenPositions.clear(); state.lastBoardRoomId=null;
       $("#ludo-room-view").hidden=true;
       $("#ludo-lobby").hidden=false;
       $("#ludo-my-rooms-panel").hidden=false;
-      window.history.replaceState({}, "", "ludo.html");
+      const nextUrl=new URL("ludo.html",window.location.href);
+      window.history.replaceState({}, "", nextUrl);
       await loadMyRooms();
       await loadMyRequests();
-      showNotice("Kamu sudah keluar dari room.","success");
-    }catch(error){showNotice(error.message||"Belum bisa keluar dari room.","error");}
-    finally{state.actionBusy=false;setButtonBusy(button,false);}
-  }
-
-  async function closeRoom() {
-    if(state.actionBusy||!state.room)return;
-    if(!window.confirm("Tutup room ini? Pemain tidak bisa melanjutkan atau memakai undangan lama."))return;
-    const button=$("#ludo-close-room");
-    state.actionBusy=true;setButtonBusy(button,true,"Menutup…");
-    try{
-      await rpc("ludo_close_room",{p_room_id:state.room.id});
-      stopRoomLiveUpdates();
-      state.room=null;state.players=[];state.requests=[];
-      $("#ludo-room-view").hidden=true;
-      $("#ludo-lobby").hidden=false;
-      $("#ludo-my-rooms-panel").hidden=false;
-      window.history.replaceState({}, "", "ludo.html");
-      await loadMyRooms();
-      showNotice("Room ditutup.","success");
-    }catch(error){showNotice(error.message||"Room belum bisa ditutup.","error");}
-    finally{state.actionBusy=false;setButtonBusy(button,false);}
+      showNotice("Room ditutup untuk semua pemain. Buat room baru jika ingin bermain lagi.","success");
+    } catch(error) {
+      showNotice(error.message||"Room belum bisa ditutup.","error");
+    } finally {
+      state.actionBusy=false;
+      setButtonBusy(button,false);
+      if(state.room)button.textContent="Tutup room & keluar";
+    }
   }
 
   async function handleInviteFromUrl() {
@@ -1100,15 +1137,16 @@
     $("#ludo-request-form").addEventListener("submit",requestJoin);
     $("#ludo-refresh-rooms").addEventListener("click",()=>{void loadMyRooms();});
     $("#ludo-refresh-requests").addEventListener("click",()=>{void loadMyRequests();});
-    $("#ludo-back-lobby").addEventListener("click",returnToLobby);
+    $("#ludo-back-lobby").addEventListener("click",()=>{
+      if(state.room&&!isBotRoom())void leaveRoom();
+      else returnToLobby();
+    });
     $("#ludo-create-invite").addEventListener("click",()=>void createInvite());
     $("#ludo-copy-invite").addEventListener("click",()=>void copyWithFeedback($("#ludo-invite-url").value,"Tautan undangan disalin."));
     $("#ludo-copy-code").addEventListener("click",()=>void copyWithFeedback($("#ludo-room-code").textContent,"Kode room disalin. Bagikan kode ini agar teman bisa meminta bergabung."));
     $("#ludo-start-game").addEventListener("click",()=>void startGame());
     $("#ludo-roll-dice").addEventListener("click",()=>void rollDice());
     $("#ludo-skip-turn").addEventListener("click",()=>void skipTurn());
-    $("#ludo-close-room").addEventListener("click",()=>void closeRoom());
-    $("#ludo-leave-room").addEventListener("click",()=>void leaveRoom());
     $("#ludo-room-code").addEventListener("click",()=>void copyWithFeedback($("#ludo-room-code").textContent,"Kode room disalin."));
     $("#ludo-my-rooms").addEventListener("click",(event)=>{
       const button=event.target.closest("[data-open-room]");
