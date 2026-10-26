@@ -1,54 +1,31 @@
-# LightJurnal
+# TradeLog — Trading Journal
 
-Website jurnal dan arsip tugas kuliah untuk **lightjurnal.my.id**. Dibangun dengan HTML, CSS, dan JavaScript murni agar ringan, responsif, dan dapat dipublikasikan melalui GitHub Pages.
+TradeLog adalah jurnal trading pribadi berbasis HTML, CSS, dan JavaScript murni. Tidak memerlukan proses build atau dependensi eksternal; cocok untuk GitHub Pages dan domain khusus.
 
 ## Fitur
-- Pencarian judul, ringkasan, kategori, penulis, dan tag
-- Filter kategori dan pengurutan koleksi
-- Mode gelap/terang yang disimpan di browser
-- Tata letak responsif untuk ponsel dan desktop
-- Halaman ruang kerja untuk menyiapkan metadata dan mengekspor JSON/Markdown
-- Domain khusus melalui file \`CNAME\`
 
-## Login, unggah jurnal, dan moderasi
+- Dashboard ringkasan P/L bersih, win rate, jumlah trade, profit factor, dan kurva ekuitas.
+- Catat, edit, hapus, cari, dan filter riwayat trade.
+- Dukung posisi Long/Short, beberapa kelas aset, strategi, entry/exit, stop-loss, ukuran posisi, pengali kontrak, biaya, risiko, dan hasil bersih manual.
+- Analisis performa bulanan dan berdasarkan strategi.
+- Kalkulator risiko untuk memperkirakan nominal risiko dan ukuran posisi.
+- Ekspor CSV serta backup/restore JSON.
+- Tampilan responsif untuk desktop dan ponsel.
+- Data tersimpan di localStorage browser.
 
-Login pengguna, penyimpanan PDF privat, status peninjauan, serta panel admin sekarang disiapkan dengan Supabase. GitHub Pages hanya menyajikan antarmuka; kontrol akses berada pada Supabase Auth, Row Level Security (RLS), dan Storage policies.
+## Cara menggunakan
 
-Ikuti **[SUPABASE-SETUP.md](SUPABASE-SETUP.md)** untuk membuat project, menjalankan `supabase-setup.sql`, mengisi URL serta anon/publishable key pada `supabase-config.js`, dan menetapkan akun admin pertama. Jangan pernah menaruh service_role/secret key di frontend.
+1. Buka website yang dipublikasikan melalui GitHub Pages.
+2. Masuk ke Pengaturan & Cadangan, pilih mata uang akun dan saldo awal.
+3. Pilih Catat Trade untuk memasukkan transaksi.
+4. Untuk perhitungan otomatis P/L, masukkan harga entry dan exit, arah posisi, ukuran posisi, pengali kontrak yang sesuai instrumen, serta biaya. Trade tanpa harga exit atau hasil manual dianggap masih terbuka.
+5. Jika laporan broker sudah menyediakan angka hasil bersih, isi Hasil bersih manual; angka tersebut akan dipakai sebagai P/L bersih untuk trade itu.
+6. Buat backup JSON secara berkala dan simpan di tempat aman.
 
-Alur karya:
-- Pengguna mendaftar/masuk melalui `login.html`, lalu mengirim PDF dari `dashboard.html`.
-- Setiap kiriman berstatus `pending`; dokumen tetap di bucket privat sampai disetujui admin.
-- Admin masuk melalui `admin.html` untuk menyetujui, menolak dengan catatan, menarik publikasi, atau menghapus kiriman.
-- Halaman utama hanya memuat jurnal berstatus `approved`.
+## Catatan penting
 
-
-## Publikasi melalui GitHub Pages
-1. Buka **Settings → Pages** pada repository ini.
-2. Pada **Build and deployment**, pilih **Deploy from a branch**, branch \`main\`, folder \`/(root)\`, lalu **Save**.
-3. Di bagian **Custom domain**, masukkan \`lightjurnal.my.id\` dan simpan. File \`CNAME\` di root juga sudah berisi domain tersebut.
-4. Pada pengelola DNS domain, atur record apex sesuai dokumentasi GitHub Pages. Jika belum ada konfigurasi yang cocok, gunakan empat record A berikut dengan host/name \`@\`:
-   - \`185.199.108.153\`
-   - \`185.199.109.153\`
-   - \`185.199.110.153\`
-   - \`185.199.111.153\`
-5. Opsional tetapi disarankan: buat record CNAME host \`www\` menuju \`lightevil96-svg.github.io\` (tanpa nama repository).
-6. Tunggu propagasi DNS, lalu aktifkan **Enforce HTTPS** di Settings → Pages ketika opsi tersedia.
-
-DNS dan pengaturan Pages harus dikonfigurasi di akun/domain masing-masing; commit file saja tidak otomatis membuat situs online.
-
-## Konfigurasi dan batas unggahan
-
-PDF dibatasi 25 MB. Pengaturan produksi tidak aktif sampai project Supabase dibuat, SQL diterapkan, dan `supabase-config.js` diisi. Tanpa backend terkonfigurasi, formulir tidak menyimpan unggahan sebagai jurnal publik. Koleksi publik hanya menampilkan karya yang sudah disetujui admin.
-
-## Berkas
-
-- `index.html` — koleksi jurnal publik
-- `login.html`, `auth.js` — pendaftaran dan login pengguna
-- `dashboard.html`, `dashboard.js` — unggah PDF dan pelacakan status
-- `admin.html`, `admin.js` — login admin dan antrean moderasi
-- `style.css`, `portal.css` — tampilan responsif
-- `supabase-config.js` — konfigurasi publik frontend
-- `supabase-setup.sql` — tabel, RLS, bucket, dan policies
-- `SUPABASE-SETUP.md` — petunjuk konfigurasi backend
-- `CNAME` — domain khusus
+- Data jurnal disimpan pada browser dan perangkat yang sedang digunakan, bukan disinkronkan ke akun atau server. Menghapus data situs/browser dapat menghapus jurnal; ekspor backup secara berkala.
+- P/L otomatis dihitung sebagai (exit - entry) × ukuran × pengali kontrak × arah - biaya. Untuk posisi Short arah dibalik. Sesuaikan pengali kontrak dengan spesifikasi instrumen dan mata uang akun; hasil otomatis tidak menggantikan rekonsiliasi dengan laporan broker.
+- Risiko otomatis dihitung dari |entry - stop-loss| × ukuran × pengali kontrak, kecuali nominal risiko diisi manual. Perhitungan ini merupakan estimasi dan belum memperhitungkan slippage, funding, konversi mata uang, atau aturan margin broker.
+- Aplikasi ini merupakan alat pencatatan dan edukasi, bukan rekomendasi transaksi atau nasihat keuangan.
+- File CNAME dipertahankan untuk domain lightjurnal.my.id. Pastikan konfigurasi GitHub Pages/DNS di akun pemilik tetap sesuai setelah perubahan situs.
