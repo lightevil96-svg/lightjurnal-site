@@ -241,7 +241,7 @@
       metricCard("Total trade", String(trades.length), stats.closed.length + " tertutup · " + (trades.length - stats.closed.length) + " terbuka", "↕", "amber", "") +
       metricCard("Profit factor", displayProfitFactor(stats.profitFactor), stats.profitFactor === Infinity ? "Profit tanpa trade rugi" : "Gross profit ÷ gross loss", "⌁", "green", "") +
       '</div>';
-    html += '<div class="dashboard-grid"><section class="card chart-card"><div class="card-header"><div><div class="chart-heading"><h3 class="section-title">Kurva ekuitas</h3><span class="pill ' + (stats.pnl >= 0 ? "green" : "red") + '">' + (stats.pnl >= 0 ? "+" : "") + formatNumber(stats.pnl / Math.max(settings.startingBalance, 1) * 100, 2) + "%</span></div><p class="section-subtitle">Akumulasi P/L dari trade yang sudah ditutup</p></div><div class="chart-legend"><span class="legend-dot"></span><span>P/L kumulatif</span></div></div>' +
+    html += '<div class="dashboard-grid"><section class="card chart-card"><div class="card-header"><div><div class="chart-heading"><h3 class="section-title">Kurva ekuitas</h3><span class="pill ' + (stats.pnl >= 0 ? "green" : "red") + '">' + (stats.pnl >= 0 ? "+" : "") + formatNumber(stats.pnl / Math.max(settings.startingBalance, 1) * 100, 2) + '%</span></div><p class="section-subtitle">Akumulasi P/L dari trade yang sudah ditutup</p></div><div class="chart-legend"><span class="legend-dot"></span><span>P/L kumulatif</span></div></div>' +
       '<div class="chart-wrap">' + renderEquityChart() + '</div></section>';
     const closed = stats.closed.length;
     const winDegrees = closed ? stats.wins.length / closed * 360 : 0;
