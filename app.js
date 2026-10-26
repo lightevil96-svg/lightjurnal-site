@@ -551,6 +551,7 @@
       notes: String(data.get("notes") || "").trim()
     };
     const normalized = normalizeTrade(raw);
+    const wasEditing = Boolean(editingId);
     if (editingId) {
       const index = trades.findIndex(function (trade) { return trade.id === editingId; });
       if (index >= 0) trades[index] = normalized;
@@ -563,7 +564,7 @@
     marketFilter = "all";
     outcomeFilter = "all";
     renderPage();
-    showToast(editingId ? "Trade berhasil diperbarui." : "Trade berhasil dicatat.");
+    showToast(wasEditing ? "Trade berhasil diperbarui." : "Trade berhasil dicatat.");
   }
 
   function showToast(message) {
