@@ -242,7 +242,7 @@
 
 
   function getMT5Config() {
-    let endpoint = "/api/mt5";
+    let endpoint = window.location.origin + "/api/mt5";
     let apiKey = "";
     try {
       endpoint = (window.localStorage.getItem("tradelog.mt5.endpoint") || endpoint).trim();
@@ -286,7 +286,9 @@
     }
     try {
       const endpoint = config.endpoint.replace(/\\/+$/, "");
-      if (!/^https:\/\//i.test(endpoint) && !/^http:\/\/localhost(?::\\d+)?(?:\/|$)/i.test(endpoint) && !/^http:\/\/127\\.0\\.0\\.1(?::\\d+)?(?:\/|$)/i.test(endpoint)) {
+      const parsedEndpoint = new URL(endpoint);
+      const isLocal = parsedEndpoint.hostname === "localhost" || parsedEndpoint.hostname === "127.0.0.1";
+      if (parsedEndpoint.protocol !== "https:" && !isLocal) {
         throw new Error("Gunakan URL HTTPS untuk koneksi bridge, atau localhost untuk pengujian lokal.");
       }
       const response = await fetch(endpoint + "/snapshot", {
