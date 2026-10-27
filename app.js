@@ -638,6 +638,8 @@
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function () {
+      const previousTrades = trades.slice();
+      const previousSettings = { currency: settings.currency, startingBalance: settings.startingBalance };
       try {
         const parsed = JSON.parse(String(reader.result || ""));
         const incoming = Array.isArray(parsed) ? parsed : parsed.trades;
@@ -653,7 +655,10 @@
           if (numberOrNull(parsed.settings.startingBalance) !== null) settings.startingBalance = Math.max(0, Number(parsed.settings.startingBalance));
         }
         if (!saveData()) {
-          showToast("Pemulihan dibatalkan karena data tidak berhasil disimpan. Periksa ruang penyimpanan browser.");
+          trades = previousTrades;
+          settings = previousSettings;
+          showToast("Pemulihan dibatalkan karena data tidak berhasil disimpan. Data di layar dikembalikan; periksa ruang penyimpanan browser.");
+          renderPage();
           return;
         }
         renderPage();
@@ -756,6 +761,7 @@
   document.addEventListener("change", function (event) {
     if (event.target.id === "market-filter") { marketFilter = event.target.value; updateTradeList(); }
     if (event.target.id === "outcome-filter") { outcomeFilter = event.target.value; updateTradeList(); }
+    if (event.target.hasAttribute("data-risk-field")) updateRiskResult();
   });
 
   $("#import-file").addEventListener("change", function (event) { importJSONFile(event.target.files && event.target.files[0]); });
