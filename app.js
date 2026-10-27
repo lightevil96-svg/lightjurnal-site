@@ -10,6 +10,7 @@
     trades: "Riwayat Trade",
     analytics: "Analisis Performa",
     risk: "Kalkulator Risiko",
+    mt5: "MT5 Live",
     settings: "Pengaturan & Cadangan"
   };
 
@@ -20,6 +21,8 @@
   let marketFilter = "all";
   let outcomeFilter = "all";
   let editingId = null;
+  let mt5PollTimer = null;
+  let mt5LastSnapshot = null;
 
   const $ = function (selector, root) { return (root || document).querySelector(selector); };
   const $$ = function (selector, root) { return Array.from((root || document).querySelectorAll(selector)); };
@@ -228,11 +231,155 @@
     $("#nav-trade-count").textContent = String(trades.length);
     $("#today-date").textContent = new Intl.DateTimeFormat("id-ID", { weekday: "short", day: "2-digit", month: "short" }).format(new Date());
     document.body.classList.remove("sidebar-open");
+    if (mt5PollTimer) { window.clearInterval(mt5PollTimer); mt5PollTimer = null; }
     if (currentPage === "overview") renderOverview();
     else if (currentPage === "trades") renderTradesPage();
     else if (currentPage === "analytics") renderAnalytics();
     else if (currentPage === "risk") renderRisk();
+    else if (currentPage === "mt5") { renderMT5(); startMT5Polling(); }
     else renderSettings();
+  }
+
+
+  function getMT5Config() {
+    let endpoint = "/api/mt5";
+    let apiKey = "";
+    try {
+      endpoint = (window.localStorage.getItem("tradelog.mt5.endpoint") || endpoint).trim();
+      apiKey = window.sessionStorage.getItem("tradelog.mt5.key") || "";
+    } catch (error) {}
+    return { endpoint: endpoint.replace(/\\/+$/, ""), apiKey: apiKey };
+  }
+
+  function renderMT5() {
+    const config = getMT5Config();
+    const symbol = "FX:EURUSD";
+    content.innerHTML = '<div class="page-intro"><div><h2>Akun MetaTrader 5</h2><p>Chart pasar live dan panel akun investor melalui bridge MT5 yang kamu host sendiri.</p></div><span class="pill amber" id="mt5-status-pill">BELUM TERHUBUNG</span></div>' +
+      '<div class="mt5-warning"><strong>Keamanan akun</strong><p>Jangan masukkan password investor MT5 ke halaman web. Login MT5 dilakukan di terminal pada server/VPS milikmu; halaman ini hanya menerima API key bridge dan data baca-saja. Jangan membuka bridge ke internet tanpa HTTPS dan pembatasan akses.</p></div>' +
+      '<section class="card mt5-connection-card"><div class="card-header"><div><h3 class="section-title">Koneksi bridge</h3><p class="section-subtitle">Backend MT5 harus aktif di Windows VPS/PC yang menjalankan terminal MetaTrader 5.</p></div><button class="button button-secondary" data-action="mt5-refresh">↻ Perbarui</button></div>' +
+      '<div class="mt5-connection-form"><label>URL API bridge<input id="mt5-endpoint" type="url" placeholder="https://domain-kamu.com/api/mt5" value="' + escapeHtml(config.endpoint) + '" autocomplete="url"></label><label>API key bridge<input id="mt5-api-key" type="password" placeholder="API key (hanya sesi ini)" autocomplete="off" value="' + escapeHtml(config.apiKey) + '"></label><button class="button button-primary" data-action="mt5-connect">Hubungkan</button><button class="button button-secondary" data-action="mt5-disconnect">Putuskan</button></div>' +
+      '<p class="mt5-help">API key disimpan di session browser sampai tab/sesi berakhir. Endpoint wajib memakai HTTPS kecuali localhost. Koneksi membaca snapshot akun dan posisi; tidak ada fungsi untuk membuka/menutup order.</p></section>' +
+      '<div id="mt5-account-panel"><div class="mt5-state-card"><span class="mt5-state-icon">⌁</span><strong>Menunggu koneksi bridge</strong><p>Isi URL API dan API key setelah backend MT5 dipasang. Chart pasar di bawah tetap dapat digunakan tanpa koneksi akun.</p></div></div>' +
+      '<section class="card mt5-chart-card"><div class="card-header"><div><h3 class="section-title">Chart pasar</h3><p class="section-subtitle">Data chart dari TradingView, bukan feed khusus broker MT5. Simbol dapat berbeda dari harga broker.</p></div><label class="mt5-symbol-label">Instrumen<select id="mt5-symbol"><option value="FX:EURUSD">EUR/USD</option><option value="FX:GBPUSD">GBP/USD</option><option value="FX:USDJPY">USD/JPY</option><option value="OANDA:XAUUSD">Gold / XAUUSD</option><option value="BINANCE:BTCUSDT">BTC/USDT</option><option value="NASDAQ:NDX">Nasdaq 100</option></select></label></div><div class="mt5-chart-frame"><iframe id="mt5-chart-frame" title="Chart pasar TradingView" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen src="' + tradingViewChartUrl(symbol) + '"></iframe></div></section>' +
+      '<section class="card mt5-positions-card"><div class="card-header"><div><h3 class="section-title">Posisi terbuka</h3><p class="section-subtitle">Diambil dari snapshot akun MT5 saat bridge tersedia.</p></div><span class="pill gray" id="mt5-position-count">0 posisi</span></div><div id="mt5-positions-list"><div class="mt5-empty-positions">Belum ada data posisi.</div></div></section>';
+  }
+
+  function tradingViewChartUrl(symbol) {
+    return "https://s.tradingview.com/widgetembed/?frameElementId=tradelog_mt5_chart&symbol=" + encodeURIComponent(symbol) +
+      "&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=%23f1f3f6&studies=%5B%5D&theme=light&style=1&timezone=Asia%2FJakarta&withdateranges=1&hide_side_toolbar=0&allow_symbol_change=1&details=1&hotlist=1&calendar=0";
+  }
+
+  function startMT5Polling() {
+    if (currentPage !== "mt5") return;
+    refreshMT5Snapshot();
+    mt5PollTimer = window.setInterval(function () {
+      if (currentPage === "mt5") refreshMT5Snapshot();
+    }, 10000);
+  }
+
+  async function refreshMT5Snapshot() {
+    if (currentPage !== "mt5") return;
+    const config = getMT5Config();
+    if (!config.apiKey || !config.endpoint) {
+      setMT5Offline("Bridge belum dikonfigurasi", "Masukkan URL dan API key bridge. Jangan masukkan password investor MT5 di sini.");
+      return;
+    }
+    try {
+      const endpoint = config.endpoint.replace(/\\/+$/, "");
+      if (!/^https:\/\//i.test(endpoint) && !/^http:\/\/localhost(?::\\d+)?(?:\/|$)/i.test(endpoint) && !/^http:\/\/127\\.0\\.0\\.1(?::\\d+)?(?:\/|$)/i.test(endpoint)) {
+        throw new Error("Gunakan URL HTTPS untuk koneksi bridge, atau localhost untuk pengujian lokal.");
+      }
+      const response = await fetch(endpoint + "/snapshot", {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + config.apiKey, "Accept": "application/json" },
+        credentials: "omit",
+        cache: "no-store"
+      });
+      if (!response.ok) throw new Error(response.status === 401 ? "API key ditolak." : "Bridge merespons HTTP " + response.status + ".");
+      const data = await response.json();
+      if (!data || data.connected !== true || !data.account || !Array.isArray(data.positions)) {
+        throw new Error("Format snapshot bridge tidak sesuai kontrak API.");
+      }
+      mt5LastSnapshot = data;
+      renderMT5Snapshot(data);
+    } catch (error) {
+      setMT5Offline("Koneksi belum tersedia", error && error.message ? error.message : "Tidak dapat menjangkau bridge MT5.");
+    }
+  }
+
+  function setMT5Offline(title, detail) {
+    const pill = $("#mt5-status-pill");
+    if (pill) { pill.textContent = "OFFLINE"; pill.className = "pill red"; }
+    const panel = $("#mt5-account-panel");
+    if (panel) panel.innerHTML = '<div class="mt5-state-card"><span class="mt5-state-icon">!</span><strong>' + escapeHtml(title) + '</strong><p>' + escapeHtml(detail) + '</p><small>Refresh otomatis setiap 10 detik selama halaman MT5 Live terbuka.</small></div>';
+    const positions = $("#mt5-positions-list");
+    if (positions) positions.innerHTML = '<div class="mt5-empty-positions">Tidak ada data posisi dari bridge.</div>';
+    const count = $("#mt5-position-count");
+    if (count) count.textContent = "— posisi";
+  }
+
+  function renderMT5Snapshot(data) {
+    const account = data.account || {};
+    const money = function (value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "—";
+      return new Intl.NumberFormat("id-ID", { maximumFractionDigits: 2 }).format(n) + (account.currency ? " " + escapeHtml(account.currency) : "");
+    };
+    const pill = $("#mt5-status-pill");
+    if (pill) { pill.textContent = "TERHUBUNG"; pill.className = "pill green"; }
+    const panel = $("#mt5-account-panel");
+    if (panel) panel.innerHTML = '<div class="metric-grid mt5-metric-grid">' +
+      metricCard("Saldo", money(account.balance), "Balance akun broker", "◉", "blue", "") +
+      metricCard("Equity", money(account.equity), "Saldo + floating P/L", "↗", "green", "") +
+      metricCard("Floating P/L", money(account.profit), "P/L posisi terbuka", "⌁", Number(account.profit) >= 0 ? "green" : "red", Number(account.profit) >= 0 ? "positive" : "negative") +
+      metricCard("Free margin", money(account.freeMargin), "Margin bebas tersedia", "◇", "amber", "") + '</div>' +
+      '<div class="mt5-account-meta"><span>Akun: <strong>' + escapeHtml(account.login || "—") + '</strong></span><span>Server: <strong>' + escapeHtml(account.server || "—") + '</strong></span><span>Leverage: <strong>' + escapeHtml(account.leverage ? "1:" + account.leverage : "—") + '</strong></span><span>Sinkron terakhir: <strong>' + escapeHtml(data.timestamp || new Date().toISOString()) + '</strong></span></div>';
+    const positions = $("#mt5-positions-list");
+    const count = $("#mt5-position-count");
+    const list = data.positions || [];
+    if (count) count.textContent = list.length + " posisi";
+    if (positions) {
+      if (!list.length) positions.innerHTML = '<div class="mt5-empty-positions">Tidak ada posisi terbuka saat ini.</div>';
+      else positions.innerHTML = '<div class="table-scroll"><table><thead><tr><th>Simbol</th><th>Tipe</th><th>Volume</th><th>Harga buka</th><th>Harga saat ini</th><th>Floating P/L</th></tr></thead><tbody>' + list.map(function (position) {
+        return '<tr><td><strong>' + escapeHtml(position.symbol || "—") + '</strong></td><td>' + escapeHtml(position.type || "—") + '</td><td>' + escapeHtml(position.volume == null ? "—" : position.volume) + '</td><td>' + escapeHtml(position.priceOpen == null ? "—" : position.priceOpen) + '</td><td>' + escapeHtml(position.priceCurrent == null ? "—" : position.priceCurrent) + '</td><td class="' + (Number(position.profit) >= 0 ? "positive" : "negative") + '">' + money(position.profit) + '</td></tr>';
+      }).join("") + '</tbody></table></div>';
+    }
+  }
+
+  function saveMT5Config() {
+    const endpointInput = $("#mt5-endpoint");
+    const keyInput = $("#mt5-api-key");
+    if (!endpointInput || !keyInput) return false;
+    const endpoint = endpointInput.value.trim().replace(/\\/+$/, "");
+    const key = keyInput.value.trim();
+    if (!endpoint || !key) {
+      showToast("Isi URL API bridge dan API key. Password MT5 tidak diperlukan.");
+      return false;
+    }
+    try {
+      const parsed = new URL(endpoint);
+      const isLocal = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+      if (parsed.protocol !== "https:" && !isLocal) {
+        showToast("URL bridge harus HTTPS kecuali localhost untuk pengujian.");
+        return false;
+      }
+      window.localStorage.setItem("tradelog.mt5.endpoint", endpoint);
+      window.sessionStorage.setItem("tradelog.mt5.key", key);
+      showToast("Konfigurasi bridge disimpan; API key hanya berlaku untuk sesi browser ini.");
+      refreshMT5Snapshot();
+      return true;
+    } catch (error) {
+      showToast("URL bridge tidak valid.");
+      return false;
+    }
+  }
+
+  function disconnectMT5() {
+    try { window.sessionStorage.removeItem("tradelog.mt5.key"); } catch (error) {}
+    mt5LastSnapshot = null;
+    setMT5Offline("Koneksi diputuskan", "API key dihapus dari sesi browser. URL bridge tetap tersimpan.");
+    const keyInput = $("#mt5-api-key");
+    if (keyInput) keyInput.value = "";
   }
 
   function renderOverview() {
@@ -709,6 +856,9 @@
       }
     } else if (action === "close-modal") closeModal();
     else if (action === "backdrop-close" && event.target === actionButton) closeModal();
+    else if (action === "mt5-connect") saveMT5Config();
+    else if (action === "mt5-disconnect") disconnectMT5();
+    else if (action === "mt5-refresh") refreshMT5Snapshot();
     else if (action === "export-json") exportJSON();
     else if (action === "export-csv") exportCSV();
     else if (action === "import-json") $("#import-file").click();
@@ -762,6 +912,10 @@
     if (event.target.id === "market-filter") { marketFilter = event.target.value; updateTradeList(); }
     if (event.target.id === "outcome-filter") { outcomeFilter = event.target.value; updateTradeList(); }
     if (event.target.hasAttribute("data-risk-field")) updateRiskResult();
+    if (event.target.id === "mt5-symbol") {
+      const frame = $("#mt5-chart-frame");
+      if (frame) frame.src = tradingViewChartUrl(event.target.value);
+    }
   });
 
   $("#import-file").addEventListener("change", function (event) { importJSONFile(event.target.files && event.target.files[0]); });
