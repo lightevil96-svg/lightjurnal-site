@@ -15,7 +15,7 @@
   };
 
   let trades = [];
-  let settings = { currency: "USD", startingBalance: 10000 };
+  let settings = { currency: "USD", startingBalance: 10000, dailyLossLimitPercent: 3, maxTradesPerDay: 5 };
   let currentPage = "overview";
   let searchText = "";
   let marketFilter = "all";
@@ -80,7 +80,14 @@
       fees: Math.max(0, numberOrNull(source.fees) || 0),
       riskAmount: Math.max(0, numberOrNull(source.riskAmount) || 0),
       manualNet: manualNet,
-      notes: String(source.notes || "").slice(0, 3000)
+      notes: String(source.notes || "").slice(0, 3000),
+      checklist: {
+        setupValid: Boolean(source.checklist && source.checklist.setupValid === true),
+        stopPlanned: Boolean(source.checklist && source.checklist.stopPlanned === true),
+        riskWithinLimit: Boolean(source.checklist && source.checklist.riskWithinLimit === true),
+        newsChecked: Boolean(source.checklist && source.checklist.newsChecked === true),
+        emotionStable: Boolean(source.checklist && source.checklist.emotionStable === true)
+      }
     };
   }
 
@@ -97,6 +104,8 @@
         if (parsedSettings && typeof parsedSettings === "object") {
           settings.currency = CURRENCIES.indexOf(parsedSettings.currency) >= 0 ? parsedSettings.currency : "USD";
           settings.startingBalance = Math.max(0, numberOrNull(parsedSettings.startingBalance) || 0);
+          settings.dailyLossLimitPercent = Math.max(0, Math.min(100, numberOrNull(parsedSettings.dailyLossLimitPercent) === null ? 3 : Number(parsedSettings.dailyLossLimitPercent)));
+          settings.maxTradesPerDay = Math.max(0, Math.min(1000, Math.floor(numberOrNull(parsedSettings.maxTradesPerDay) === null ? 5 : Number(parsedSettings.maxTradesPerDay))));
         }
       }
     } catch (error) {
@@ -807,6 +816,38 @@
     if (keyInput) keyInput.value = "";
   }
 
+  function getDailyRiskSnapshot() {
+    const today = todayISO();
+    const todaysTrades = trades.filter(function (trade) { return trade.date === today; });
+    const todaysClosed = todaysTrades.filter(function (trade) { return calcTrade(trade).isClosed; });
+    const dailyPnl = sumPnl(todaysClosed);
+    const priorClosed = closedTrades().filter(function (trade) { return trade.date < today; });
+    const dayStartBalance = settings.startingBalance + sumPnl(priorClosed);
+    const lossLimit = settings.dailyLossLimitPercent > 0 ? Math.max(0, dayStartBalance) * settings.dailyLossLimitPercent / 100 : 0;
+    const lossLimitHit = settings.dailyLossLimitPercent > 0 && lossLimit > 0 && dailyPnl <= -lossLimit;
+    const tradeLimitHit = settings.maxTradesPerDay > 0 && todaysTrades.length >= settings.maxTradesPerDay;
+    return { today: today, trades: todaysTrades.length, closed: todaysClosed.length, pnl: dailyPnl, dayStartBalance: dayStartBalance, lossLimit: lossLimit, lossLimitHit: lossLimitHit, tradeLimitHit: tradeLimitHit };
+  }
+
+  function renderDailyRiskCard() {
+    const snapshot = getDailyRiskSnapshot();
+    const breached = snapshot.lossLimitHit || snapshot.tradeLimitHit;
+    const nearLossLimit = snapshot.lossLimit > 0 && snapshot.pnl < 0 && Math.abs(snapshot.pnl) >= snapshot.lossLimit * 0.8 && !snapshot.lossLimitHit;
+    const tone = breached ? "warning" : nearLossLimit ? "warning" : "success";
+    const title = breached ? "Batas disiplin harian tercapai" : nearLossLimit ? "Mendekati batas kerugian harian" : "Pemantauan disiplin harian";
+    const detail = [];
+    if (settings.dailyLossLimitPercent > 0) detail.push("P/L hari ini " + formatMoney(snapshot.pnl) + " dari batas rugi " + formatMoney(-snapshot.lossLimit));
+    else detail.push("Peringatan batas rugi harian dinonaktifkan");
+    if (settings.maxTradesPerDay > 0) detail.push(snapshot.trades + " dari " + settings.maxTradesPerDay + " trade tercatat hari ini");
+    else detail.push("Batas jumlah trade dinonaktifkan");
+    const message = breached
+      ? "Sebaiknya berhenti menambah risiko dan evaluasi jurnal. Peringatan ini tidak menghentikan order di broker."
+      : nearLossLimit
+        ? "Kerugian tercatat sudah mendekati ambang. Tinjau rencana sebelum mengambil keputusan berikutnya."
+        : "Gunakan batas ini sebagai pengingat. P/L dihitung dari trade tertutup yang tanggalnya sama dengan hari lokal perangkat.";
+    return '<section class="daily-risk-card ' + tone + '" aria-live="polite"><div class="daily-risk-heading"><div><p class="eyebrow">RISK GUARDRAIL · ' + escapeHtml(formatDate(snapshot.today, true)) + '</p><h3>' + title + '</h3></div><span class="pill ' + (breached ? "red" : nearLossLimit ? "amber" : "green") + '">' + (breached ? "BATAS TERCAPAI" : nearLossLimit ? "MENDEKATI" : "DIPANTAU") + '</span></div><div class="daily-risk-metrics"><div><small>P/L tertutup hari ini</small><strong class="' + moneyClass(snapshot.pnl) + '">' + escapeHtml(formatMoney(snapshot.pnl)) + '</strong></div><div><small>Trade dicatat hari ini</small><strong>' + snapshot.trades + (settings.maxTradesPerDay > 0 ? " / " + settings.maxTradesPerDay : "") + '</strong></div><div><small>Batas rugi nominal</small><strong>' + (settings.dailyLossLimitPercent > 0 ? escapeHtml(formatMoney(-snapshot.lossLimit)) : "Nonaktif") + '</strong></div></div><p>' + escapeHtml(detail.join(" · ")) + '</p><p class="daily-risk-message">' + escapeHtml(message) + '</p><p class="daily-risk-footnote">Estimasi lokal berdasarkan tanggal trade; bukan sinkronisasi broker dan bukan pemblokir transaksi otomatis.</p></section>';
+  }
+
   function renderOverview() {
     const stats = getStats(trades);
     const equity = settings.startingBalance + stats.pnl;
@@ -819,6 +860,7 @@
       metricCard("Total trade", String(trades.length), stats.closed.length + " tertutup · " + (trades.length - stats.closed.length) + " terbuka", "↕", "amber", "") +
       metricCard("Profit factor", displayProfitFactor(stats.profitFactor), stats.profitFactor === Infinity ? "Profit tanpa trade rugi" : "Gross profit ÷ gross loss", "⌁", "green", "") +
       '</div>';
+    html += renderDailyRiskCard();
     html += '<div class="dashboard-grid"><section class="card chart-card"><div class="card-header"><div><div class="chart-heading"><h3 class="section-title">Kurva ekuitas</h3><span class="pill ' + (stats.pnl >= 0 ? "green" : "red") + '">' + (stats.pnl >= 0 ? "+" : "") + formatNumber(stats.pnl / Math.max(settings.startingBalance, 1) * 100, 2) + '%</span></div><p class="section-subtitle">Akumulasi P/L dari trade yang sudah ditutup</p></div><div class="chart-legend"><span class="legend-dot"></span><span>P/L kumulatif</span></div></div>' +
       '<div class="chart-wrap">' + renderEquityChart() + '</div></section>';
     const closed = stats.closed.length;
@@ -1033,7 +1075,7 @@
   function renderRisk() {
     const pnl = sumPnl(closedTrades());
     const balance = settings.startingBalance + pnl;
-    content.innerHTML = '<div class="page-intro"><div><h2>Rencanakan risiko sebelum entry</h2><p>Hitung perkiraan nominal risiko dan ukuran posisi berdasarkan jarak stop-loss.</p></div></div>' +
+    content.innerHTML = '<div class="page-intro"><div><h2>Rencanakan risiko sebelum entry</h2><p>Hitung perkiraan nominal risiko dan ukuran posisi berdasarkan jarak stop-loss.</p></div></div>' + renderDailyRiskCard() +
       '<div class="risk-layout"><section class="card section-card"><div class="section-card-header"><div><h3>Parameter trade</h3><p>Ubah nilai untuk melihat hasil estimasi.</p></div></div>' +
       '<div class="notice" style="margin-bottom:18px">Saldo dasar yang digunakan: <strong>' + escapeHtml(formatMoney(balance)) + '</strong> (saldo awal ditambah P/L trade tertutup).</div>' +
       '<div class="risk-form-grid">' +
@@ -1078,6 +1120,8 @@
       '<div class="settings-layout"><section class="card section-card"><div class="section-card-header"><div><h3>Pengaturan akun jurnal</h3><p>Mengubah saldo awal akan memengaruhi estimasi saldo dan kalkulator risiko.</p></div></div><form id="settings-form">' +
       '<div class="setting-row"><div><strong>Mata uang akun</strong><small>Digunakan saat menampilkan semua P/L. Ubah hanya jika seluruh nominal jurnal memakai mata uang yang sama.</small></div><select class="field-control" id="setting-currency" name="currency">' + CURRENCIES.map(function (currency) { return '<option value="' + currency + '"' + (settings.currency === currency ? " selected" : "") + '>' + currency + '</option>'; }).join("") + '</select></div>' +
       '<div class="setting-row"><div><strong>Saldo awal</strong><small>Saldo dasar sebelum P/L trade yang tercatat.</small></div><input class="field-control" type="number" id="setting-balance" name="startingBalance" min="0" step="any" required value="' + escapeHtml(settings.startingBalance) + '"></div>' +
+      '<div class="setting-row"><div><strong>Batas kerugian harian (%)</strong><small>Persentase dari estimasi saldo awal hari. Isi 0 untuk menonaktifkan peringatan batas rugi.</small></div><input class="field-control" type="number" id="setting-daily-loss-limit" name="dailyLossLimitPercent" min="0" max="100" step="0.1" required value="' + escapeHtml(settings.dailyLossLimitPercent) + '"></div>' +
+      '<div class="setting-row"><div><strong>Maksimal trade per hari</strong><small>Jumlah trade yang dicatat pada tanggal hari ini. Isi 0 untuk menonaktifkan batas jumlah.</small></div><input class="field-control" type="number" id="setting-max-trades-day" name="maxTradesPerDay" min="0" max="1000" step="1" required value="' + escapeHtml(settings.maxTradesPerDay) + '"></div>' +
       '<div style="display:flex;justify-content:flex-end;padding-top:17px"><button class="button button-primary" type="submit">Simpan pengaturan</button></div></form></section>' +
       '<section class="card section-card"><div class="section-card-header"><div><h3>Backup & pemulihan</h3><p>Jaga salinan jurnal agar data aman saat berganti perangkat.</p></div></div>' +
       '<div class="notice success" style="margin-bottom:16px"><strong>' + trades.length + ' trade tersimpan</strong><br>Data berada di localStorage browser ini. Jurnal tidak otomatis sinkron antarperangkat.</div>' +
@@ -1106,6 +1150,10 @@
     return '<div class="form-field' + full + '"><label class="form-label" for="trade-' + name + '">' + label + (required ? ' <span class="field-required">*</span>' : "") + '</label><input class="field-control" id="trade-' + name + '" name="' + name + '" type="' + type + '" value="' + escapeHtml(value == null ? "" : value) + '"' + placeholder + required + (type === "number" ? ' step="any"' : "") + '>' + help + '</div>';
   }
 
+  function checklistField(name, label, checklist) {
+    return '<label class="trade-checklist-item"><input type="checkbox" name="checklist_' + name + '"' + (checklist && checklist[name] ? " checked" : "") + '><span>' + escapeHtml(label) + '</span></label>';
+  }
+
   function openTradeModal(id) {
     editingId = id || null;
     const existing = id ? trades.find(function (trade) { return trade.id === id; }) : null;
@@ -1127,7 +1175,13 @@
       field("Nominal risiko manual", "riskAmount", "number", trade.riskAmount || "", { help: "Opsional; bila kosong dihitung dari jarak entry ke stop-loss." }) +
       field("Hasil bersih manual (opsional)", "manualNet", "number", trade.manualNet, { help: "Jika diisi, angka ini menggantikan P/L otomatis dan dianggap sudah bersih setelah biaya.", full: true }) +
       field("Catatan trade", "notes", "textarea", trade.notes, { full: true, placeholder: "Alasan entry, kondisi pasar, emosi, kesalahan, dan pelajaran..." }) +
-      '</div><div class="notice" style="margin-top:17px">Rumus P/L otomatis: (exit − entry) × ukuran × pengali kontrak × arah, dikurangi biaya. Posisi Short membalik arah perhitungan.</div></form>';
+      '<fieldset class="trade-checklist"><legend>Checklist disiplin sebelum entry</legend><p>Centang hanya jika poin ini benar-benar sudah diperiksa untuk trade ini.</p>' +
+      checklistField("setupValid", "Setup sesuai rencana dan ada alasan entry yang jelas", trade.checklist) +
+      checklistField("stopPlanned", "Stop-loss dan titik invalidasi sudah ditentukan", trade.checklist) +
+      checklistField("riskWithinLimit", "Nominal risiko sesuai batas yang direncanakan", trade.checklist) +
+      checklistField("newsChecked", "Berita dan jadwal ekonomi penting sudah diperiksa", trade.checklist) +
+      checklistField("emotionStable", "Kondisi emosi cukup tenang; bukan balas dendam / FOMO", trade.checklist) +
+      '</fieldset></div><div class="notice" style="margin-top:17px">Rumus P/L otomatis: (exit − entry) × ukuran × pengali kontrak × arah, dikurangi biaya. Posisi Short membalik arah perhitungan.</div></form>';
     $("#modal-root").innerHTML = '<div class="modal-backdrop" data-action="backdrop-close"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="trade-modal-title"><div class="modal-header"><div><h2 id="trade-modal-title">' + (existing ? "Edit trade" : "Catat trade baru") + '</h2><p>Isi detail agar hasil dan risiko dapat dihitung dengan konsisten.</p></div><button class="icon-button" data-action="close-modal" type="button" aria-label="Tutup">✕</button></div><div class="modal-body">' + form + '</div><div class="modal-footer"><span class="form-help">Field bertanda * wajib diisi.</span><div class="modal-footer-right"><button class="button button-secondary" type="button" data-action="close-modal">Batal</button><button class="button button-primary" type="submit" form="trade-form">Simpan trade</button></div></div></section></div>';
     const first = $("#trade-symbol");
     if (first) first.focus();
@@ -1166,7 +1220,14 @@
       fees: Math.max(0, numberOrNull(data.get("fees")) || 0),
       riskAmount: Math.max(0, numberOrNull(data.get("riskAmount")) || 0),
       manualNet: numberOrNull(data.get("manualNet")),
-      notes: String(data.get("notes") || "").trim()
+      notes: String(data.get("notes") || "").trim(),
+      checklist: {
+        setupValid: data.get("checklist_setupValid") === "on",
+        stopPlanned: data.get("checklist_stopPlanned") === "on",
+        riskWithinLimit: data.get("checklist_riskWithinLimit") === "on",
+        newsChecked: data.get("checklist_newsChecked") === "on",
+        emotionStable: data.get("checklist_emotionStable") === "on"
+      }
     };
     const normalized = normalizeTrade(raw);
     const wasEditing = Boolean(editingId);
@@ -1242,7 +1303,7 @@
     const reader = new FileReader();
     reader.onload = function () {
       const previousTrades = trades.slice();
-      const previousSettings = { currency: settings.currency, startingBalance: settings.startingBalance };
+      const previousSettings = Object.assign({}, settings);
       try {
         const parsed = JSON.parse(String(reader.result || ""));
         const incoming = Array.isArray(parsed) ? parsed : parsed.trades;
@@ -1256,6 +1317,8 @@
         if (parsed.settings && typeof parsed.settings === "object") {
           settings.currency = CURRENCIES.indexOf(parsed.settings.currency) >= 0 ? parsed.settings.currency : settings.currency;
           if (numberOrNull(parsed.settings.startingBalance) !== null) settings.startingBalance = Math.max(0, Number(parsed.settings.startingBalance));
+          if (numberOrNull(parsed.settings.dailyLossLimitPercent) !== null) settings.dailyLossLimitPercent = Math.max(0, Math.min(100, Number(parsed.settings.dailyLossLimitPercent)));
+          if (numberOrNull(parsed.settings.maxTradesPerDay) !== null) settings.maxTradesPerDay = Math.max(0, Math.min(1000, Math.floor(Number(parsed.settings.maxTradesPerDay))));
         }
         if (!saveData()) {
           trades = previousTrades;
@@ -1343,13 +1406,17 @@
       event.preventDefault();
       const currency = $("#setting-currency").value;
       const startingBalance = numberOrNull($("#setting-balance").value);
-      if (CURRENCIES.indexOf(currency) < 0 || startingBalance === null || startingBalance < 0) {
-        showToast("Periksa mata uang dan saldo awal.");
+      const dailyLossLimitPercent = numberOrNull($("#setting-daily-loss-limit").value);
+      const maxTradesPerDay = numberOrNull($("#setting-max-trades-day").value);
+      if (CURRENCIES.indexOf(currency) < 0 || startingBalance === null || startingBalance < 0 || dailyLossLimitPercent === null || dailyLossLimitPercent < 0 || dailyLossLimitPercent > 100 || maxTradesPerDay === null || maxTradesPerDay < 0 || maxTradesPerDay > 1000 || !Number.isInteger(maxTradesPerDay)) {
+        showToast("Periksa mata uang, saldo awal, batas rugi harian, dan jumlah maksimal trade.");
         return;
       }
-      const previousSettings = { currency: settings.currency, startingBalance: settings.startingBalance };
+      const previousSettings = Object.assign({}, settings);
       settings.currency = currency;
       settings.startingBalance = startingBalance;
+      settings.dailyLossLimitPercent = dailyLossLimitPercent;
+      settings.maxTradesPerDay = maxTradesPerDay;
       if (!saveData()) {
         settings = previousSettings;
         return;
