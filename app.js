@@ -267,8 +267,9 @@
   }
 
   function tradingViewChartUrl(symbol, interval) {
+    const chartInterval = String(interval || "15") === "D" ? "1D" : String(interval || "15");
     return "https://s.tradingview.com/widgetembed/?frameElementId=tradelog_mt5_chart&symbol=" + encodeURIComponent(symbol) +
-      "&interval=" + encodeURIComponent(interval || "15") + "&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=%23f1f3f6&studies=%5B%5D&theme=light&style=1&timezone=Asia%2FJakarta&withdateranges=1&hide_side_toolbar=0&allow_symbol_change=1&details=1&hotlist=1&calendar=0";
+      "&interval=" + encodeURIComponent(chartInterval) + "&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=%23f1f3f6&studies=%5B%5D&theme=light&style=1&timezone=Asia%2FJakarta&withdateranges=1&hide_side_toolbar=0&allow_symbol_change=1&details=1&hotlist=1&calendar=0";
   }
 
   function tradingViewAnalysisInterval(value) {
