@@ -8,6 +8,8 @@ TradeLog adalah jurnal trading pribadi berbasis HTML, CSS, dan JavaScript murni.
 - Catat, edit, hapus, cari, dan filter riwayat trade.
 - Dukung posisi Long/Short, beberapa kelas aset, strategi, entry/exit, stop-loss, ukuran posisi, pengali kontrak, biaya, risiko, dan hasil bersih manual.
 - Analisis performa bulanan dan berdasarkan strategi.
+- Expectancy (rata-rata P/L per trade), rata-rata profit/loss, dan maximum drawdown dari puncak saldo.
+- Performa berdasarkan hari dalam minggu dengan penanda sampel kecil agar pola dari sedikit trade tidak dianggap kesimpulan.
 - Kalkulator risiko untuk memperkirakan nominal risiko dan ukuran posisi.
 - Ekspor CSV serta backup/restore JSON.
 - Tampilan responsif untuk desktop dan ponsel.
@@ -26,6 +28,7 @@ TradeLog adalah jurnal trading pribadi berbasis HTML, CSS, dan JavaScript murni.
 
 - Data jurnal disimpan pada browser dan perangkat yang sedang digunakan, bukan disinkronkan ke akun atau server. Menghapus data situs/browser dapat menghapus jurnal; ekspor backup secara berkala.
 - P/L otomatis dihitung sebagai (exit - entry) × ukuran × pengali kontrak × arah - biaya. Untuk posisi Short arah dibalik. Sesuaikan pengali kontrak dengan spesifikasi instrumen dan mata uang akun; hasil otomatis tidak menggantikan rekonsiliasi dengan laporan broker.
+- Expectancy adalah rata-rata P/L bersih per trade tertutup pada jurnal. Maximum drawdown mengukur penurunan saldo terbesar dari puncak ekuitas historis berdasarkan tanggal trade yang dicatat; keduanya bersifat deskriptif, bukan prediksi. Analisis hari menggunakan tanggal trade, bukan jam entry atau zona waktu broker. Pola dengan sampel kecil jangan diperlakukan sebagai keunggulan yang terbukti.
 - Risiko otomatis dihitung dari |entry - stop-loss| × ukuran × pengali kontrak, kecuali nominal risiko diisi manual. Perhitungan ini merupakan estimasi dan belum memperhitungkan slippage, funding, konversi mata uang, atau aturan margin broker.
 - Aplikasi ini merupakan alat pencatatan dan edukasi, bukan rekomendasi transaksi atau nasihat keuangan.
 - File CNAME dipertahankan untuk domain lightjurnal.my.id. Pastikan konfigurasi GitHub Pages/DNS di akun pemilik tetap sesuai setelah perubahan situs.
