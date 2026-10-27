@@ -211,3 +211,25 @@ tbody tr:hover{background:#f6fbf9}
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
 }
+
+
+/* Trading discipline checklist and daily risk guardrails */
+.trade-checklist{grid-column:1/-1;min-width:0;margin:4px 0 0;padding:15px;border:1px solid #dce5ef;border-radius:12px;background:#f8fafc}
+.trade-checklist legend{padding:0 7px;color:#24354b;font-size:13px;font-weight:750}
+.trade-checklist>p{margin:0 0 11px;color:#748196;font-size:11px;line-height:1.5}
+.trade-checklist-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;color:#34445a;font-size:12px;line-height:1.5;cursor:pointer}
+.trade-checklist-item+.trade-checklist-item{border-top:1px solid #e7edf3}
+.trade-checklist-item input{width:17px;height:17px;flex:0 0 17px;margin:1px 0 0;accent-color:#168b68}
+.daily-risk-card{margin:0 0 18px;padding:19px 21px;border:1px solid #d6e9df;border-radius:14px;background:linear-gradient(135deg,#f6fbf8,#fff);color:#24364b}
+.daily-risk-card.warning{border-color:#f0d6a9;background:linear-gradient(135deg,#fff9ed,#fff)}
+.daily-risk-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.daily-risk-heading .eyebrow{margin:0 0 5px;color:#75849a;font-size:9px;font-weight:800;letter-spacing:.11em}
+.daily-risk-heading h3{margin:0;color:#24364b;font-size:16px;letter-spacing:-.25px}
+.daily-risk-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:16px 0 12px}
+.daily-risk-metrics>div{min-width:0;padding:12px;border:1px solid rgba(213,224,234,.8);border-radius:10px;background:rgba(255,255,255,.78)}
+.daily-risk-metrics small{display:block;margin-bottom:6px;color:#718097;font-size:10px;line-height:1.4}
+.daily-risk-metrics strong{display:block;overflow-wrap:anywhere;color:#26384e;font-size:15px;font-variant-numeric:tabular-nums}
+.daily-risk-card>p{margin:8px 0 0;color:#66768b;font-size:11px;line-height:1.6}
+.daily-risk-card .daily-risk-message{color:#34465b;font-weight:650}
+.daily-risk-card .daily-risk-footnote{color:#8490a1;font-size:10px}
+@media(max-width:620px){.daily-risk-card{padding:15px}.daily-risk-heading{align-items:flex-start}.daily-risk-heading h3{font-size:14px}.daily-risk-metrics{grid-template-columns:1fr;gap:8px;margin:13px 0}.daily-risk-metrics>div{padding:10px}.daily-risk-metrics strong{font-size:14px}}
