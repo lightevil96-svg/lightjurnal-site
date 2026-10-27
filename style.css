@@ -12,3 +12,24 @@
 @media(max-width:940px){.sidebar{transform:translateX(-100%);transition:transform .2s ease;box-shadow:15px 0 40px rgba(13,25,44,.15)}body.sidebar-open .sidebar{transform:translateX(0)}.sidebar-scrim{display:none;position:fixed;z-index:25;inset:0;background:rgba(11,20,35,.42)}body.sidebar-open .sidebar-scrim{display:block}.main-shell{margin-left:0}.menu-toggle{display:grid;flex-shrink:0}.topbar{gap:13px}.topbar-heading{margin-right:auto}.dashboard-grid,.risk-layout,.settings-layout{grid-template-columns:1fr}.winrate-layout{max-width:430px}.sidebar-bottom{margin-top:auto}}
 @media(max-width:620px){.topbar{height:78px;padding:0 15px;gap:10px}.topbar-heading .eyebrow{font-size:8px}.topbar-heading h1{font-size:19px}.topbar-actions{gap:7px}.today-chip{display:none}.topbar-actions .button{padding:10px 11px;font-size:11px}.button-plus{display:none}#page-content{padding:20px 14px 17px}.app-footer{margin:0 14px;font-size:9px}.page-intro{align-items:flex-start;flex-direction:column}.page-intro .button{align-self:stretch}.metric-grid{gap:10px}.metric-card{padding:14px 13px}.metric-value{font-size:21px;margin-top:12px}.metric-top{font-size:10px}.metric-icon{width:28px;height:28px}.metric-caption{font-size:9px}.dashboard-grid{gap:12px}.card-header{padding:17px 16px 0}.card-body{padding:15px 16px 17px}.chart-wrap{padding:10px 8px}.equity-svg{height:190px}.insight-stack{padding:16px}.table-toolbar{padding:13px;gap:8px}.search-field{max-width:none;flex-basis:100%}.table-toolbar .field-control{flex:1;min-width:0}.table-footer{padding:12px}.form-grid,.risk-form-grid{grid-template-columns:1fr}.form-field.full{grid-column:auto}.section-card{padding:17px}.setting-row{grid-template-columns:1fr;gap:9px}.setting-row .field-control{width:100%}.modal-backdrop{padding:8px;align-items:flex-end}.modal{max-height:94vh;border-radius:17px 17px 10px 10px}.modal-header,.modal-body{padding:18px}.modal-footer{padding:13px 18px}.bar-row{grid-template-columns:70px 1fr 68px;gap:8px}.risk-result-panel{padding:20px}.toast-root{right:10px;bottom:10px}.nav-count{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* MT5 Live dashboard */
+.mt5-warning{padding:15px 18px;border:1px solid #f1dba9;background:#fff9eb;border-radius:12px;margin:0 0 17px;color:#73531a}
+.mt5-warning strong{font-size:12px}.mt5-warning p{font-size:11px;line-height:1.65;margin:5px 0 0}
+.mt5-connection-card,.mt5-chart-card,.mt5-positions-card{margin-bottom:18px;overflow:hidden}
+.mt5-connection-form{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(180px,1fr) auto auto;gap:12px;align-items:end;padding:20px 22px 10px}
+.mt5-connection-form label,.mt5-symbol-label{display:flex;flex-direction:column;gap:7px;font-size:11px;color:#68758a;font-weight:700;min-width:0}
+.mt5-connection-form input,.mt5-symbol-label select{width:100%;min-width:0;border:1px solid #dfe5ee;border-radius:9px;padding:10px 11px;background:#fff;color:#24334b;font-size:12px}
+.mt5-help{font-size:10px;color:#8b96a7;margin:0;padding:0 22px 18px;line-height:1.6}
+.mt5-state-card{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;padding:26px 20px;margin-bottom:18px;background:#fff;border:1px dashed #dbe2ec;border-radius:14px;color:#758196}
+.mt5-state-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#f2f5fa;color:#667b99;font-size:21px}
+.mt5-state-card strong{font-size:13px;color:#43516a}.mt5-state-card p{max-width:520px;margin:0;font-size:11px;line-height:1.6}.mt5-state-card small{font-size:10px}
+.mt5-metric-grid{margin:18px 0 10px}
+.mt5-account-meta{display:flex;flex-wrap:wrap;gap:9px 22px;margin:0 0 18px;padding:14px 17px;background:#fff;border:1px solid #e7ecf3;border-radius:12px;font-size:11px;color:#8490a1}
+.mt5-account-meta strong{color:#3c4b62;font-weight:700}
+.mt5-symbol-label{width:155px}
+.mt5-chart-frame{height:560px;background:#f5f7fb;border-top:1px solid #edf0f5}
+.mt5-chart-frame iframe{display:block;width:100%;height:100%;border:0}
+.mt5-empty-positions{padding:24px;text-align:center;font-size:11px;color:#929daf}
+@media(max-width:1050px){.mt5-connection-form{grid-template-columns:1fr 1fr}.mt5-connection-form button{min-height:40px}}
+@media(max-width:700px){.mt5-connection-form{grid-template-columns:1fr;padding:16px}.mt5-chart-card .card-header{flex-direction:column}.mt5-symbol-label{width:100%}.mt5-chart-frame{height:430px}.mt5-account-meta{margin-left:12px;margin-right:12px}.mt5-warning{padding:13px}}
