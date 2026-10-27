@@ -50,3 +50,15 @@
 .mt5-scenario{display:flex;flex-direction:column;gap:7px;padding:14px 15px;border-radius:11px;background:#f7f9fc;border:1px solid #e9edf3;font-size:11px;color:#657287}.mt5-scenario strong{color:#2b3950;font-size:12px}
 .mt5-analysis-disclaimer{font-size:10px;line-height:1.7;color:#8995a6;margin:13px 0 0}
 @media(max-width:700px){.mt5-ai-analysis-body{padding:14px}.mt5-ai-analysis-intro{align-items:stretch;flex-direction:column}.mt5-ai-analysis-intro .button{width:100%}.mt5-analysis-summary{flex-direction:column}.mt5-current-price{text-align:left;min-width:0}.mt5-analysis-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.mt5-analysis-summary h4{font-size:18px}}
+
+
+/* ChatGPT-ready trading prompt builder */
+.mt5-prompt-card{margin-bottom:18px;overflow:hidden}.mt5-prompt-body{padding:18px 22px 22px}
+.mt5-prompt-style-label{display:block;font-size:11px;font-weight:750;color:#526078;margin:0 0 8px}
+.mt5-prompt-select{width:100%;max-width:440px;min-height:42px;padding:10px 12px;border:1px solid #dfe5ee;border-radius:9px;background:#fff;color:#24334b;font-size:12px}
+.mt5-prompt-help,.mt5-prompt-footnote{font-size:10px;color:#8591a3;line-height:1.7;margin:10px 0 14px}
+.mt5-prompt-actions{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}
+.mt5-prompt-status{font-size:11px;color:#64738a;background:#f5f8fc;border:1px solid #e7edf5;border-radius:9px;padding:12px 14px;margin-bottom:16px;line-height:1.6}
+.mt5-prompt-output{display:block;width:100%;min-height:260px;resize:vertical;padding:14px;border:1px solid #dfe5ee;border-radius:10px;background:#fbfcfe;color:#334158;font:11px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+.mt5-prompt-output:focus{outline:none;border-color:#91aaf2;box-shadow:0 0 0 3px rgba(82,121,232,.08)}
+@media(max-width:700px){.mt5-prompt-body{padding:14px}.mt5-prompt-select{max-width:none}.mt5-prompt-actions{flex-direction:column}.mt5-prompt-actions .button{width:100%}.mt5-prompt-output{min-height:300px;font-size:10px}}
