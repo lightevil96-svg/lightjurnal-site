@@ -248,7 +248,7 @@
       endpoint = (window.localStorage.getItem("tradelog.mt5.endpoint") || endpoint).trim();
       apiKey = window.sessionStorage.getItem("tradelog.mt5.key") || "";
     } catch (error) {}
-    return { endpoint: endpoint.replace(/\\/+$/, ""), apiKey: apiKey };
+    return { endpoint: endpoint.replace(/\/+$/, ""), apiKey: apiKey };
   }
 
   function renderMT5() {
@@ -285,7 +285,7 @@
       return;
     }
     try {
-      const endpoint = config.endpoint.replace(/\\/+$/, "");
+      const endpoint = config.endpoint.replace(/\/+$/, "");
       const parsedEndpoint = new URL(endpoint);
       const isLocal = parsedEndpoint.hostname === "localhost" || parsedEndpoint.hostname === "127.0.0.1";
       if (parsedEndpoint.protocol !== "https:" && !isLocal) {
@@ -352,7 +352,7 @@
     const endpointInput = $("#mt5-endpoint");
     const keyInput = $("#mt5-api-key");
     if (!endpointInput || !keyInput) return false;
-    const endpoint = endpointInput.value.trim().replace(/\\/+$/, "");
+    const endpoint = endpointInput.value.trim().replace(/\/+$/, "");
     const key = keyInput.value.trim();
     if (!endpoint || !key) {
       showToast("Isi URL API bridge dan API key. Password MT5 tidak diperlukan.");
