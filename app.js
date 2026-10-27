@@ -263,7 +263,7 @@
       '<section class="card mt5-chart-card"><div class="card-header"><div><h3 class="section-title">Chart pasar</h3><p class="section-subtitle">Chart TradingView. Harga bisa berbeda dari feed broker HFM.</p></div><div class="mt5-chart-controls"><label class="mt5-symbol-label">Instrumen<select id="mt5-symbol"><option value="OANDA:XAUUSD" selected>Gold / XAUUSD</option><option value="FX:EURUSD">EUR/USD</option><option value="FX:GBPUSD">GBP/USD</option><option value="FX:USDJPY">USD/JPY</option><option value="BINANCE:BTCUSDT">BTC/USDT</option><option value="NASDAQ:NDX">Nasdaq 100</option></select></label><label class="mt5-symbol-label">Timeframe<select id="mt5-interval"><option value="5">M5</option><option value="15" selected>M15</option><option value="60">H1</option><option value="240">H4</option><option value="D">D1</option></select></label></div></div><div class="mt5-chart-frame"><iframe id="mt5-chart-frame" title="Chart XAUUSD TradingView" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen src="' + tradingViewChartUrl(symbol, "15") + '"></iframe></div></section>' +
       '<section class="card mt5-analysis-card"><div class="card-header"><div><h3 class="section-title">Analisis teknikal otomatis</h3><p class="section-subtitle">Ringkasan indikator TradingView untuk instrumen dan timeframe terpilih.</p></div><span class="pill blue">OTOMATIS</span></div><div class="mt5-analysis-note">Widget ini merangkum indikator teknikal dari TradingView, bukan analisis AI ChatGPT atau sinyal dari server HFM. Gunakan bersama struktur harga dan manajemen risiko.</div><div id="mt5-technical-analysis" class="mt5-technical-analysis"><div class="mt5-state-card"><strong>Memuat ringkasan indikator…</strong><p>Menunggu widget TradingView.</p></div></div><div class="mt5-analysis-footer"><span id="mt5-analysis-label">OANDA:XAUUSD · M15</span><span>Data pihak ketiga; bisa tertunda atau berbeda dari HFM.</span></div></section>' +
       '<section class="card mt5-ai-analysis-card"><div class="card-header"><div><h3 class="section-title">Analisis XAUUSD</h3><p class="section-subtitle">Baca tren, momentum, volatilitas, dan level teknikal dari candle terbaru.</p></div><span class="pill blue">LIVE DATA</span></div><div class="mt5-ai-analysis-body"><div class="mt5-ai-analysis-intro"><p>Analisis otomatis berbasis indikator teknikal, bukan AI ChatGPT. Feed yang digunakan adalah futures emas GC=F sebagai proksi, sehingga harga dapat berbeda dari XAUUSD di broker HFM.</p><button class="button button-primary" data-action="mt5-run-analysis" id="mt5-run-analysis">↗ Analisis sekarang</button></div><div id="mt5-analysis-result" aria-live="polite"><div class="mt5-state-card"><strong>Siap menganalisis</strong><p>Tekan tombol untuk mengambil candle terbaru dan menghitung indikator.</p></div></div></div></section>' +
-      '<section class="card mt5-prompt-card"><div class="card-header"><div><h3 class="section-title">Prompt Analisis Trading untuk ChatGPT</h3><p class="section-subtitle">Pilih gaya analisis, ambil snapshot pasar, lalu salin prompt siap tempel ke ChatGPT.</p></div><span class="pill blue">PROMPT BUILDER</span></div><div class="mt5-prompt-body"><label class="mt5-prompt-style-label" for="mt5-prompt-style">Gaya analisis</label><select id="mt5-prompt-style" class="mt5-prompt-select"><option value="scalping">Scalping (M5 / M15)</option><option value="intraday" selected>Intraday / Day Trading (M15 / H1)</option><option value="swing">Swing Trading (H4 / D1)</option><option value="price-action">Price Action & Struktur Pasar</option><option value="risk">Risk Management & Rencana Trading</option><option value="multi-timeframe">Multi-timeframe (M1 / M5 / M15 / M30 / H1 / H4 / D1 / W1)</option></select><p class="mt5-prompt-help">Prompt meminta konfirmasi top-down pada M1, M5, M15, M30, H1, H4, D1, dan W1, ditambah DXY, yield AS, berita, kalender ekonomi, dan pembanding harga bila sumber tersedia. Timeframe yang datanya tidak tersedia wajib ditandai belum terverifikasi—bukan ditebak. GPT dilarang mengarang data atau meminta kamu menjawab pertanyaan klarifikasi lagi.</p><div class="mt5-prompt-actions"><button class="button button-primary" data-action="mt5-generate-prompt" id="mt5-generate-prompt">Buat prompt dari data terbaru</button><button class="button button-secondary" data-action="mt5-copy-prompt" id="mt5-copy-prompt" disabled>Salin prompt</button></div><div id="mt5-prompt-status" class="mt5-prompt-status" aria-live="polite">Belum ada prompt. Tekan “Buat prompt dari data terbaru”.</div><label class="mt5-prompt-style-label" for="mt5-prompt-output">Prompt siap ditempel ke ChatGPT</label><textarea id="mt5-prompt-output" class="mt5-prompt-output" rows="15" placeholder="Prompt akan muncul di sini setelah data pasar berhasil diambil. Kamu bisa meninjau dan mengeditnya sebelum menyalin." spellcheck="false"></textarea><p class="mt5-prompt-footnote">Catatan: prompt ini meminta ChatGPT menganalisis snapshot yang disediakan. Ia tidak menjamin prediksi benar; data yang tidak tersedia tidak akan dikarang. Periksa ulang harga dan spread di platform broker sebelum mengambil keputusan.</p></div></section>' +
+      '<section class="card mt5-prompt-card"><div class="card-header"><div><h3 class="section-title">Prompt Analisis Trading untuk ChatGPT</h3><p class="section-subtitle">Pilih gaya analisis, ambil snapshot pasar, lalu salin prompt siap tempel ke ChatGPT.</p></div><span class="pill blue">PROMPT BUILDER</span></div><div class="mt5-prompt-body"><label class="mt5-prompt-style-label" for="mt5-prompt-style">Gaya analisis</label><select id="mt5-prompt-style" class="mt5-prompt-select"><option value="scalping">Scalping (M5 / M15)</option><option value="intraday" selected>Intraday / Day Trading (M15 / H1)</option><option value="swing">Swing Trading (H4 / D1)</option><option value="price-action">Price Action & Struktur Pasar</option><option value="risk">Risk Management & Rencana Trading</option><option value="multi-timeframe">Multi-timeframe (M1 / M5 / M15 / M30 / H1 / H4 / D1 / W1)</option></select><p class="mt5-prompt-help">Generator mengambil candle tertutup untuk M1, M5, M15, M30, H1, D1, W1 dan membentuk H4 dari H1, lalu menghitung metrik per timeframe sebelum menyusun prompt. Timeframe yang gagal diambil ditandai belum terverifikasi—bukan ditebak. GPT diminta membandingkan semua timeframe dan konteks eksternal tanpa mengarang data.</p><div class="mt5-prompt-actions"><button class="button button-primary" data-action="mt5-generate-prompt" id="mt5-generate-prompt">Buat prompt dari data terbaru</button><button class="button button-secondary" data-action="mt5-copy-prompt" id="mt5-copy-prompt" disabled>Salin prompt</button></div><div id="mt5-prompt-status" class="mt5-prompt-status" aria-live="polite">Belum ada prompt. Tekan “Buat prompt dari data terbaru”.</div><label class="mt5-prompt-style-label" for="mt5-prompt-output">Prompt siap ditempel ke ChatGPT</label><textarea id="mt5-prompt-output" class="mt5-prompt-output" rows="15" placeholder="Prompt akan muncul di sini setelah data pasar berhasil diambil. Kamu bisa meninjau dan mengeditnya sebelum menyalin." spellcheck="false"></textarea><p class="mt5-prompt-footnote">Catatan: prompt ini meminta ChatGPT menganalisis snapshot yang disediakan. Ia tidak menjamin prediksi benar; data yang tidak tersedia tidak akan dikarang. Periksa ulang harga dan spread di platform broker sebelum mengambil keputusan.</p></div></section>' +
       '<section class="card mt5-positions-card"><div class="card-header"><div><h3 class="section-title">Posisi terbuka</h3><p class="section-subtitle">Diambil dari snapshot akun MT5 saat bridge tersedia.</p></div><span class="pill gray" id="mt5-position-count">0 posisi</span></div><div id="mt5-positions-list"><div class="mt5-empty-positions">Belum ada data posisi.</div></div></section>';
     mountTradingViewTechnicalAnalysis(symbol, "15");
   }
@@ -411,90 +411,239 @@
     return configs[style] || configs.intraday;
   }
 
+  async function fetchPromptTimeframeBars(interval, range) {
+    const endpoint = "https://query1.finance.yahoo.com/v8/finance/chart/GC%3DF?range=" +
+      encodeURIComponent(range) + "&interval=" + encodeURIComponent(interval);
+    let data;
+    try {
+      const response = await fetch(endpoint, { cache: "no-store" });
+      if (!response.ok) throw new Error("Sumber langsung HTTP " + response.status);
+      data = await response.json();
+    } catch (directError) {
+      const proxy = await fetch("https://proxy.cors.dev/" + endpoint, { cache: "no-store" });
+      if (!proxy.ok) throw new Error("Sumber langsung dan proxy gagal (HTTP " + proxy.status + ")");
+      data = await proxy.json();
+    }
+    const result = data && data.chart && data.chart.result && data.chart.result[0];
+    const quote = result && result.indicators && result.indicators.quote && result.indicators.quote[0];
+    const timestamps = result && result.timestamp || [];
+    if (!quote || !Array.isArray(quote.close)) throw new Error("Data OHLC tidak tersedia");
+    return timestamps.map(function (timestamp, i) {
+      return { time: timestamp, open: quote.open && quote.open[i], high: quote.high && quote.high[i],
+        low: quote.low && quote.low[i], close: quote.close[i], volume: quote.volume && quote.volume[i] };
+    }).filter(function (bar) {
+      return Number.isFinite(bar.time) && Number.isFinite(bar.open) && Number.isFinite(bar.high) &&
+        Number.isFinite(bar.low) && Number.isFinite(bar.close);
+    }).sort(function (a, b) { return a.time - b.time; });
+  }
+
+  function onlyClosedPromptBars(bars, seconds, nowMs) {
+    return (bars || []).filter(function (bar) {
+      return Number.isFinite(bar.time) && (bar.time * 1000 + seconds * 1000) <= nowMs;
+    });
+  }
+
+  function aggregatePromptH4(hourlyBars) {
+    const groups = new Map();
+    (hourlyBars || []).forEach(function (bar) {
+      const bucket = Math.floor(bar.time / 14400) * 14400;
+      if (!groups.has(bucket)) groups.set(bucket, []);
+      groups.get(bucket).push(bar);
+    });
+    const output = [];
+    groups.forEach(function (group, bucket) {
+      group.sort(function (a, b) { return a.time - b.time; });
+      if (group.length !== 4) return;
+      for (let i = 0; i < 4; i++) {
+        if (Math.floor(group[i].time / 3600) !== Math.floor(bucket / 3600) + i) return;
+      }
+      output.push({
+        time: bucket, open: group[0].open,
+        high: Math.max.apply(null, group.map(function (bar) { return bar.high; })),
+        low: Math.min.apply(null, group.map(function (bar) { return bar.low; })),
+        close: group[3].close,
+        volume: group.every(function (bar) { return Number.isFinite(bar.volume); })
+          ? group.reduce(function (sum, bar) { return sum + bar.volume; }, 0) : null
+      });
+    });
+    return output.sort(function (a, b) { return a.time - b.time; });
+  }
+
+  function promptTimeframeMetrics(bars) {
+    if (!bars || bars.length < 22) return null;
+    const closes = bars.map(function (bar) { return bar.close; });
+    const e9 = emaSeries(closes, 9), e21 = emaSeries(closes, 21);
+    const e12 = emaSeries(closes, 12), e26 = emaSeries(closes, 26);
+    const macd = e12.map(function (value, i) { return value - e26[i]; });
+    const signal = emaSeries(macd, 9);
+    const ranges = [];
+    for (let i = 1; i < bars.length; i++) {
+      ranges.push(Math.max(bars[i].high - bars[i].low,
+        Math.abs(bars[i].high - bars[i - 1].close),
+        Math.abs(bars[i].low - bars[i - 1].close)));
+    }
+    const recent = bars.slice(-20);
+    const last = bars[bars.length - 1];
+    let bias = "campuran / sideways";
+    if (last.close > e9[e9.length - 1] && e9[e9.length - 1] > e21[e21.length - 1] &&
+        macd[macd.length - 1] >= signal[signal.length - 1]) bias = "bullish";
+    else if (last.close < e9[e9.length - 1] && e9[e9.length - 1] < e21[e21.length - 1] &&
+        macd[macd.length - 1] < signal[signal.length - 1]) bias = "bearish";
+    return {
+      last: last,
+      ema9: e9[e9.length - 1],
+      ema21: e21[e21.length - 1],
+      rsi: calculateRSI(closes, 14),
+      macdRelation: macd[macd.length - 1] >= signal[signal.length - 1] ? "di atas sinyal" : "di bawah sinyal",
+      atr: ranges.length ? ranges.slice(-14).reduce(function (sum, value) { return sum + value; }, 0) / Math.min(14, ranges.length) : null,
+      support: Math.min.apply(null, recent.map(function (bar) { return bar.low; })),
+      resistance: Math.max.apply(null, recent.map(function (bar) { return bar.high; })),
+      bias: bias
+    };
+  }
+
+  function promptTimeframeTimestamp(timestamp) {
+    return new Date(timestamp * 1000).toLocaleString("id-ID", {
+      timeZone: "Asia/Jakarta", dateStyle: "medium", timeStyle: "short"
+    }) + " WIB";
+  }
+
+  function promptTimeframeSummary(label, bars, sourceNote, fetchError) {
+    if (fetchError) return "- " + label + ": DATA TIDAK TERSEDIA; pengambilan gagal (" + fetchError + "). Jangan simpulkan bias timeframe ini.";
+    if (!bars || bars.length < 22) return "- " + label + ": DATA TIDAK CUKUP (" + (bars ? bars.length : 0) +
+      " candle tertutup); bias/indikator tidak dapat dikonfirmasi. Sumber: GC=F Yahoo Finance; " + sourceNote + ".";
+    const m = promptTimeframeMetrics(bars);
+    if (!m) return "- " + label + ": data tidak cukup untuk menghitung indikator.";
+    return "- " + label + " | bias teknikal awal: " + m.bias + " | candle tertutup: " + bars.length +
+      " | candle terakhir: " + promptTimeframeTimestamp(m.last.time) + " | close " + formatGoldPrice(m.last.close) +
+      " | EMA9 " + formatGoldPrice(m.ema9) + " | EMA21 " + formatGoldPrice(m.ema21) +
+      " | RSI14 " + (m.rsi === null ? "tidak tersedia" : m.rsi.toFixed(2)) +
+      " | MACD " + m.macdRelation + " | ATR14 " + (m.atr === null ? "tidak tersedia" : formatGoldPrice(m.atr)) +
+      " | support 20 candle " + formatGoldPrice(m.support) + " | resistance 20 candle " + formatGoldPrice(m.resistance) +
+      " | sumber: GC=F Yahoo Finance; " + sourceNote + ".";
+  }
+
   async function generateMT5Prompt(button) {
     const output = $("#mt5-prompt-output"), status = $("#mt5-prompt-status"), copyButton = $("#mt5-copy-prompt");
     const style = ($("#mt5-prompt-style") || {}).value || "intraday";
     const config = promptStrategyConfig(style);
     if (!output || !status) return;
-    if (button) { button.disabled = true; button.textContent = "Mengambil data pasar…"; }
+    if (button) { button.disabled = true; button.textContent = "Mengambil 8 timeframe…"; }
     if (copyButton) copyButton.disabled = true;
-    status.textContent = "Mengambil candle terbaru dan menghitung indikator. Tunggu sebentar…";
+    status.textContent = "Mengambil candle M1, M5, M15, M30, H1, D1, W1; H4 dihitung dari H1. Data yang gagal akan ditandai.";
     try {
-      const endpoint = "https://query1.finance.yahoo.com/v8/finance/chart/GC%3DF?range=" + encodeURIComponent(config.range) + "&interval=" + encodeURIComponent(config.interval);
-      let data;
-      try {
-        const response = await fetch(endpoint, { cache: "no-store" });
-        if (!response.ok) throw new Error("Sumber langsung tidak tersedia");
-        data = await response.json();
-        if (!data || !data.chart || !data.chart.result) throw new Error("Format sumber langsung tidak sesuai");
-      } catch (directError) {
-        const proxy = await fetch("https://proxy.cors.dev/" + endpoint, { cache: "no-store" });
-        if (!proxy.ok) throw new Error("Sumber harga tidak merespons (HTTP " + proxy.status + ")");
-        data = await proxy.json();
+      const nowMs = Date.now();
+      const specs = [
+        { key: "M1", interval: "1m", range: "5d", seconds: 60, note: "interval Yahoo 1m" },
+        { key: "M5", interval: "5m", range: "5d", seconds: 300, note: "interval Yahoo 5m" },
+        { key: "M15", interval: "15m", range: "1mo", seconds: 900, note: "interval Yahoo 15m" },
+        { key: "M30", interval: "30m", range: "1mo", seconds: 1800, note: "interval Yahoo 30m" },
+        { key: "H1", interval: "60m", range: "3mo", seconds: 3600, note: "interval Yahoo 60m" },
+        { key: "D1", interval: "1d", range: "1y", seconds: 86400, note: "interval Yahoo 1d" },
+        { key: "W1", interval: "1wk", range: "5y", seconds: 604800, note: "interval Yahoo 1wk" }
+      ];
+      const fetched = await Promise.all(specs.map(async function (spec) {
+        try {
+          const raw = await fetchPromptTimeframeBars(spec.interval, spec.range);
+          return { spec: spec, bars: onlyClosedPromptBars(raw, spec.seconds, nowMs), error: null };
+        } catch (error) {
+          return { spec: spec, bars: [], error: error && error.message ? error.message : "kesalahan sumber data" };
+        }
+      }));
+      const byKey = {};
+      fetched.forEach(function (item) { byKey[item.spec.key] = item; });
+      const hourly = byKey.H1 && byKey.H1.bars || [];
+      const h4Raw = aggregatePromptH4(hourly);
+      byKey.H4 = {
+        spec: { key: "H4", note: "diagregasi dari empat candle H1 tertutup dalam bucket UTC 4 jam; bukan candle H4 asli broker" },
+        bars: onlyClosedPromptBars(h4Raw, 14400, nowMs),
+        error: byKey.H1 && byKey.H1.error ? "tidak dapat dibuat karena data H1 gagal" : null
+      };
+      const timeframeOrder = ["M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1"];
+      const available = timeframeOrder.filter(function (key) {
+        return byKey[key] && byKey[key].bars && byKey[key].bars.length >= 22 && !byKey[key].error;
+      });
+      if (!available.length) throw new Error("Tidak ada timeframe dengan minimal 22 candle tertutup yang berhasil diambil.");
+      const configMap = { "1m": "M1", "5m": "M5", "15m": "M15", "30m": "M30", "60m": "H1", "1h": "H1", "1d": "D1", "1wk": "W1" };
+      let snapshotKey = configMap[String(config.interval).toLowerCase()] || "M15";
+      let snapshotFallback = "";
+      if (!available.includes(snapshotKey)) {
+        const preferred = style === "scalping" ? ["M5", "M15", "M1", "M30", "H1", "H4", "D1", "W1"] :
+          style === "swing" ? ["D1", "H4", "H1", "W1", "M15", "M5", "M1", "M30"] :
+          ["M15", "H1", "H4", "M5", "M30", "D1", "W1", "M1"];
+        snapshotKey = preferred.find(function (key) { return available.includes(key); }) || available[0];
+        snapshotFallback = "PERHATIAN: timeframe utama yang dipilih oleh gaya analisis tidak tersedia/kurang data; snapshot utama dialihkan ke " + snapshotKey + ".";
       }
-      const result = data && data.chart && data.chart.result && data.chart.result[0];
-      const quote = result && result.indicators && result.indicators.quote && result.indicators.quote[0];
-      const timestamps = result && result.timestamp || [];
-      if (!quote || !quote.close) throw new Error("Data candle tidak lengkap.");
-      const bars = timestamps.map(function (timestamp, i) {
-        return { time: timestamp, open: quote.open && quote.open[i], high: quote.high && quote.high[i], low: quote.low && quote.low[i], close: quote.close[i], volume: quote.volume && quote.volume[i] };
-      }).filter(function (bar) { return Number.isFinite(bar.open) && Number.isFinite(bar.high) && Number.isFinite(bar.low) && Number.isFinite(bar.close); });
-      if (bars.length < 30) throw new Error("Candle yang tersedia belum cukup untuk membuat prompt.");
-      const closes = bars.map(function (bar) { return bar.close; }), last = bars[bars.length - 1];
-      const ema9 = emaSeries(closes, 9), ema21 = emaSeries(closes, 21), ema12 = emaSeries(closes, 12), ema26 = emaSeries(closes, 26);
-      const macd = ema12.map(function (v, i) { return v - ema26[i]; }), signal = emaSeries(macd, 9), rsi = calculateRSI(closes, 14);
-      const ranges = [];
-      for (let i = 1; i < bars.length; i++) ranges.push(Math.max(bars[i].high - bars[i].low, Math.abs(bars[i].high - bars[i - 1].close), Math.abs(bars[i].low - bars[i - 1].close)));
-      const atr = ranges.slice(-14).reduce(function (sum, v) { return sum + v; }, 0) / Math.min(14, ranges.length);
-      const recent = bars.slice(-20), support = Math.min.apply(null, recent.map(function (bar) { return bar.low; })), resistance = Math.max.apply(null, recent.map(function (bar) { return bar.high; }));
+      const bars = byKey[snapshotKey].bars;
+      const metrics = promptTimeframeMetrics(bars);
+      if (!metrics) throw new Error("Indikator snapshot utama belum dapat dihitung.");
       const candleText = bars.slice(-12).map(function (bar) {
-        return new Date(bar.time * 1000).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }) + " WIB | O " + formatGoldPrice(bar.open) + " | H " + formatGoldPrice(bar.high) + " | L " + formatGoldPrice(bar.low) + " | C " + formatGoldPrice(bar.close);
+        return promptTimeframeTimestamp(bar.time) + " | O " + formatGoldPrice(bar.open) +
+          " | H " + formatGoldPrice(bar.high) + " | L " + formatGoldPrice(bar.low) +
+          " | C " + formatGoldPrice(bar.close);
       }).join("\n");
       const now = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta", dateStyle: "full", timeStyle: "short" }) + " WIB";
+      const timeframeText = timeframeOrder.map(function (key) {
+        const item = byKey[key];
+        const sourceNote = item.spec.note;
+        return promptTimeframeSummary(key, item.bars, sourceNote, item.error);
+      }).join("\n");
+      const crossTimeframeNote = "Data lintas timeframe diambil pada satu proses sekitar " + now +
+        ". Semua bar yang dipakai sebagai analisis telah difilter agar candle berjalan tidak ikut dihitung berdasarkan timestamp dan durasi interval. Timestamp candle dari sumber berbeda dapat memiliki batas sesi berbeda. H4 dibuat dengan menggabungkan empat candle H1 tertutup yang lengkap ke bucket UTC 4 jam; ini bukan candle H4 native broker. Semua harga berasal dari GC=F Yahoo Finance, bukan kuotasi spot HFM.";
       const prompt = [
         "Bertindaklah sebagai analis pasar profesional yang objektif dan disiplin dalam manajemen risiko.",
         "Analisis XAUUSD/emas secara menyeluruh. Snapshot chart di bawah hanya salah satu input, bukan satu-satunya dasar keputusan dan bukan otomatis chart HFM. Jangan terpaku pada satu broker, satu chart, satu timeframe, atau satu indikator.",
-        "WAJIB ANALISIS MULTI-TIMEFRAME SECARA TOP-DOWN: M1, M5, M15, M30, H1, H4, D1, dan W1. Periksa struktur harga, arah tren, swing high/low, support/resistance, momentum, serta level invalidasi pada setiap timeframe yang datanya benar-benar tersedia. Gunakan timeframe besar (W1/D1/H4) untuk konteks tren, H1/M30 untuk struktur intraday, dan M15/M5/M1 untuk timing scalping; jangan menyamakan sinyal timeframe kecil dengan arah tren utama. Gunakan pencarian web/sumber eksternal bila tersedia untuk memperoleh chart/candle lintas timeframe, DXY, yield Treasury AS (terutama 10Y), berita penggerak emas, kalender ekonomi berdampak tinggi, dan pembanding harga emas. Cantumkan waktu, timeframe, instrumen/feed, serta tautan sumber yang benar-benar berhasil diperiksa.",
-        "Snapshot OHLC yang disertakan hanya berasal dari satu timeframe dan tidak otomatis mewakili timeframe lain. Untuk M1, M5, M15, M30, H1, H4, D1, dan W1, tampilkan ringkasan terpisah berisi status data (terverifikasi/tidak tersedia), bias, struktur, level kunci, dan apakah sejalan atau bertentangan dengan timeframe lain. Jika data suatu timeframe tidak berhasil diperoleh, tulis BELUM TERVERIFIKASI dan jangan mengisi tabel dengan perkiraan. Jangan menyebut semua timeframe sudah diperiksa bila sumbernya tidak tersedia. Jangan mengarang angka, berita, kalender, kutipan, atau sumber. Bedakan data snapshot, data eksternal, dan interpretasi.",
-        "PENTING: Jangan ajukan pertanyaan klarifikasi, jangan meminta pengguna mengirim ulang chart/data yang sudah ada, dan jangan meminta pengguna menjawab pertanyaan nomor 6 atau pertanyaan lanjutan lainnya. Langsung selesaikan analisis berdasarkan informasi yang tersedia. Jika ada data yang kurang, buat analisis bersyarat dan tulis keterbatasannya; jangan berhenti untuk menunggu jawaban pengguna.",
+        "WAJIB analisis top-down seluruh timeframe: M1, M5, M15, M30, H1, H4, D1, dan W1. Data candle untuk timeframe ini dilampirkan di bawah dari proses pengambilan yang sama. Bandingkan struktur, bias, swing high/low, support/resistance, momentum, dan konflik sinyal. Gunakan W1/D1/H4 untuk konteks tren besar, H1/M30 untuk struktur intraday, serta M15/M5/M1 untuk timing scalping. Jangan menyatakan sinyal valid hanya karena beberapa indikator searah.",
+        "Gunakan pencarian web/sumber eksternal jika tersedia untuk memeriksa konteks terbaru: harga pembanding spot/futures, DXY, yield Treasury AS terutama 10Y, berita penggerak emas, dan kalender ekonomi berdampak tinggi. Cantumkan waktu, tautan, instrumen/feed, dan timeframe hanya untuk data yang benar-benar berhasil diperiksa. Jangan menganggap pencarian web menggantikan candle timeframe yang dilampirkan.",
+        "Jika suatu timeframe atau sumber eksternal gagal diambil, nyatakan secara eksplisit sebagai tidak tersedia/belum terverifikasi. Jangan mengarang angka, berita, kalender, sumber, atau seolah-olah sudah memeriksanya. Bedakan data snapshot, data eksternal, dan interpretasi.",
+        "PENTING: Jangan ajukan pertanyaan klarifikasi, jangan meminta pengguna mengirim ulang chart/data yang sudah ada, dan jangan meminta pengguna menjawab pertanyaan nomor 6 atau pertanyaan lanjutan lainnya. Langsung selesaikan analisis dari data yang tersedia; bila data kurang, buat skenario bersyarat dan jelaskan keterbatasannya.",
         "",
         "GAYA ANALISIS: " + config.title,
         "FOKUS: " + config.focus + ".",
         "",
         "KONTEKS DATA",
         "- Waktu pembuatan prompt: " + now,
-        "- Instrumen snapshot: GC=F (gold futures Yahoo Finance), hanya PROKSI/pembanding; bukan kuotasi spot XAUUSD HFM dan harga dapat berbeda.",
-        "- Perlakukan harga dan indikator di bawah sebagai snapshot teknikal awal saja. Verifikasi apakah candle terakhir sudah selesai, cek timestamp, dan jangan menganggap snapshot ini sebagai satu-satunya chart yang relevan.",
-        "- Interval candle sumber: " + config.interval,
-        "- Harga candle terakhir: " + formatGoldPrice(last.close),
-        "- Waktu candle terakhir: " + new Date(last.time * 1000).toLocaleString("id-ID", { timeZone: "Asia/Jakarta", dateStyle: "medium", timeStyle: "short" }) + " WIB",
-        "- EMA 9: " + formatGoldPrice(ema9[ema9.length - 1]),
-        "- EMA 21: " + formatGoldPrice(ema21[ema21.length - 1]),
-        "- RSI 14: " + (rsi === null ? "tidak tersedia" : rsi.toFixed(2)),
-        "- MACD: " + (macd[macd.length - 1] >= signal[signal.length - 1] ? "di atas garis sinyal" : "di bawah garis sinyal"),
-        "- ATR 14 (estimasi): " + formatGoldPrice(atr),
-        "- Support referensi dari 20 candle terakhir: " + formatGoldPrice(support),
-        "- Resistance referensi dari 20 candle terakhir: " + formatGoldPrice(resistance),
+        "- Instrumen semua snapshot: GC=F (gold futures Yahoo Finance), proksi/pembanding; bukan kuotasi spot XAUUSD HFM dan harga dapat berbeda.",
+        "- Timeframe utama untuk analisis gaya ini: " + config.interval + "; timeframe snapshot aktual: " + snapshotKey + ".",
+        "- " + (snapshotFallback || "Timeframe utama tersedia dari data yang berhasil diambil."),
+        "- Hanya candle tertutup yang dipakai untuk metrik. Candle yang sedang berjalan dikeluarkan berdasarkan timestamp dan durasi interval; keterlambatan feed atau perbedaan batas sesi tetap mungkin.",
+        "- Snapshot close terakhir: " + formatGoldPrice(metrics.last.close) + " pada " + promptTimeframeTimestamp(metrics.last.time),
+        "- EMA 9: " + formatGoldPrice(metrics.ema9),
+        "- EMA 21: " + formatGoldPrice(metrics.ema21),
+        "- RSI 14: " + (metrics.rsi === null ? "tidak tersedia" : metrics.rsi.toFixed(2)),
+        "- MACD: " + metrics.macdRelation,
+        "- ATR 14 (estimasi): " + (metrics.atr === null ? "tidak tersedia" : formatGoldPrice(metrics.atr)),
+        "- Support referensi 20 candle: " + formatGoldPrice(metrics.support),
+        "- Resistance referensi 20 candle: " + formatGoldPrice(metrics.resistance),
         "",
-        "12 CANDLE TERAKHIR YANG TERSEDIA (OHLC)",
+        "KONFIRMASI SELURUH TIMEFRAME (M1 / M5 / M15 / M30 / H1 / H4 / D1 / W1)",
+        crossTimeframeNote,
+        timeframeText,
+        "",
+        "12 CANDLE TERAKHIR TERTUTUP PADA TIMEFRAME SNAPSHOT UTAMA: " + snapshotKey,
         candleText,
         "",
         "TUGAS ANALISIS",
-        "1. Tentukan bias utama (bullish, bearish, sideways, atau belum jelas) dari gabungan bukti; bedakan fakta, interpretasi, dan data yang belum terverifikasi.",
-        "2. Analisis struktur harga dan momentum dari candle yang diberikan; cek swing high/low, market structure, support/resistance, likuiditas, breakout/retest, EMA, RSI, MACD, ATR, dan konflik indikator yang relevan.",
-        "3. Buat tabel konfirmasi seluruh timeframe M1, M5, M15, M30, H1, H4, D1, W1 dengan kolom: status data/sumber, bias, struktur atau swing, support/resistance, momentum, dan kesesuaian dengan timeframe lain. Gunakan analisis top-down; jelaskan konflik timeframe dan jangan memaksakan entry bila timeframe besar berlawanan. Setelah itu bandingkan konteks makro (DXY, yield AS, berita emas, kalender ekonomi) hanya jika benar-benar tersedia.",
-        "4. Buat skenario bullish, bearish, dan netral beserta pemicu konfirmasi, invalidasi, dan level kunci. Jangan memaksakan satu arah dan jangan menganggap level dari satu feed pasti sama dengan broker.",
-        "5. Jika ada setup yang layak, berikan zona entry bersyarat, konfirmasi, stop/invalidation, target potensial, serta estimasi risk/reward. Jika tidak ada setup berkualitas, tulis TIDAK ADA SETUP / WAIT. Jangan menjanjikan profit atau probabilitas pasti tanpa dasar statistik.",
-        "6. Berikan keputusan praktis langsung: apa yang perlu ditunggu, kapan skenario batal, dan risiko utama (false breakout, spread, slippage, volatilitas, berita). Jangan mengubah bagian ini menjadi pertanyaan untuk pengguna dan jangan meminta jawaban lanjutan.",
-        "7. Akhiri dengan daftar singkat data yang belum tersedia/perlu diverifikasi, tanpa menahan kesimpulan dan tanpa bertanya kepada pengguna. Jangan menyatakan sudah mengecek sesuatu kecuali benar-benar telah diperiksa.",
+        "1. Tentukan bias utama (bullish, bearish, sideways, atau belum jelas) dari gabungan bukti; bedakan fakta, interpretasi, dan data belum terverifikasi.",
+        "2. Analisis snapshot utama: swing high/low, market structure, support/resistance, likuiditas (jangan klaim order-book liquidity tanpa data), breakout/retest, EMA, RSI, MACD, ATR, dan konflik indikator.",
+        "3. Buat tabel delapan timeframe M1, M5, M15, M30, H1, H4, D1, W1 dengan kolom status/kualitas data, bias, struktur, level kunci, momentum, dan apakah sejalan atau bertentangan. Gunakan data yang dilampirkan; jangan mengarang data timeframe yang gagal.",
+        "4. Konfirmasi lintas timeframe secara top-down. Untuk scalping, prioritaskan tren H4/D1/W1 sebagai konteks, H1/M30 untuk struktur, dan M15/M5/M1 untuk trigger. Bila timeframe besar berlawanan, kurangi keyakinan, tunggu konfirmasi, atau pilih WAIT; jangan memaksakan entry.",
+        "5. Bandingkan dengan DXY, yield AS, berita emas, kalender ekonomi, dan harga pembanding hanya jika benar-benar tersedia; jelaskan timestamp mismatch dan konflik sumber.",
+        "6. Buat skenario bullish, bearish, dan netral dengan pemicu konfirmasi, invalidasi, dan level kunci. Jangan menganggap level dari feed GC=F pasti sama dengan broker.",
+        "7. Jika ada setup layak, berikan zona entry bersyarat, konfirmasi, stop/invalidation, target, dan estimasi risk/reward setelah mempertimbangkan spread/slippage. Jika tidak ada setup berkualitas, tulis TIDAK ADA SETUP / WAIT. Jangan menjanjikan profit atau probabilitas pasti.",
+        "8. Berikan keputusan praktis langsung: apa yang perlu ditunggu, kapan skenario batal, dan risiko false breakout, spread, slippage, volatilitas, serta berita. Jangan bertanya balik.",
+        "9. Akhiri dengan daftar data yang belum tersedia/perlu diverifikasi tanpa menahan kesimpulan dan tanpa pertanyaan lanjutan.",
         "",
-        "Format jawaban: Kesimpulan/bias | Bukti teknikal snapshot | Tabel multi-timeframe M1/M5/M15/M30/H1/H4/D1/W1 | Konteks pasar dan sumber/waktu | Skenario bullish | Skenario bearish | Skenario netral/no-trade | Rencana dan risiko | Data belum tersedia/terverifikasi."
+        "Format jawaban: Kesimpulan/bias | Bukti snapshot utama | Tabel konfirmasi M1/M5/M15/M30/H1/H4/D1/W1 | Konteks pasar dan sumber/waktu | Skenario bullish | Skenario bearish | Skenario netral/no-trade | Rencana dan risiko | Keterbatasan/data belum terverifikasi."
       ].join("\n");
       output.value = prompt;
       if (copyButton) copyButton.disabled = false;
-      status.textContent = "Prompt berhasil dibuat dari data candle yang tersedia. Periksa timestamp dan perbedaan feed sebelum digunakan.";
+      const failed = timeframeOrder.filter(function (key) { return !available.includes(key); });
+      status.textContent = "Prompt multi-timeframe berhasil dibuat. Tersedia: " + available.join(", ") +
+        (failed.length ? ". Data tidak cukup/tersedia: " + failed.join(", ") + "." : ". Semua timeframe memiliki data cukup.") +
+        " Periksa perbedaan feed dan spread broker sebelum digunakan.";
     } catch (error) {
-      status.textContent = "Gagal membuat prompt: " + (error && error.message ? error.message : "koneksi bermasalah") + ". Tidak ada data harga yang dikarang; coba lagi nanti.";
+      status.textContent = "Gagal membuat prompt: " + (error && error.message ? error.message : "koneksi bermasalah") + ". Data yang tidak tersedia tidak akan dikarang; coba lagi nanti.";
       output.value = "";
     } finally {
       if (button) { button.disabled = false; button.textContent = "Buat prompt dari data terbaru"; }
