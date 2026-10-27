@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101a2d">
-  <meta name="description" content="Jurnal trading pribadi untuk mencatat transaksi, mengevaluasi performa, dan mengelola risiko.">
-  <title>TradeLog — Trading Journal</title>
+  <meta name="theme-color" content="#111f34">
+  <meta name="description" content="LightJurnal TradeLog: jurnal trading untuk mencatat transaksi, mengevaluasi performa, mengukur risiko, dan meninjau laporan MT5.">
+  <title>LightJurnal — TradeLog Trading Journal</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
   <script src="app.js" defer></script>
@@ -21,18 +21,18 @@
       </a>
       <div class="workspace-label">WORKSPACE</div>
       <nav class="nav-list">
-        <button class="nav-item is-active" data-page="overview"><span class="nav-icon">▦</span><span>Ringkasan</span></button>
-        <button class="nav-item" data-page="trades"><span class="nav-icon">↕</span><span>Riwayat Trade</span><span class="nav-count" id="nav-trade-count">0</span></button>
-        <button class="nav-item" data-page="analytics"><span class="nav-icon">▥</span><span>Analisis</span></button>
-        <button class="nav-item" data-page="risk"><span class="nav-icon">◈</span><span>Kalkulator Risiko</span></button>
-        <button class="nav-item" data-page="mt5"><span class="nav-icon">⌁</span><span>MT5 Live</span><span class="nav-count">LIVE</span></button>
+        <button class="nav-item is-active" data-page="overview"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></span><span>Ringkasan</span></button>
+        <button class="nav-item" data-page="trades"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M4 7l3-3 3 3M17 20V4m-3 13 3 3 3-3"/></svg></span><span>Riwayat Trade</span><span class="nav-count" id="nav-trade-count">0</span></button>
+        <button class="nav-item" data-page="analytics"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V12M10 19.5V5M16 19.5V9M22 19.5V3"/></svg></span><span>Analisis</span></button>
+        <button class="nav-item" data-page="risk"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 20 8v8l-8 4.5L4 16V8z"/><path d="M12 8v8m-4-4h8"/></svg></span><span>Kalkulator Risiko</span></button>
+        <button class="nav-item" data-page="mt5"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h3l2.2-5 4.6 10 2.2-5H20"/><path d="M4 4.5h16M4 19.5h16" opacity=".45"/></svg></span><span>MT5 Live</span><span class="nav-count">LIVE</span></button>
       </nav>
       <div class="sidebar-bottom">
         <div class="sidebar-note">
           <span class="note-icon">✳</span>
           <div><strong>Trade with a plan</strong><p>Catat prosesnya, bukan hanya hasilnya.</p></div>
         </div>
-        <button class="nav-item settings-link" data-page="settings"><span class="nav-icon">⚙</span><span>Pengaturan & Cadangan</span></button>
+        <button class="nav-item settings-link" data-page="settings"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.1 1.9-2 3.4-2.2-.5a8 8 0 0 1-1.8 1l-.7 2.1h-4l-.7-2.1a8 8 0 0 1-1.8-1l-2.2.5-2-3.4 1.1-1.9a8 8 0 0 1 0-2.1l-1.1-1.9 2-3.4 2.2.5a8 8 0 0 1 1.8-1l.7-2.1h4l.7 2.1a8 8 0 0 1 1.8 1l2.2-.5 2 3.4-1.1 1.9a8 8 0 0 1-.1 2.1Z" transform="translate(0 -1) scale(.92)"/></svg></span><span>Pengaturan & Cadangan</span></button>
         <div class="profile-mini"><span class="avatar">TJ</span><div><strong>Jurnal Pribadi</strong><small>Ruang kerja lokal</small></div><span class="local-dot" title="Data tersimpan di browser"></span></div>
       </div>
     </aside>
