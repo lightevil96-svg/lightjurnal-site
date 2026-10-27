@@ -263,6 +263,7 @@
       '<section class="card mt5-chart-card"><div class="card-header"><div><h3 class="section-title">Chart pasar</h3><p class="section-subtitle">Chart TradingView. Harga bisa berbeda dari feed broker HFM.</p></div><div class="mt5-chart-controls"><label class="mt5-symbol-label">Instrumen<select id="mt5-symbol"><option value="OANDA:XAUUSD" selected>Gold / XAUUSD</option><option value="FX:EURUSD">EUR/USD</option><option value="FX:GBPUSD">GBP/USD</option><option value="FX:USDJPY">USD/JPY</option><option value="BINANCE:BTCUSDT">BTC/USDT</option><option value="NASDAQ:NDX">Nasdaq 100</option></select></label><label class="mt5-symbol-label">Timeframe<select id="mt5-interval"><option value="5">M5</option><option value="15" selected>M15</option><option value="60">H1</option><option value="240">H4</option><option value="D">D1</option></select></label></div></div><div class="mt5-chart-frame"><iframe id="mt5-chart-frame" title="Chart XAUUSD TradingView" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen src="' + tradingViewChartUrl(symbol, "15") + '"></iframe></div></section>' +
       '<section class="card mt5-analysis-card"><div class="card-header"><div><h3 class="section-title">Analisis teknikal otomatis</h3><p class="section-subtitle">Ringkasan indikator TradingView untuk instrumen dan timeframe terpilih.</p></div><span class="pill blue">OTOMATIS</span></div><div class="mt5-analysis-note">Widget ini merangkum indikator teknikal dari TradingView, bukan analisis AI ChatGPT atau sinyal dari server HFM. Gunakan bersama struktur harga dan manajemen risiko.</div><div id="mt5-technical-analysis" class="mt5-technical-analysis"><div class="mt5-state-card"><strong>Memuat ringkasan indikator…</strong><p>Menunggu widget TradingView.</p></div></div><div class="mt5-analysis-footer"><span id="mt5-analysis-label">OANDA:XAUUSD · M15</span><span>Data pihak ketiga; bisa tertunda atau berbeda dari HFM.</span></div></section>' +
       '<section class="card mt5-ai-analysis-card"><div class="card-header"><div><h3 class="section-title">Analisis XAUUSD</h3><p class="section-subtitle">Baca tren, momentum, volatilitas, dan level teknikal dari candle terbaru.</p></div><span class="pill blue">LIVE DATA</span></div><div class="mt5-ai-analysis-body"><div class="mt5-ai-analysis-intro"><p>Analisis otomatis berbasis indikator teknikal, bukan AI ChatGPT. Feed yang digunakan adalah futures emas GC=F sebagai proksi, sehingga harga dapat berbeda dari XAUUSD di broker HFM.</p><button class="button button-primary" data-action="mt5-run-analysis" id="mt5-run-analysis">↗ Analisis sekarang</button></div><div id="mt5-analysis-result" aria-live="polite"><div class="mt5-state-card"><strong>Siap menganalisis</strong><p>Tekan tombol untuk mengambil candle terbaru dan menghitung indikator.</p></div></div></div></section>' +
+      '<section class="card mt5-prompt-card"><div class="card-header"><div><h3 class="section-title">Prompt Analisis Trading untuk ChatGPT</h3><p class="section-subtitle">Pilih gaya analisis, ambil snapshot pasar, lalu salin prompt siap tempel ke ChatGPT.</p></div><span class="pill blue">PROMPT BUILDER</span></div><div class="mt5-prompt-body"><label class="mt5-prompt-style-label" for="mt5-prompt-style">Gaya analisis</label><select id="mt5-prompt-style" class="mt5-prompt-select"><option value="scalping">Scalping (M5 / M15)</option><option value="intraday" selected>Intraday / Day Trading (M15 / H1)</option><option value="swing">Swing Trading (H4 / D1)</option><option value="price-action">Price Action & Struktur Pasar</option><option value="risk">Risk Management & Rencana Trading</option><option value="multi-timeframe">Multi-timeframe (M15 / H1 / H4)</option></select><p class="mt5-prompt-help">Saat dibuat, prompt akan menyertakan data candle terbaru, harga terakhir, EMA, RSI, MACD, ATR, dan area support/resistance jika data berhasil diambil. Data menggunakan GC=F (futures emas), bukan feed persis XAUUSD HFM.</p><div class="mt5-prompt-actions"><button class="button button-primary" data-action="mt5-generate-prompt" id="mt5-generate-prompt">Buat prompt dari data terbaru</button><button class="button button-secondary" data-action="mt5-copy-prompt" id="mt5-copy-prompt" disabled>Salin prompt</button></div><div id="mt5-prompt-status" class="mt5-prompt-status" aria-live="polite">Belum ada prompt. Tekan “Buat prompt dari data terbaru”.</div><label class="mt5-prompt-style-label" for="mt5-prompt-output">Prompt siap ditempel ke ChatGPT</label><textarea id="mt5-prompt-output" class="mt5-prompt-output" rows="15" placeholder="Prompt akan muncul di sini setelah data pasar berhasil diambil. Kamu bisa meninjau dan mengeditnya sebelum menyalin." spellcheck="false"></textarea><p class="mt5-prompt-footnote">Catatan: prompt ini meminta ChatGPT menganalisis snapshot yang disediakan. Ia tidak menjamin prediksi benar; data yang tidak tersedia tidak akan dikarang. Periksa ulang harga dan spread di platform broker sebelum mengambil keputusan.</p></div></section>' +
       '<section class="card mt5-positions-card"><div class="card-header"><div><h3 class="section-title">Posisi terbuka</h3><p class="section-subtitle">Diambil dari snapshot akun MT5 saat bridge tersedia.</p></div><span class="pill gray" id="mt5-position-count">0 posisi</span></div><div id="mt5-positions-list"><div class="mt5-empty-positions">Belum ada data posisi.</div></div></section>';
     mountTradingViewTechnicalAnalysis(symbol, "15");
   }
@@ -395,6 +396,128 @@
       analysisMetric("Support (20 candle)", formatGoldPrice(support), "Area terendah terbaru") +
       analysisMetric("Resistance (20 candle)", formatGoldPrice(resistance), "Area tertinggi terbaru") +
       '</div>' + scenario + '<p class="mt5-analysis-disclaimer">Data Yahoo Finance GC=F (futures emas), bukan kuotasi XAUUSD HFM; bisa terlambat atau berbeda. Ini bukan nasihat keuangan dan tidak menjamin hasil.</p>';
+  }
+
+
+  function promptStrategyConfig(style) {
+    const configs = {
+      scalping: { title: "SCALPING", interval: "5m", range: "5d", focus: "fokus scalping M5/M15, momentum singkat, spread, volatilitas, konfirmasi candle, dan hindari entry saat pergerakan acak" },
+      intraday: { title: "INTRADAY / DAY TRADING", interval: "15m", range: "5d", focus: "fokus intraday M15/H1, tren sesi, level intraday, momentum, dan skenario untuk sesi berjalan" },
+      swing: { title: "SWING TRADING", interval: "1d", range: "1y", focus: "fokus swing H4/D1, tren utama, struktur higher-high/lower-low, area invalidasi, dan potensi pergerakan beberapa hari" },
+      "price-action": { title: "PRICE ACTION & STRUKTUR PASAR", interval: "15m", range: "1mo", focus: "fokus price action, struktur market, breakout/pullback, rejection, support/resistance, dan konfirmasi candle; jangan mengandalkan indikator saja" },
+      risk: { title: "RISK MANAGEMENT", interval: "15m", range: "5d", focus: "fokus kelayakan trade, invalidasi ide, rasio risiko/imbalan, volatilitas, ukuran risiko, dan kondisi no-trade; jangan menjanjikan profit" },
+      "multi-timeframe": { title: "MULTI-TIMEFRAME", interval: "60m", range: "3mo", focus: "fokus analisis top-down: bias H4/D1, setup H1, dan timing M15; jelaskan jika data timeframe tertentu tidak tersedia" }
+    };
+    return configs[style] || configs.intraday;
+  }
+
+  async function generateMT5Prompt(button) {
+    const output = $("#mt5-prompt-output"), status = $("#mt5-prompt-status"), copyButton = $("#mt5-copy-prompt");
+    const style = ($("#mt5-prompt-style") || {}).value || "intraday";
+    const config = promptStrategyConfig(style);
+    if (!output || !status) return;
+    if (button) { button.disabled = true; button.textContent = "Mengambil data pasar…"; }
+    if (copyButton) copyButton.disabled = true;
+    status.textContent = "Mengambil candle terbaru dan menghitung indikator. Tunggu sebentar…";
+    try {
+      const endpoint = "https://query1.finance.yahoo.com/v8/finance/chart/GC%3DF?range=" + encodeURIComponent(config.range) + "&interval=" + encodeURIComponent(config.interval);
+      let data;
+      try {
+        const response = await fetch(endpoint, { cache: "no-store" });
+        if (!response.ok) throw new Error("Sumber langsung tidak tersedia");
+        data = await response.json();
+        if (!data || !data.chart || !data.chart.result) throw new Error("Format sumber langsung tidak sesuai");
+      } catch (directError) {
+        const proxy = await fetch("https://proxy.cors.dev/" + endpoint, { cache: "no-store" });
+        if (!proxy.ok) throw new Error("Sumber harga tidak merespons (HTTP " + proxy.status + ")");
+        data = await proxy.json();
+      }
+      const result = data && data.chart && data.chart.result && data.chart.result[0];
+      const quote = result && result.indicators && result.indicators.quote && result.indicators.quote[0];
+      const timestamps = result && result.timestamp || [];
+      if (!quote || !quote.close) throw new Error("Data candle tidak lengkap.");
+      const bars = timestamps.map(function (timestamp, i) {
+        return { time: timestamp, open: quote.open && quote.open[i], high: quote.high && quote.high[i], low: quote.low && quote.low[i], close: quote.close[i], volume: quote.volume && quote.volume[i] };
+      }).filter(function (bar) { return Number.isFinite(bar.open) && Number.isFinite(bar.high) && Number.isFinite(bar.low) && Number.isFinite(bar.close); });
+      if (bars.length < 30) throw new Error("Candle yang tersedia belum cukup untuk membuat prompt.");
+      const closes = bars.map(function (bar) { return bar.close; }), last = bars[bars.length - 1];
+      const ema9 = emaSeries(closes, 9), ema21 = emaSeries(closes, 21), ema12 = emaSeries(closes, 12), ema26 = emaSeries(closes, 26);
+      const macd = ema12.map(function (v, i) { return v - ema26[i]; }), signal = emaSeries(macd, 9), rsi = calculateRSI(closes, 14);
+      const ranges = [];
+      for (let i = 1; i < bars.length; i++) ranges.push(Math.max(bars[i].high - bars[i].low, Math.abs(bars[i].high - bars[i - 1].close), Math.abs(bars[i].low - bars[i - 1].close)));
+      const atr = ranges.slice(-14).reduce(function (sum, v) { return sum + v; }, 0) / Math.min(14, ranges.length);
+      const recent = bars.slice(-20), support = Math.min.apply(null, recent.map(function (bar) { return bar.low; })), resistance = Math.max.apply(null, recent.map(function (bar) { return bar.high; }));
+      const candleText = bars.slice(-12).map(function (bar) {
+        return new Date(bar.time * 1000).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }) + " WIB | O " + formatGoldPrice(bar.open) + " | H " + formatGoldPrice(bar.high) + " | L " + formatGoldPrice(bar.low) + " | C " + formatGoldPrice(bar.close);
+      }).join("\n");
+      const now = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta", dateStyle: "full", timeStyle: "short" }) + " WIB";
+      const prompt = [
+        "Bertindaklah sebagai analis pasar profesional yang objektif dan disiplin dalam manajemen risiko.",
+        "Tolong analisis XAUUSD/emas berdasarkan data yang disediakan di bawah ini. Jangan mengarang harga, berita, kalender ekonomi, atau data yang tidak tercantum. Jika data tidak cukup, katakan dengan jelas.",
+        "",
+        "GAYA ANALISIS: " + config.title,
+        "FOKUS: " + config.focus + ".",
+        "",
+        "KONTEKS DATA",
+        "- Waktu pembuatan prompt: " + now,
+        "- Instrumen sumber: GC=F (gold futures Yahoo Finance), dipakai sebagai PROKSI; bukan kuotasi spot XAUUSD HFM dan harga dapat berbeda.",
+        "- Interval candle sumber: " + config.interval,
+        "- Harga candle terakhir: " + formatGoldPrice(last.close),
+        "- Waktu candle terakhir: " + new Date(last.time * 1000).toLocaleString("id-ID", { timeZone: "Asia/Jakarta", dateStyle: "medium", timeStyle: "short" }) + " WIB",
+        "- EMA 9: " + formatGoldPrice(ema9[ema9.length - 1]),
+        "- EMA 21: " + formatGoldPrice(ema21[ema21.length - 1]),
+        "- RSI 14: " + (rsi === null ? "tidak tersedia" : rsi.toFixed(2)),
+        "- MACD: " + (macd[macd.length - 1] >= signal[signal.length - 1] ? "di atas garis sinyal" : "di bawah garis sinyal"),
+        "- ATR 14 (estimasi): " + formatGoldPrice(atr),
+        "- Support referensi dari 20 candle terakhir: " + formatGoldPrice(support),
+        "- Resistance referensi dari 20 candle terakhir: " + formatGoldPrice(resistance),
+        "",
+        "12 CANDLE TERAKHIR YANG TERSEDIA (OHLC)",
+        candleText,
+        "",
+        "TUGAS ANALISIS",
+        "1. Ringkas keadaan pasar saat ini: bullish, bearish, sideways, atau belum jelas. Bedakan fakta data dengan interpretasi.",
+        "2. Jelaskan tren, momentum, volatilitas, dan struktur harga; sebutkan konflik antarindikator jika ada.",
+        "3. Buat skenario bullish, bearish, dan netral beserta pemicu konfirmasi dan level invalidasinya. Jangan memaksakan satu arah.",
+        "4. Jika ada setup yang layak, jelaskan area entry sebagai zona bersyarat, bukan perintah pasti; sebutkan konfirmasi yang perlu ditunggu, stop/invalidation, target potensial, dan rasio risk/reward perkiraan. Jika tidak ada setup berkualitas, jawab TIDAK ADA SETUP / WAIT.",
+        "5. Jelaskan risiko false breakout, spread, slippage, berita berdampak tinggi, serta keterbatasan data sumber.",
+        "6. Berikan kesimpulan praktis: kondisi yang perlu ditunggu, kapan ide harus dibatalkan, dan apa yang perlu diverifikasi langsung di platform broker.",
+        "7. Jangan menjanjikan profit, jangan menyebut probabilitas pasti tanpa dasar statistik, dan jangan menganggap snapshot ini sebagai harga live yang dijamin.",
+        "",
+        "Format jawaban: Ringkasan pasar | Bukti teknikal | Skenario bullish | Skenario bearish | Skenario netral/no-trade | Manajemen risiko | Data yang masih perlu diverifikasi."
+      ].join("\n");
+      output.value = prompt;
+      if (copyButton) copyButton.disabled = false;
+      status.textContent = "Prompt berhasil dibuat dari data candle yang tersedia. Periksa timestamp dan perbedaan feed sebelum digunakan.";
+    } catch (error) {
+      status.textContent = "Gagal membuat prompt: " + (error && error.message ? error.message : "koneksi bermasalah") + ". Tidak ada data harga yang dikarang; coba lagi nanti.";
+      output.value = "";
+    } finally {
+      if (button) { button.disabled = false; button.textContent = "Buat prompt dari data terbaru"; }
+    }
+  }
+
+  async function copyMT5Prompt() {
+    const output = $("#mt5-prompt-output"), status = $("#mt5-prompt-status");
+    if (!output || !output.value) {
+      if (status) status.textContent = "Buat prompt terlebih dahulu.";
+      return;
+    }
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(output.value);
+      } else {
+        output.focus();
+        output.select();
+        const copied = document.execCommand("copy");
+        if (!copied) throw new Error("Browser tidak mengizinkan penyalinan otomatis");
+      }
+      if (status) status.textContent = "Prompt disalin. Buka ChatGPT dan tempelkan prompt tersebut.";
+    } catch (error) {
+      output.focus();
+      output.select();
+      if (status) status.textContent = "Penyalinan otomatis gagal. Teks sudah dipilih—tekan Salin atau gunakan menu Salin browser.";
+    }
   }
 
   function startMT5Polling() {
@@ -989,6 +1112,8 @@
     else if (action === "mt5-connect") saveMT5Config();
     else if (action === "mt5-disconnect") disconnectMT5();
     else if (action === "mt5-refresh") refreshMT5Snapshot();
+    else if (action === "mt5-generate-prompt") generateMT5Prompt(actionButton);
+    else if (action === "mt5-copy-prompt") copyMT5Prompt();
     else if (action === "mt5-run-analysis") runMT5MarketAnalysis(actionButton);
     else if (action === "export-json") exportJSON();
     else if (action === "export-csv") exportCSV();
