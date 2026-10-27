@@ -43,7 +43,13 @@
   }
 
   function validDate(value) {
-    return /^\d{4}-\d{2}-\d{2}$/.test(String(value || "")) ? value : todayISO();
+    const text = String(value || "");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return todayISO();
+    const parts = text.split("-").map(Number);
+    const date = new Date(parts[0], parts[1] - 1, parts[2]);
+    return date.getFullYear() === parts[0] && date.getMonth() === parts[1] - 1 && date.getDate() === parts[2]
+      ? text
+      : todayISO();
   }
 
   function makeId() {
@@ -138,7 +144,7 @@
 
   function calcTrade(trade) {
     const hasManual = trade.manualNet !== null && trade.manualNet !== undefined && Number.isFinite(Number(trade.manualNet));
-    const isClosed = trade.exit !== null || hasManual;
+    const isClosed = (trade.exit !== null && trade.exit !== undefined) || hasManual;
     let pnl = 0;
     if (hasManual) {
       pnl = Number(trade.manualNet);
@@ -449,10 +455,19 @@
     const balance = settings.startingBalance + sumPnl(closedTrades());
     const amount = balance * percent / 100;
     const distance = entry !== null && stop !== null ? Math.abs(entry - stop) : 0;
+    const side = $("#risk-side") ? $("#risk-side").value : "Long";
+    const directionValid = entry !== null && stop !== null &&
+      (side === "Long" ? stop < entry : stop > entry);
     $("#risk-amount-result").textContent = formatMoney(amount);
     $("#risk-percent-result").textContent = formatNumber(percent, 2) + "%";
     $("#risk-distance-result").textContent = distance > 0 ? formatNumber(distance, 6) : "—";
-    $("#risk-size-result").textContent = distance > 0 && multiplier > 0 ? formatNumber(amount / (distance * multiplier), 6) : "Masukkan harga";
+    if (entry !== null && stop !== null && !directionValid) {
+      $("#risk-size-result").textContent = side === "Long" ? "Stop harus di bawah entry" : "Stop harus di atas entry";
+    } else {
+      $("#risk-size-result").textContent = directionValid && distance > 0 && multiplier > 0
+        ? formatNumber(amount / (distance * multiplier), 6)
+        : "Masukkan harga";
+    }
   }
 
   function renderSettings() {
@@ -552,13 +567,21 @@
     };
     const normalized = normalizeTrade(raw);
     const wasEditing = Boolean(editingId);
+    const previousTrades = trades.slice();
     if (editingId) {
       const index = trades.findIndex(function (trade) { return trade.id === editingId; });
-      if (index >= 0) trades[index] = normalized;
+      if (index < 0) {
+        showToast("Trade yang akan diedit tidak ditemukan. Muat ulang jurnal lalu coba lagi.");
+        return;
+      }
+      trades[index] = normalized;
     } else {
       trades.push(normalized);
     }
-    saveData();
+    if (!saveData()) {
+      trades = previousTrades;
+      return;
+    }
     closeModal();
     searchText = "";
     marketFilter = "all";
@@ -615,6 +638,8 @@
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function () {
+      const previousTrades = trades.slice();
+      const previousSettings = { currency: settings.currency, startingBalance: settings.startingBalance };
       try {
         const parsed = JSON.parse(String(reader.result || ""));
         const incoming = Array.isArray(parsed) ? parsed : parsed.trades;
@@ -629,7 +654,13 @@
           settings.currency = CURRENCIES.indexOf(parsed.settings.currency) >= 0 ? parsed.settings.currency : settings.currency;
           if (numberOrNull(parsed.settings.startingBalance) !== null) settings.startingBalance = Math.max(0, Number(parsed.settings.startingBalance));
         }
-        saveData();
+        if (!saveData()) {
+          trades = previousTrades;
+          settings = previousSettings;
+          showToast("Pemulihan dibatalkan karena data tidak berhasil disimpan. Data di layar dikembalikan; periksa ruang penyimpanan browser.");
+          renderPage();
+          return;
+        }
         renderPage();
         showToast("Backup berhasil dipulihkan: " + trades.length + " trade.");
       } catch (error) {
@@ -667,8 +698,12 @@
     else if (action === "delete-trade") {
       const target = trades.find(function (trade) { return trade.id === actionButton.dataset.id; });
       if (target && window.confirm("Hapus trade " + target.symbol + " tanggal " + target.date + "?")) {
+        const previousTrades = trades.slice();
         trades = trades.filter(function (trade) { return trade.id !== target.id; });
-        saveData();
+        if (!saveData()) {
+          trades = previousTrades;
+          return;
+        }
         renderPage();
         showToast("Trade dihapus dari jurnal.");
       }
@@ -679,8 +714,12 @@
     else if (action === "import-json") $("#import-file").click();
     else if (action === "clear-trades") {
       if (trades.length && window.confirm("Yakin hapus SEMUA trade? Tindakan ini tidak bisa dibatalkan tanpa backup JSON.")) {
+        const previousTrades = trades.slice();
         trades = [];
-        saveData();
+        if (!saveData()) {
+          trades = previousTrades;
+          return;
+        }
         renderPage();
         showToast("Semua trade telah dihapus.");
       } else if (!trades.length) {
@@ -699,9 +738,13 @@
         showToast("Periksa mata uang dan saldo awal.");
         return;
       }
+      const previousSettings = { currency: settings.currency, startingBalance: settings.startingBalance };
       settings.currency = currency;
       settings.startingBalance = startingBalance;
-      saveData();
+      if (!saveData()) {
+        settings = previousSettings;
+        return;
+      }
       renderSettings();
       showToast("Pengaturan berhasil disimpan.");
     }
@@ -718,6 +761,7 @@
   document.addEventListener("change", function (event) {
     if (event.target.id === "market-filter") { marketFilter = event.target.value; updateTradeList(); }
     if (event.target.id === "outcome-filter") { outcomeFilter = event.target.value; updateTradeList(); }
+    if (event.target.hasAttribute("data-risk-field")) updateRiskResult();
   });
 
   $("#import-file").addEventListener("change", function (event) { importJSONFile(event.target.files && event.target.files[0]); });
