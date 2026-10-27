@@ -1409,7 +1409,7 @@
       const dailyLossLimitPercent = numberOrNull($("#setting-daily-loss-limit").value);
       const maxTradesPerDay = numberOrNull($("#setting-max-trades-day").value);
       if (CURRENCIES.indexOf(currency) < 0 || startingBalance === null || startingBalance < 0 || dailyLossLimitPercent === null || dailyLossLimitPercent < 0 || dailyLossLimitPercent > 100 || maxTradesPerDay === null || maxTradesPerDay < 0 || maxTradesPerDay > 1000 || !Number.isInteger(maxTradesPerDay)) {
-        showToast("Periksa mata uang dan saldo awal.");
+        showToast("Periksa mata uang, saldo awal, batas rugi harian, dan jumlah maksimal trade.");
         return;
       }
       const previousSettings = Object.assign({}, settings);
