@@ -141,7 +141,7 @@
     reader.onerror=()=>alert("Browser gagal membaca file ini.");
     reader.readAsText(file);
   }
-  function filtered(tab) { return rows.filter(r=>tab==="closed"?(r.section==="closed"||r.section==="deal-entry"):tab==="open"?r.section==="open":r.section==="orders"); }
+  function filtered(tab) { return rows.filter(r=>tab==="closed"?r.section==="closed":tab==="open"?r.section==="open":r.section==="orders"); }
   function table(tab) {
     const list=filtered(tab).slice().reverse();
     if(!list.length)return '<div class="mt5j-empty">Belum ada data pada kategori ini. Impor laporan HTML dari MT5 untuk memulai.</div>';
