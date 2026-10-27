@@ -262,6 +262,7 @@
       '<div id="mt5-account-panel"><div class="mt5-state-card"><span class="mt5-state-icon">⌁</span><strong>Menunggu koneksi bridge</strong><p>Isi URL API dan API key setelah backend MT5 dipasang. Chart pasar di bawah tetap dapat digunakan tanpa koneksi akun.</p></div></div>' +
       '<section class="card mt5-chart-card"><div class="card-header"><div><h3 class="section-title">Chart pasar</h3><p class="section-subtitle">Chart TradingView. Harga bisa berbeda dari feed broker HFM.</p></div><div class="mt5-chart-controls"><label class="mt5-symbol-label">Instrumen<select id="mt5-symbol"><option value="OANDA:XAUUSD" selected>Gold / XAUUSD</option><option value="FX:EURUSD">EUR/USD</option><option value="FX:GBPUSD">GBP/USD</option><option value="FX:USDJPY">USD/JPY</option><option value="BINANCE:BTCUSDT">BTC/USDT</option><option value="NASDAQ:NDX">Nasdaq 100</option></select></label><label class="mt5-symbol-label">Timeframe<select id="mt5-interval"><option value="5">M5</option><option value="15" selected>M15</option><option value="60">H1</option><option value="240">H4</option><option value="D">D1</option></select></label></div></div><div class="mt5-chart-frame"><iframe id="mt5-chart-frame" title="Chart XAUUSD TradingView" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen src="' + tradingViewChartUrl(symbol, "15") + '"></iframe></div></section>' +
       '<section class="card mt5-analysis-card"><div class="card-header"><div><h3 class="section-title">Analisis teknikal otomatis</h3><p class="section-subtitle">Ringkasan indikator TradingView untuk instrumen dan timeframe terpilih.</p></div><span class="pill blue">OTOMATIS</span></div><div class="mt5-analysis-note">Widget ini merangkum indikator teknikal dari TradingView, bukan analisis AI ChatGPT atau sinyal dari server HFM. Gunakan bersama struktur harga dan manajemen risiko.</div><div id="mt5-technical-analysis" class="mt5-technical-analysis"><div class="mt5-state-card"><strong>Memuat ringkasan indikator…</strong><p>Menunggu widget TradingView.</p></div></div><div class="mt5-analysis-footer"><span id="mt5-analysis-label">OANDA:XAUUSD · M15</span><span>Data pihak ketiga; bisa tertunda atau berbeda dari HFM.</span></div></section>' +
+      '<section class="card mt5-ai-analysis-card"><div class="card-header"><div><h3 class="section-title">Analisis XAUUSD</h3><p class="section-subtitle">Baca tren, momentum, volatilitas, dan level teknikal dari candle terbaru.</p></div><span class="pill blue">LIVE DATA</span></div><div class="mt5-ai-analysis-body"><div class="mt5-ai-analysis-intro"><p>Analisis otomatis berbasis indikator teknikal, bukan AI ChatGPT. Feed yang digunakan adalah futures emas GC=F sebagai proksi, sehingga harga dapat berbeda dari XAUUSD di broker HFM.</p><button class="button button-primary" data-action="mt5-run-analysis" id="mt5-run-analysis">↗ Analisis sekarang</button></div><div id="mt5-analysis-result" aria-live="polite"><div class="mt5-state-card"><strong>Siap menganalisis</strong><p>Tekan tombol untuk mengambil candle terbaru dan menghitung indikator.</p></div></div></div></section>' +
       '<section class="card mt5-positions-card"><div class="card-header"><div><h3 class="section-title">Posisi terbuka</h3><p class="section-subtitle">Diambil dari snapshot akun MT5 saat bridge tersedia.</p></div><span class="pill gray" id="mt5-position-count">0 posisi</span></div><div id="mt5-positions-list"><div class="mt5-empty-positions">Belum ada data posisi.</div></div></section>';
     mountTradingViewTechnicalAnalysis(symbol, "15");
   }
@@ -307,6 +308,93 @@
     });
     container.appendChild(script);
     host.appendChild(container);
+  }
+
+
+  function emaSeries(values, period) {
+    if (!values.length) return [];
+    const multiplier = 2 / (period + 1);
+    let current = values[0];
+    return values.map(function (value, index) { current = index === 0 ? value : value * multiplier + current * (1 - multiplier); return current; });
+  }
+  function calculateRSI(closes, period) {
+    if (closes.length <= period) return null;
+    let gains = 0, losses = 0;
+    for (let i = 1; i <= period; i++) { const change = closes[i] - closes[i - 1]; if (change > 0) gains += change; else losses -= change; }
+    let avgGain = gains / period, avgLoss = losses / period;
+    for (let i = period + 1; i < closes.length; i++) { const change = closes[i] - closes[i - 1]; avgGain = (avgGain * (period - 1) + Math.max(0, change)) / period; avgLoss = (avgLoss * (period - 1) + Math.max(0, -change)) / period; }
+    if (avgLoss === 0) return 100;
+    return 100 - (100 / (1 + avgGain / avgLoss));
+  }
+  function formatGoldPrice(value) { return Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function analysisMetric(label, value, note) { return '<div class="mt5-analysis-metric"><span>' + label + '</span><strong>' + value + '</strong><small>' + note + '</small></div>'; }
+
+  async function runMT5MarketAnalysis(button) {
+    const output = $("#mt5-analysis-result");
+    const interval = ($("#mt5-interval") || {}).value || "15";
+    const intervalMap = { "5": "5m", "15": "15m", "60": "60m", "240": "60m", "D": "1d" };
+    const rangeMap = { "5": "5d", "15": "5d", "60": "1mo", "240": "3mo", "D": "1y" };
+    if (!output) return;
+    if (button) { button.disabled = true; button.textContent = "Mengambil data…"; }
+    output.innerHTML = '<div class="mt5-state-card"><strong>Mengambil candle pasar terbaru…</strong><p>Menghitung EMA, RSI, ATR, momentum, dan support/resistance.</p></div>';
+    try {
+      const endpoint = "https://query1.finance.yahoo.com/v8/finance/chart/GC%3DF?range=" + encodeURIComponent(rangeMap[interval] || "5d") + "&interval=" + encodeURIComponent(intervalMap[interval] || "15m");
+      let data;
+      try {
+        const direct = await fetch(endpoint, { cache: "no-store" });
+        if (!direct.ok) throw new Error("Sumber langsung tidak tersedia");
+        data = await direct.json();
+        if (!data || !data.chart) throw new Error("Format sumber langsung tidak sesuai");
+      } catch (directError) {
+        const proxy = await fetch("https://proxy.cors.dev/" + endpoint, { cache: "no-store" });
+        if (!proxy.ok) throw new Error("Sumber harga tidak merespons (HTTP " + proxy.status + ")");
+        data = await proxy.json();
+      }
+      renderMT5MarketAnalysisFromData(data, output, interval);
+    } catch (error) {
+      output.innerHTML = '<div class="mt5-state-card"><strong>Data pasar belum bisa diambil</strong><p>' + escapeHtml(error && error.message ? error.message : "Koneksi gagal.") + ' Coba lagi beberapa saat. Analisis tidak dibuat dari harga tebakan.</p></div>';
+    } finally {
+      if (button) { button.disabled = false; button.textContent = "↻ Analisis sekarang"; }
+    }
+  }
+
+  function renderMT5MarketAnalysisFromData(data, output, interval) {
+    const result = data && data.chart && data.chart.result && data.chart.result[0];
+    if (!result) throw new Error("Data candle kosong atau tidak tersedia.");
+    const quote = result.indicators && result.indicators.quote && result.indicators.quote[0], timestamps = result.timestamp || [];
+    if (!quote || !quote.close) throw new Error("Data candle tidak lengkap.");
+    const bars = timestamps.map(function (timestamp, i) { return { time: timestamp, open: quote.open && quote.open[i], high: quote.high && quote.high[i], low: quote.low && quote.low[i], close: quote.close[i] }; })
+      .filter(function (bar) { return Number.isFinite(bar.open) && Number.isFinite(bar.high) && Number.isFinite(bar.low) && Number.isFinite(bar.close); });
+    if (bars.length < 30) throw new Error("Jumlah candle belum cukup untuk analisis yang layak.");
+    const closes = bars.map(function (bar) { return bar.close; }), last = bars[bars.length - 1];
+    const ema9 = emaSeries(closes, 9), ema21 = emaSeries(closes, 21), ema12 = emaSeries(closes, 12), ema26 = emaSeries(closes, 26);
+    const macd = ema12.map(function (value, i) { return value - ema26[i]; }), macdSignal = emaSeries(macd, 9), rsi = calculateRSI(closes, 14);
+    const trueRanges = [];
+    for (let i = 1; i < bars.length; i++) trueRanges.push(Math.max(bars[i].high - bars[i].low, Math.abs(bars[i].high - bars[i - 1].close), Math.abs(bars[i].low - bars[i - 1].close)));
+    const atrValues = trueRanges.slice(-14), atr = atrValues.reduce(function (sum, value) { return sum + value; }, 0) / atrValues.length;
+    const recent = bars.slice(-20), support = Math.min.apply(null, recent.map(function (bar) { return bar.low; })), resistance = Math.max.apply(null, recent.map(function (bar) { return bar.high; }));
+    const isBull = ema9[ema9.length - 1] > ema21[ema21.length - 1], isBear = ema9[ema9.length - 1] < ema21[ema21.length - 1];
+    const macdBull = macd[macd.length - 1] > macdSignal[macdSignal.length - 1], macdBear = macd[macd.length - 1] < macdSignal[macdSignal.length - 1];
+    let bias = "NETRAL / TUNGGU", tone = "amber", explanation = "Sinyal belum searah. Tunggu konfirmasi candle dan jangan memaksakan entry.";
+    if (isBull && macdBull && rsi >= 52 && rsi < 70) { bias = "BIAS BULLISH"; tone = "green"; explanation = "EMA pendek di atas EMA panjang, momentum MACD positif, dan RSI mendukung kenaikan. Cari konfirmasi lanjutan; hindari mengejar harga."; }
+    else if (isBear && macdBear && rsi <= 48 && rsi > 30) { bias = "BIAS BEARISH"; tone = "red"; explanation = "EMA pendek di bawah EMA panjang, momentum MACD negatif, dan RSI mendukung pelemahan. Tunggu konfirmasi; waspadai pantulan."; }
+    else if (rsi >= 70) explanation = "RSI berada di area tinggi; risiko koreksi meningkat. Overbought bukan sinyal jual otomatis.";
+    else if (rsi <= 30) explanation = "RSI berada di area rendah; pantulan mungkin terjadi, tetapi belum menjadi sinyal beli tanpa konfirmasi.";
+    const stamp = new Date(last.time * 1000), timeframeLabel = ({ "5": "M5", "15": "M15", "60": "H1", "240": "H4 (data H1)", "D": "D1" })[interval] || "M15";
+    const scenario = tone === "green"
+      ? '<div class="mt5-scenario"><strong>Referensi skenario bullish (bukan sinyal entry)</strong><span>Invalidasi ilustratif: ' + formatGoldPrice(last.close - atr * 1.5) + '</span><span>Target ATR 1,5×: ' + formatGoldPrice(last.close + atr * 1.5) + '</span><span>Target ATR 2,5×: ' + formatGoldPrice(last.close + atr * 2.5) + '</span></div>'
+      : tone === "red"
+        ? '<div class="mt5-scenario"><strong>Referensi skenario bearish (bukan sinyal entry)</strong><span>Invalidasi ilustratif: ' + formatGoldPrice(last.close + atr * 1.5) + '</span><span>Target ATR 1,5×: ' + formatGoldPrice(last.close - atr * 1.5) + '</span><span>Target ATR 2,5×: ' + formatGoldPrice(last.close - atr * 2.5) + '</span></div>'
+        : '<div class="mt5-scenario"><strong>Belum ada rencana entry</strong><span>Tunggu tren dan momentum lebih selaras sebelum menentukan risiko.</span></div>';
+    output.innerHTML = '<div class="mt5-analysis-summary"><div><span class="mt5-analysis-kicker">BIAS TEKNIKAL · ' + timeframeLabel + '</span><h4 class="mt5-bias ' + tone + '">' + bias + '</h4><p>' + explanation + '</p></div><div class="mt5-current-price"><small>Harga candle terakhir (GC=F)</small><strong>' + formatGoldPrice(last.close) + '</strong><span>' + stamp.toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" }) + ' WIB</span></div></div>' +
+      '<div class="mt5-analysis-metrics">' +
+      analysisMetric("EMA 9 / EMA 21", formatGoldPrice(ema9[ema9.length - 1]) + " / " + formatGoldPrice(ema21[ema21.length - 1]), isBull ? "Tren pendek naik" : isBear ? "Tren pendek turun" : "Tren mendatar") +
+      analysisMetric("RSI (14)", rsi.toFixed(1), rsi >= 70 ? "Area tinggi" : rsi <= 30 ? "Area rendah" : rsi >= 50 ? "Momentum di atas 50" : "Momentum di bawah 50") +
+      analysisMetric("MACD", macdBull ? "Positif" : "Negatif", "Dibanding garis sinyal") +
+      analysisMetric("ATR (14)", formatGoldPrice(atr), "Perkiraan rentang candle") +
+      analysisMetric("Support (20 candle)", formatGoldPrice(support), "Area terendah terbaru") +
+      analysisMetric("Resistance (20 candle)", formatGoldPrice(resistance), "Area tertinggi terbaru") +
+      '</div>' + scenario + '<p class="mt5-analysis-disclaimer">Data Yahoo Finance GC=F (futures emas), bukan kuotasi XAUUSD HFM; bisa terlambat atau berbeda. Ini bukan nasihat keuangan dan tidak menjamin hasil.</p>';
   }
 
   function startMT5Polling() {
@@ -901,6 +989,7 @@
     else if (action === "mt5-connect") saveMT5Config();
     else if (action === "mt5-disconnect") disconnectMT5();
     else if (action === "mt5-refresh") refreshMT5Snapshot();
+    else if (action === "mt5-run-analysis") runMT5MarketAnalysis(actionButton);
     else if (action === "export-json") exportJSON();
     else if (action === "export-csv") exportCSV();
     else if (action === "import-json") $("#import-file").click();
