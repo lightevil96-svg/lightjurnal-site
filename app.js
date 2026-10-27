@@ -188,6 +188,21 @@
     const grossProfit = wins.reduce(function (sum, trade) { return sum + calcTrade(trade).pnl; }, 0);
     const grossLoss = Math.abs(losses.reduce(function (sum, trade) { return sum + calcTrade(trade).pnl; }, 0));
     const pnl = sumPnl(closed);
+    const validR = closed.filter(function (trade) { return calcTrade(trade).rMultiple !== null; });
+    const drawdownTrades = closed.slice().sort(function (a, b) { return a.date.localeCompare(b.date); });
+    let runningEquity = settings.startingBalance;
+    let peakEquity = runningEquity;
+    let maxDrawdown = 0;
+    let maxDrawdownPercent = null;
+    drawdownTrades.forEach(function (trade) {
+      runningEquity += calcTrade(trade).pnl;
+      if (runningEquity > peakEquity) peakEquity = runningEquity;
+      const drawdown = peakEquity - runningEquity;
+      if (drawdown > maxDrawdown) {
+        maxDrawdown = drawdown;
+        maxDrawdownPercent = peakEquity > 0 ? drawdown / peakEquity * 100 : null;
+      }
+    });
     return {
       closed: closed,
       wins: wins,
@@ -197,9 +212,13 @@
       count: closed.length,
       winRate: closed.length ? wins.length / closed.length * 100 : 0,
       profitFactor: grossLoss > 0 ? grossProfit / grossLoss : (grossProfit > 0 ? Infinity : null),
-      avgR: closed.filter(function (trade) { return calcTrade(trade).rMultiple !== null; }).length
-        ? closed.reduce(function (sum, trade) { return sum + (calcTrade(trade).rMultiple === null ? 0 : calcTrade(trade).rMultiple); }, 0) /
-          closed.filter(function (trade) { return calcTrade(trade).rMultiple !== null; }).length
+      expectancy: closed.length ? pnl / closed.length : null,
+      avgWin: wins.length ? grossProfit / wins.length : null,
+      avgLoss: losses.length ? losses.reduce(function (sum, trade) { return sum + calcTrade(trade).pnl; }, 0) / losses.length : null,
+      maxDrawdown: maxDrawdown,
+      maxDrawdownPercent: maxDrawdownPercent,
+      avgR: validR.length
+        ? validR.reduce(function (sum, trade) { return sum + calcTrade(trade).rMultiple; }, 0) / validR.length
         : null
     };
   }
@@ -942,22 +961,44 @@
       return { label: new Intl.DateTimeFormat("id-ID", { month: "short", year: "2-digit" }).format(d), value: monthMap[key] };
     });
     const strategyMap = {};
+    const weekdayMap = {};
     stats.closed.forEach(function (trade) {
+      const result = calcTrade(trade);
       const key = trade.strategy || "Tanpa strategi";
       if (!strategyMap[key]) strategyMap[key] = { pnl: 0, count: 0, wins: 0 };
-      strategyMap[key].pnl += calcTrade(trade).pnl;
+      strategyMap[key].pnl += result.pnl;
       strategyMap[key].count += 1;
-      if (calcTrade(trade).pnl > 0.0000001) strategyMap[key].wins += 1;
+      if (result.outcome === "Win") strategyMap[key].wins += 1;
+
+      const date = new Date(trade.date + "T12:00:00");
+      const weekday = date.getDay();
+      if (!weekdayMap[weekday]) weekdayMap[weekday] = { pnl: 0, count: 0, wins: 0, losses: 0 };
+      weekdayMap[weekday].pnl += result.pnl;
+      weekdayMap[weekday].count += 1;
+      if (result.outcome === "Win") weekdayMap[weekday].wins += 1;
+      if (result.outcome === "Loss") weekdayMap[weekday].losses += 1;
     });
     const strategies = Object.keys(strategyMap).map(function (key) {
       return { name: key, pnl: strategyMap[key].pnl, count: strategyMap[key].count, winRate: strategyMap[key].wins / strategyMap[key].count * 100 };
     }).sort(function (a, b) { return b.pnl - a.pnl; });
-    let html = '<div class="page-intro"><div><h2>Lihat pola, bukan tebakan</h2><p>Statistik berdasarkan trade tertutup yang tersimpan di jurnal ini.</p></div><button class="button button-secondary" data-action="export-csv">↓ Ekspor data</button></div>';
+    const weekdayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const weekdayOrder = [1, 2, 3, 4, 5, 6, 0];
+    const weekdays = weekdayOrder.filter(function (day) { return weekdayMap[day]; }).map(function (day) {
+      const item = weekdayMap[day];
+      return { name: weekdayNames[day], pnl: item.pnl, count: item.count, wins: item.wins, losses: item.losses, winRate: item.count ? item.wins / item.count * 100 : 0 };
+    });
+    let html = '<div class="page-intro"><div><h2>Lihat pola, bukan tebakan</h2><p>Statistik berdasarkan trade tertutup yang tersimpan di jurnal ini. Angka historis bukan jaminan hasil berikutnya.</p></div><button class="button button-secondary" data-action="export-csv">↓ Ekspor data</button></div>';
     html += '<div class="metric-grid">' +
       metricCard("Rata-rata R", stats.avgR === null ? "—" : formatNumber(stats.avgR, 2) + "R", "P/L bersih dibanding risiko per trade", "⌁", "blue", stats.avgR === null ? "" : moneyClass(stats.avgR)) +
       metricCard("Gross profit", formatMoney(stats.wins.reduce(function (sum, t) { return sum + calcTrade(t).pnl; }, 0)), stats.wins.length + " trade profit", "↗", "green", "positive") +
       metricCard("Gross loss", formatMoney(Math.abs(stats.losses.reduce(function (sum, t) { return sum + calcTrade(t).pnl; }, 0))), stats.losses.length + " trade loss", "↘", "red", "negative") +
       metricCard("Saldo estimasi", formatMoney(settings.startingBalance + stats.pnl), "Saldo awal + P/L tertutup", "◉", "amber", "") +
+      '</div>';
+    html += '<div class="metric-grid">' +
+      metricCard("Expectancy", stats.expectancy === null ? "—" : (stats.expectancy > 0 ? "+" : "") + formatMoney(stats.expectancy), "Rata-rata P/L per trade tertutup", "∑", stats.expectancy !== null && stats.expectancy >= 0 ? "green" : "red", stats.expectancy === null ? "" : moneyClass(stats.expectancy)) +
+      metricCard("Maximum drawdown", stats.count ? formatMoney(-stats.maxDrawdown) : "—", stats.maxDrawdownPercent === null ? "Penurunan terbesar dari puncak saldo" : "Sekitar " + formatNumber(stats.maxDrawdownPercent, 2) + "% dari puncak saldo", "↘", "red", stats.maxDrawdown > 0 ? "negative" : "neutral") +
+      metricCard("Rata-rata profit", stats.avgWin === null ? "—" : "+" + formatMoney(stats.avgWin), stats.wins.length + " trade menang", "↗", "green", "positive") +
+      metricCard("Rata-rata loss", stats.avgLoss === null ? "—" : formatMoney(stats.avgLoss), stats.losses.length + " trade kalah", "↘", "red", stats.avgLoss === null ? "" : "negative") +
       '</div>';
     html += '<div class="dashboard-grid"><section class="card"><div class="card-header"><div><h3 class="section-title">P/L bulanan</h3><p class="section-subtitle">Enam bulan terbaru dengan trade tertutup</p></div></div><div class="card-body">' +
       renderBars(monthNames, "Belum ada data bulanan. Tambahkan trade yang sudah ditutup.") + '</div></section>' +
@@ -968,12 +1009,21 @@
       '<div class="stat-item"><span class="label">Trade impas</span><span class="value">' + stats.breakeven + '</span></div>' +
       '<div class="stat-item"><span class="label">P/L bersih</span><span class="value ' + moneyClass(stats.pnl) + '">' + formatMoney(stats.pnl) + '</span></div>' +
       '</div></div></section></div>';
-    html += '<section class="card trade-table-card"><div class="card-header"><div><h3 class="section-title">Performa berdasarkan strategi</h3><p class="section-subtitle">Bandingkan strategi dari hasil yang sudah dicatat.</p></div></div>';
+    html += '<section class="card trade-table-card"><div class="card-header"><div><h3 class="section-title">Performa berdasarkan strategi</h3><p class="section-subtitle">Bandingkan hasil dan jumlah sampel tiap strategi.</p></div></div>';
     if (!strategies.length) {
       html += '<div class="card-body">' + emptyState("Belum cukup data", "Isi nama strategi ketika mencatat trade agar performanya bisa dibandingkan.", "") + '</div>';
     } else {
       html += '<div class="table-scroll"><table style="min-width:560px"><thead><tr><th>Strategi</th><th>Jumlah trade</th><th>Win rate</th><th>P/L bersih</th></tr></thead><tbody>' + strategies.map(function (item) {
-        return '<tr><td><strong style="color:#29364d">' + escapeHtml(item.name) + '</strong></td><td>' + item.count + '</td><td>' + formatNumber(item.winRate, 1) + '%</td><td><strong class="' + moneyClass(item.pnl) + '">' + (item.pnl > 0 ? "+" : "") + escapeHtml(formatMoney(item.pnl)) + '</strong></td></tr>';
+        return '<tr><td><strong style="color:#29364d">' + escapeHtml(item.name) + '</strong></td><td>' + item.count + (item.count < 5 ? ' <span class="pill amber">Sampel kecil</span>' : '') + '</td><td>' + formatNumber(item.winRate, 1) + '%</td><td><strong class="' + moneyClass(item.pnl) + '">' + (item.pnl > 0 ? "+" : "") + escapeHtml(formatMoney(item.pnl)) + '</strong></td></tr>';
+      }).join("") + '</tbody></table></div>';
+    }
+    html += '</section>';
+    html += '<section class="card trade-table-card"><div class="card-header"><div><h3 class="section-title">Performa berdasarkan hari</h3><p class="section-subtitle">Dihitung dari tanggal trade yang dicatat, bukan waktu entry. Gunakan jumlah sampel sebelum menyimpulkan pola.</p></div></div>';
+    if (!weekdays.length) {
+      html += '<div class="card-body">' + emptyState("Belum ada data hari", "Trade tertutup akan dikelompokkan menurut hari saat dicatat.", "") + '</div>';
+    } else {
+      html += '<div class="table-scroll"><table style="min-width:560px"><thead><tr><th>Hari</th><th>Trade tertutup</th><th>Win rate</th><th>P/L bersih</th><th>Catatan sampel</th></tr></thead><tbody>' + weekdays.map(function (item) {
+        return '<tr><td><strong style="color:#29364d">' + item.name + '</strong></td><td>' + item.count + '</td><td>' + formatNumber(item.winRate, 1) + '%</td><td><strong class="' + moneyClass(item.pnl) + '">' + (item.pnl > 0 ? "+" : "") + escapeHtml(formatMoney(item.pnl)) + '</strong></td><td>' + (item.count < 5 ? '<span class="pill amber">Sampel kecil</span>' : '<span class="pill gray">Perlu validasi lanjut</span>') + '</td></tr>';
       }).join("") + '</tbody></table></div>';
     }
     html += '</section>';
