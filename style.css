@@ -36,3 +36,17 @@
 
 /* XAUUSD automatic technical analysis widgets */
 .mt5-chart-controls{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}.mt5-chart-controls .mt5-symbol-label{width:150px}.mt5-analysis-card{margin-bottom:18px;overflow:hidden}.mt5-analysis-note{margin:16px 22px 0;padding:12px 14px;background:#f6f8fc;border:1px solid #e9eef5;border-radius:10px;color:#69778d;font-size:11px;line-height:1.65}.mt5-technical-analysis{min-height:420px;padding:10px 16px 0;overflow:hidden}.mt5-technical-analysis .tradingview-widget-container,.mt5-technical-analysis .tradingview-widget-container__widget{width:100%;min-width:0}.mt5-analysis-footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid #edf0f5;padding:12px 20px;color:#929daf;font-size:10px}.mt5-analysis-footer span:first-child{color:#52627a;font-weight:700}@media(max-width:700px){.mt5-chart-controls{width:100%;display:grid;grid-template-columns:1fr 1fr}.mt5-chart-controls .mt5-symbol-label{width:auto}.mt5-technical-analysis{padding:8px 8px 0;min-height:430px}.mt5-analysis-note{margin:12px 12px 0}.mt5-analysis-footer{padding:12px}}
+
+/* MT5 market analysis panel */
+.mt5-ai-analysis-card{margin-top:18px;overflow:hidden}.mt5-ai-analysis-body{padding:18px 22px 22px}
+.mt5-ai-analysis-intro{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 15px;background:#f7f9fc;border:1px solid #e8edf4;border-radius:12px;margin-bottom:15px}
+.mt5-ai-analysis-intro p{font-size:11px;color:#6f7c90;line-height:1.65;margin:0;max-width:760px}.mt5-ai-analysis-intro .button:disabled{opacity:.65;cursor:wait}
+.mt5-analysis-summary{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;padding:18px 0;border-bottom:1px solid #edf0f4}
+.mt5-analysis-kicker{font-size:9px;font-weight:800;letter-spacing:1.1px;color:#8a96a8}.mt5-analysis-summary h4{margin:7px 0 5px;font-size:20px;letter-spacing:-.4px}
+.mt5-bias.green{color:#159568}.mt5-bias.red{color:#cf4b5b}.mt5-bias.amber{color:#b17a18}.mt5-analysis-summary p{font-size:11px;color:#68768b;line-height:1.65;margin:0;max-width:600px}
+.mt5-current-price{min-width:190px;text-align:right;display:flex;flex-direction:column;gap:4px}.mt5-current-price small,.mt5-current-price span{font-size:10px;color:#8d99aa}.mt5-current-price strong{font-size:25px;letter-spacing:-.8px;color:#1e2b42}
+.mt5-analysis-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:15px 0}.mt5-analysis-metric{display:flex;flex-direction:column;gap:5px;border:1px solid #e9edf3;border-radius:11px;padding:13px;min-width:0}
+.mt5-analysis-metric span{font-size:10px;color:#8390a3}.mt5-analysis-metric strong{font-size:14px;color:#27364d;overflow-wrap:anywhere}.mt5-analysis-metric small{font-size:9px;color:#9aa4b3}
+.mt5-scenario{display:flex;flex-direction:column;gap:7px;padding:14px 15px;border-radius:11px;background:#f7f9fc;border:1px solid #e9edf3;font-size:11px;color:#657287}.mt5-scenario strong{color:#2b3950;font-size:12px}
+.mt5-analysis-disclaimer{font-size:10px;line-height:1.7;color:#8995a6;margin:13px 0 0}
+@media(max-width:700px){.mt5-ai-analysis-body{padding:14px}.mt5-ai-analysis-intro{align-items:stretch;flex-direction:column}.mt5-ai-analysis-intro .button{width:100%}.mt5-analysis-summary{flex-direction:column}.mt5-current-price{text-align:left;min-width:0}.mt5-analysis-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.mt5-analysis-summary h4{font-size:18px}}
