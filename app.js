@@ -253,20 +253,58 @@
 
   function renderMT5() {
     const config = getMT5Config();
-    const symbol = "FX:EURUSD";
+    const symbol = "OANDA:XAUUSD";
     content.innerHTML = '<div class="page-intro"><div><h2>Akun MetaTrader 5</h2><p>Chart pasar live dan panel akun investor melalui bridge MT5 yang kamu host sendiri.</p></div><span class="pill amber" id="mt5-status-pill">BELUM TERHUBUNG</span></div>' +
       '<div class="mt5-warning"><strong>Keamanan akun</strong><p>Jangan masukkan password investor MT5 ke halaman web. Login MT5 dilakukan di terminal pada server/VPS milikmu; halaman ini hanya menerima API key bridge dan data baca-saja. Jangan membuka bridge ke internet tanpa HTTPS dan pembatasan akses.</p></div>' +
       '<section class="card mt5-connection-card"><div class="card-header"><div><h3 class="section-title">Koneksi bridge</h3><p class="section-subtitle">Backend MT5 harus aktif di Windows VPS/PC yang menjalankan terminal MetaTrader 5.</p></div><button class="button button-secondary" data-action="mt5-refresh">↻ Perbarui</button></div>' +
       '<div class="mt5-connection-form"><label>URL API bridge<input id="mt5-endpoint" type="url" placeholder="https://domain-kamu.com/api/mt5" value="' + escapeHtml(config.endpoint) + '" autocomplete="url"></label><label>API key bridge<input id="mt5-api-key" type="password" placeholder="API key (hanya sesi ini)" autocomplete="off" value="' + escapeHtml(config.apiKey) + '"></label><button class="button button-primary" data-action="mt5-connect">Hubungkan</button><button class="button button-secondary" data-action="mt5-disconnect">Putuskan</button></div>' +
       '<p class="mt5-help">API key disimpan di session browser sampai tab/sesi berakhir. Endpoint wajib memakai HTTPS kecuali localhost. Koneksi membaca snapshot akun dan posisi; tidak ada fungsi untuk membuka/menutup order.</p></section>' +
       '<div id="mt5-account-panel"><div class="mt5-state-card"><span class="mt5-state-icon">⌁</span><strong>Menunggu koneksi bridge</strong><p>Isi URL API dan API key setelah backend MT5 dipasang. Chart pasar di bawah tetap dapat digunakan tanpa koneksi akun.</p></div></div>' +
-      '<section class="card mt5-chart-card"><div class="card-header"><div><h3 class="section-title">Chart pasar</h3><p class="section-subtitle">Data chart dari TradingView, bukan feed khusus broker MT5. Simbol dapat berbeda dari harga broker.</p></div><label class="mt5-symbol-label">Instrumen<select id="mt5-symbol"><option value="FX:EURUSD">EUR/USD</option><option value="FX:GBPUSD">GBP/USD</option><option value="FX:USDJPY">USD/JPY</option><option value="OANDA:XAUUSD">Gold / XAUUSD</option><option value="BINANCE:BTCUSDT">BTC/USDT</option><option value="NASDAQ:NDX">Nasdaq 100</option></select></label></div><div class="mt5-chart-frame"><iframe id="mt5-chart-frame" title="Chart pasar TradingView" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen src="' + tradingViewChartUrl(symbol) + '"></iframe></div></section>' +
+      '<section class="card mt5-chart-card"><div class="card-header"><div><h3 class="section-title">Chart pasar</h3><p class="section-subtitle">Chart TradingView. Harga bisa berbeda dari feed broker HFM.</p></div><div class="mt5-chart-controls"><label class="mt5-symbol-label">Instrumen<select id="mt5-symbol"><option value="OANDA:XAUUSD" selected>Gold / XAUUSD</option><option value="FX:EURUSD">EUR/USD</option><option value="FX:GBPUSD">GBP/USD</option><option value="FX:USDJPY">USD/JPY</option><option value="BINANCE:BTCUSDT">BTC/USDT</option><option value="NASDAQ:NDX">Nasdaq 100</option></select></label><label class="mt5-symbol-label">Timeframe<select id="mt5-interval"><option value="5">M5</option><option value="15" selected>M15</option><option value="60">H1</option><option value="240">H4</option><option value="D">D1</option></select></label></div></div><div class="mt5-chart-frame"><iframe id="mt5-chart-frame" title="Chart XAUUSD TradingView" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen src="' + tradingViewChartUrl(symbol, "15") + '"></iframe></div></section>' +
+      '<section class="card mt5-analysis-card"><div class="card-header"><div><h3 class="section-title">Analisis teknikal otomatis</h3><p class="section-subtitle">Ringkasan indikator TradingView untuk instrumen dan timeframe terpilih.</p></div><span class="pill blue">OTOMATIS</span></div><div class="mt5-analysis-note">Widget ini merangkum indikator teknikal dari TradingView, bukan analisis AI ChatGPT atau sinyal dari server HFM. Gunakan bersama struktur harga dan manajemen risiko.</div><div id="mt5-technical-analysis" class="mt5-technical-analysis"><div class="mt5-state-card"><strong>Memuat ringkasan indikator…</strong><p>Menunggu widget TradingView.</p></div></div><div class="mt5-analysis-footer"><span id="mt5-analysis-label">OANDA:XAUUSD · M15</span><span>Data pihak ketiga; bisa tertunda atau berbeda dari HFM.</span></div></section>' +
       '<section class="card mt5-positions-card"><div class="card-header"><div><h3 class="section-title">Posisi terbuka</h3><p class="section-subtitle">Diambil dari snapshot akun MT5 saat bridge tersedia.</p></div><span class="pill gray" id="mt5-position-count">0 posisi</span></div><div id="mt5-positions-list"><div class="mt5-empty-positions">Belum ada data posisi.</div></div></section>';
   }
 
-  function tradingViewChartUrl(symbol) {
+  function tradingViewChartUrl(symbol, interval) {
     return "https://s.tradingview.com/widgetembed/?frameElementId=tradelog_mt5_chart&symbol=" + encodeURIComponent(symbol) +
-      "&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=%23f1f3f6&studies=%5B%5D&theme=light&style=1&timezone=Asia%2FJakarta&withdateranges=1&hide_side_toolbar=0&allow_symbol_change=1&details=1&hotlist=1&calendar=0";
+      "&interval=" + encodeURIComponent(interval || "15") + "&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=%23f1f3f6&studies=%5B%5D&theme=light&style=1&timezone=Asia%2FJakarta&withdateranges=1&hide_side_toolbar=0&allow_symbol_change=1&details=1&hotlist=1&calendar=0";
+  }
+
+  function tradingViewAnalysisInterval(value) {
+    return ({ "5": "5m", "15": "15m", "60": "1h", "240": "4h", "D": "1D" })[String(value || "15")] || "15m";
+  }
+
+  function mountTradingViewTechnicalAnalysis(symbol, interval) {
+    const host = $("#mt5-technical-analysis");
+    const label = $("#mt5-analysis-label");
+    if (!host) return;
+    const ticker = symbol || "OANDA:XAUUSD";
+    const widgetInterval = tradingViewAnalysisInterval(interval);
+    if (label) label.textContent = ticker + " · " + ({ "5m": "M5", "15m": "M15", "1h": "H1", "4h": "H4", "1D": "D1" })[widgetInterval];
+    host.innerHTML = "";
+    const container = document.createElement("div");
+    container.className = "tradingview-widget-container";
+    container.style.width = "100%";
+    const widget = document.createElement("div");
+    widget.className = "tradingview-widget-container__widget";
+    container.appendChild(widget);
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js";
+    script.async = true;
+    script.text = JSON.stringify({
+      interval: widgetInterval,
+      width: "100%",
+      isTransparent: false,
+      height: "420",
+      symbol: ticker,
+      showIntervalTabs: true,
+      displayMode: "single",
+      locale: "id",
+      colorTheme: "light"
+    });
+    container.appendChild(script);
+    host.appendChild(container);
   }
 
   function startMT5Polling() {
@@ -914,9 +952,14 @@
     if (event.target.id === "market-filter") { marketFilter = event.target.value; updateTradeList(); }
     if (event.target.id === "outcome-filter") { outcomeFilter = event.target.value; updateTradeList(); }
     if (event.target.hasAttribute("data-risk-field")) updateRiskResult();
-    if (event.target.id === "mt5-symbol") {
+    if (event.target.id === "mt5-symbol" || event.target.id === "mt5-interval") {
+      const symbolSelect = $("#mt5-symbol");
+      const intervalSelect = $("#mt5-interval");
+      const selectedSymbol = symbolSelect ? symbolSelect.value : "OANDA:XAUUSD";
+      const selectedInterval = intervalSelect ? intervalSelect.value : "15";
       const frame = $("#mt5-chart-frame");
-      if (frame) frame.src = tradingViewChartUrl(event.target.value);
+      if (frame) frame.src = tradingViewChartUrl(selectedSymbol, selectedInterval);
+      mountTradingViewTechnicalAnalysis(selectedSymbol, selectedInterval);
     }
   });
 
