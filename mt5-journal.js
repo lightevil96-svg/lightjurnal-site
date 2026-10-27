@@ -26,8 +26,8 @@
   }
   function classify(section, headers) {
     const h = headers.join(" ");
-    if (/working orders|open positions|positions|posisi terbuka/.test(section)) return "open";
-    if (/orders|order history|riwayat order|pesanan/.test(section) || /state/.test(h) && /order/.test(h)) return "orders";
+    if (/working orders|order history|riwayat order|orders|pesanan/.test(section) || /state/.test(h) && /order/.test(h)) return "orders";
+    if (/open positions|positions|posisi terbuka/.test(section)) return "open";
     if (/deals|closed|transactions|transaksi|trade history/.test(section) || /deal/.test(h) || /profit/.test(h) && /entry/.test(h)) return "closed";
     if (/entry/.test(h) && /profit/.test(h)) return "closed";
     if (/price current|current price|floating/.test(h)) return "open";
@@ -141,7 +141,7 @@
     reader.onerror=()=>alert("Browser gagal membaca file ini.");
     reader.readAsText(file);
   }
-  function filtered(tab) { return rows.filter(r=>tab==="closed"?(r.section==="closed"||r.section==="deal-entry"):tab==="open"?r.section==="open":r.section==="orders"); }
+  function filtered(tab) { return rows.filter(r=>tab==="closed"?r.section==="closed":tab==="open"?r.section==="open":r.section==="orders"); }
   function table(tab) {
     const list=filtered(tab).slice().reverse();
     if(!list.length)return '<div class="mt5j-empty">Belum ada data pada kategori ini. Impor laporan HTML dari MT5 untuk memulai.</div>';

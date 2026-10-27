@@ -62,3 +62,36 @@
 .mt5-prompt-output{display:block;width:100%;min-height:260px;resize:vertical;padding:14px;border:1px solid #dfe5ee;border-radius:10px;background:#fbfcfe;color:#334158;font:11px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
 .mt5-prompt-output:focus{outline:none;border-color:#91aaf2;box-shadow:0 0 0 3px rgba(82,121,232,.08)}
 @media(max-width:700px){.mt5-prompt-body{padding:14px}.mt5-prompt-select{max-width:none}.mt5-prompt-actions{flex-direction:column}.mt5-prompt-actions .button{width:100%}.mt5-prompt-output{min-height:300px;font-size:10px}}
+
+
+/* Local MT5 report journal */
+.mt5j-security,.mt5j-how{padding:15px 18px;border:1px solid #e5eaf1;background:#fff;border-radius:12px;margin-bottom:16px;color:#5d6b80;font-size:11px;line-height:1.65}
+.mt5j-security{background:#fff8eb;border-color:#f1dfb5;color:#805e21}
+.mt5j-security strong,.mt5j-how strong{font-size:12px;color:#344159}
+.mt5j-security p{margin:5px 0 0}
+.mt5j-how ol{padding-left:20px;margin:8px 0}
+.mt5j-how li{margin:4px 0}
+.mt5j-how small{display:block;color:#8793a5}
+.mt5j-actions{display:flex;flex-wrap:wrap;gap:8px}
+.mt5j-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 17px}
+.mt5j-metric{background:#fff;border:1px solid #e9edf3;border-radius:13px;padding:16px;min-width:0;box-shadow:var(--shadow)}
+.mt5j-metric span{display:block;font-size:10px;color:#7d899c}
+.mt5j-metric strong{display:block;font-size:24px;line-height:1.35;letter-spacing:-.6px;margin:8px 0;color:#1c2940;overflow-wrap:anywhere}
+.mt5j-metric small{font-size:9px;line-height:1.5;color:#9aa4b2}
+.mt5j-card{overflow:hidden}
+.mt5j-cardhead{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:19px 21px 14px}
+.mt5j-cardhead h3{margin:0;font-size:14px}
+.mt5j-cardhead p{margin:4px 0 0;font-size:10px;color:#8995a6}
+.mt5j-tabs{display:flex;gap:7px;flex-wrap:wrap;padding:0 20px 14px;border-bottom:1px solid #edf0f4}
+.mt5j-tab{border:1px solid #e2e8f0;background:#fff;border-radius:8px;padding:8px 10px;font-size:10px;color:#66748a;font-weight:700}
+.mt5j-tab.active{background:#e8f8f1;border-color:#bdebd8;color:#13835c}
+.mt5j-tab span{margin-left:4px;opacity:.75}
+.mt5j-table-wrap{overflow:auto;width:100%}
+.mt5j-table{min-width:950px}
+.mt5j-table th{padding:12px 13px}
+.mt5j-table td{padding:12px 13px}
+.mt5j-footnote{font-size:10px;color:#9aa4b2;padding:0 20px 15px}
+.mt5j-empty{padding:34px 20px;text-align:center;color:#8e9aac;font-size:11px}
+.mt5j-bottom{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;color:#929daf;font-size:10px}
+@media(max-width:900px){.mt5j-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.mt5j-summary{gap:9px}.mt5j-metric{padding:13px}.mt5j-metric strong{font-size:20px}.mt5j-cardhead{padding:16px;align-items:flex-start;flex-direction:column}.mt5j-tabs{padding:0 13px 13px}.mt5j-tab{flex:1;min-width:0;padding:8px 6px}.mt5j-security,.mt5j-how{padding:13px}}
