@@ -74,7 +74,7 @@ test("all primary sections open and render", async ({ page }) => {
     await expect(page.locator("#page-title")).not.toBeEmpty();
     await expect(page.locator("#page-content")).toContainText(heading);
   }
-  await page.locator('[data-page="mt5journal"]').click();
+  await page.locator('.nav-list [data-page="mt5journal"]').click();
   await expect(page.locator("#page-title")).toHaveText("Jurnal Transaksi MT5");
   await expect(page.locator("#mt5-journal-root")).toBeVisible();
 });
@@ -109,7 +109,7 @@ test("trade create, calculation, edit, delete and persistence work", async ({ pa
 test("trade search and market/outcome filters work", async ({ page }) => {
   await addTrade(page, { symbol: "EURUSD", market: "Forex", entry: 1, exit: 1.1, multiplier: 100, size: 1 });
   await addTrade(page, { symbol: "BTCUSDT", market: "Crypto", entry: 100, exit: 90, multiplier: 1, size: 1, side: "Long" });
-  await page.locator('[data-page="trades"]').click();
+  await page.locator('.nav-list [data-page="trades"]').click();
   await page.locator("#trade-search").fill("BTC");
   await expect(page.locator("#trade-list-wrap")).toContainText("BTCUSDT");
   await expect(page.locator("#trade-list-wrap")).not.toContainText("EURUSD");
@@ -121,18 +121,18 @@ test("trade search and market/outcome filters work", async ({ page }) => {
 });
 
 test("risk calculator validates direction and calculates position size", async ({ page }) => {
-  await page.locator('[data-page="risk"]').click();
+  await page.locator('.nav-list [data-page="risk"]').click();
   await page.locator("#risk-entry").fill("100");
   await page.locator("#risk-stop").fill("95");
   await page.locator("#risk-multiplier").fill("1");
   await expect(page.locator("#risk-amount-result")).toContainText("100");
   await expect(page.locator("#risk-size-result")).toHaveText("20");
   await page.locator("#risk-side").selectOption("Short");
-  await expect(page.locator("#risk-size-result")).toContainText("Stop harus di atas entry");
+  await expect(page.locator("#risk-size-result")).toContainText("Entry harus positif; stop di atas entry");
 });
 
 test("settings persist after reload", async ({ page }) => {
-  await page.locator('[data-page="settings"]').click();
+  await page.locator('.nav-list [data-page="settings"]').click();
   await page.locator("#setting-currency").selectOption("IDR");
   await page.locator("#setting-balance").fill("2500000");
   await page.locator("#setting-daily-loss-limit").fill("2");
@@ -140,7 +140,7 @@ test("settings persist after reload", async ({ page }) => {
   await page.locator("#settings-form button[type='submit']").click();
   await expect(page.locator("#toast-root")).toContainText("berhasil disimpan");
   await page.reload();
-  await page.locator('[data-page="settings"]').click();
+  await page.locator('.nav-list [data-page="settings"]').click();
   await expect(page.locator("#setting-currency")).toHaveValue("IDR");
   await expect(page.locator("#setting-balance")).toHaveValue("2500000");
   await expect(page.locator("#setting-daily-loss-limit")).toHaveValue("2");
@@ -149,7 +149,7 @@ test("settings persist after reload", async ({ page }) => {
 
 test("JSON backup export and restore preserve trade data", async ({ page }) => {
   await addTrade(page, { symbol: "GBPUSD", market: "Forex", entry: 1.2, exit: 1.25, size: 1, multiplier: 100 });
-  await page.locator('[data-page="settings"]').click();
+  await page.locator('.nav-list [data-page="settings"]').click();
   const downloadPromise = page.waitForEvent("download");
   await page.locator('[data-action="export-json"]').click();
   const download = await downloadPromise;
@@ -168,7 +168,7 @@ test("JSON backup export and restore preserve trade data", async ({ page }) => {
     buffer: backupBuffer
   });
   await expect(page.locator("#toast-root")).toContainText("Backup berhasil dipulihkan");
-  await page.locator('[data-page="trades"]').click();
+  await page.locator('.nav-list [data-page="trades"]').click();
   await expect(page.locator("#page-content")).toContainText("GBPUSD");
 });
 
@@ -181,7 +181,7 @@ test("CSV export produces a downloadable trade report", async ({ page }) => {
 });
 
 test("MT5 HTML import shows closed deals and entry activity", async ({ page }) => {
-  await page.locator('[data-page="mt5journal"]').click();
+  await page.locator('.nav-list [data-page="mt5journal"]').click();
   page.on("dialog", dialog => dialog.accept());
   const html = `<!doctype html><html><body>
     <h2>Deals</h2>
@@ -205,7 +205,7 @@ test("MT5 HTML import shows closed deals and entry activity", async ({ page }) =
 });
 
 test("MT5 chart selector changes chart and analysis timeframe", async ({ page }) => {
-  await page.locator('[data-page="mt5"]').click();
+  await page.locator('.nav-list [data-page="mt5"]').click();
   await page.locator("#mt5-symbol").selectOption("FX:EURUSD");
   await expect(page.locator("#mt5-chart-frame")).toHaveAttribute("src", /FX%3AEURUSD/);
   await expect(page.locator("#mt5-analysis-label")).toContainText("FX:EURUSD");
@@ -224,7 +224,7 @@ test("market analysis uses closed candles and aggregates H4 from H1", async ({ p
       body: JSON.stringify(yahooPayload(interval, count))
     });
   });
-  await page.locator('[data-page="mt5"]').click();
+  await page.locator('.nav-list [data-page="mt5"]').click();
   await page.locator("#mt5-run-analysis").click();
   await expect(page.locator("#mt5-analysis-result")).toContainText("Harga candle terakhir (GC=F)");
   await page.locator("#mt5-interval").selectOption("240");
@@ -242,9 +242,10 @@ test("multi-timeframe prompt builder returns grounded candle data", async ({ pag
       body: JSON.stringify(yahooPayload(interval, 240))
     });
   });
-  await page.locator('[data-page="mt5"]').click();
+  await page.locator('.nav-list [data-page="mt5"]').click();
   await page.locator("#mt5-generate-prompt").click();
-  await expect(page.locator("#mt5-prompt-output")).toContainText("KONFIRMASI SELURUH TIMEFRAME", { timeout: 30000 });
+  await expect(page.locator("#mt5-prompt-status")).toContainText("Prompt multi-timeframe berhasil dibuat", { timeout: 30000 });
+  await expect(page.locator("#mt5-prompt-output")).toContainText("KONFIRMASI SELURUH TIMEFRAME", { timeout: 5000 });
   await expect(page.locator("#mt5-prompt-output")).toContainText("GC=F");
   await expect(page.locator("#mt5-copy-prompt")).toBeEnabled();
 });
@@ -293,7 +294,7 @@ test("MT5 bridge connects to a valid read-only snapshot and displays positions",
       })
     });
   });
-  await page.locator('[data-page="mt5"]').click();
+  await page.locator('.nav-list [data-page="mt5"]').click();
   await page.locator("#mt5-endpoint").fill("http://127.0.0.1:8765/api/mt5/snapshot");
   await page.locator("#mt5-api-key").fill("test-read-only-key");
   await page.locator('[data-action="mt5-connect"]').click();
