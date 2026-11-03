@@ -18,6 +18,11 @@ async function addTrade(page, trade) {
   await page.locator("#trade-size").fill(String(trade.size == null ? 1 : trade.size));
   await page.locator("#trade-multiplier").fill(String(trade.multiplier == null ? 1 : trade.multiplier));
   await page.locator("#trade-fees").fill(String(trade.fees == null ? 0 : trade.fees));
+  if (trade.checklist) {
+    for (const [key, checked] of Object.entries(trade.checklist)) {
+      if (checked) await page.locator('input[name="checklist_' + key + '"]').check();
+    }
+  }
   await page.locator('button[form="trade-form"][type="submit"]').click();
   await expect(page.locator("#modal-root")).toBeEmpty();
 }
@@ -89,12 +94,15 @@ test("trade create, calculation, edit, delete and persistence work", async ({ pa
     exit: 1.1,
     size: 1,
     multiplier: 100000,
-    fees: 5
+    fees: 5,
+    checklist: { setupValid: true, stopPlanned: true }
   });
   await expect(page.locator("#page-content")).toContainText("EURUSD");
   await expect(page.locator(".metric-card").first()).toContainText("9.995");
 
   await page.locator('[data-action="edit-trade"]').first().click();
+  await expect(page.locator('input[name="checklist_setupValid"]')).toBeChecked();
+  await expect(page.locator('input[name="checklist_stopPlanned"]')).toBeChecked();
   await page.locator("#trade-strategy").fill("London breakout");
   await page.locator('button[form="trade-form"][type="submit"]').click();
   await expect(page.locator("#page-content")).toContainText("London breakout");
@@ -149,7 +157,7 @@ test("settings persist after reload", async ({ page }) => {
 });
 
 test("JSON backup export and restore preserve trade data", async ({ page }) => {
-  await addTrade(page, { symbol: "GBPUSD", market: "Forex", entry: 1.2, exit: 1.25, size: 1, multiplier: 100 });
+  await addTrade(page, { symbol: "GBPUSD", market: "Forex", entry: 1.2, exit: 1.25, size: 1, multiplier: 100, checklist: { setupValid: true, newsChecked: true } });
   await page.locator('.sidebar-bottom [data-page="settings"]').click();
   const downloadPromise = page.waitForEvent("download");
   await page.locator('[data-action="export-json"]').click();
@@ -158,6 +166,8 @@ test("JSON backup export and restore preserve trade data", async ({ page }) => {
   const backupBuffer = await fs.readFile(await download.path());
   const backup = JSON.parse(backupBuffer.toString("utf8"));
   expect(backup.trades[0].symbol).toBe("GBPUSD");
+  expect(backup.trades[0].checklist.setupValid).toBe(true);
+  expect(backup.trades[0].checklist.newsChecked).toBe(true);
 
   page.once("dialog", dialog => dialog.accept());
   await page.locator('[data-action="clear-trades"]').click();
@@ -174,11 +184,15 @@ test("JSON backup export and restore preserve trade data", async ({ page }) => {
 });
 
 test("CSV export produces a downloadable trade report", async ({ page }) => {
-  await addTrade(page, { symbol: "USDJPY", market: "Forex", entry: 150, exit: 151, size: 1, multiplier: 10 });
+  await addTrade(page, { symbol: "USDJPY", market: "Forex", entry: 150, exit: 151, size: 1, multiplier: 10, checklist: { setupValid: true, riskWithinLimit: true } });
   const downloadPromise = page.waitForEvent("download");
   await page.locator('[data-action="export-csv"]').first().click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/tradelog-trades-.*\.csv$/);
+  const csv = await fs.readFile(await download.path(), "utf8");
+  expect(csv).toContain("checklist_setup_valid");
+  expect(csv).toContain("checklist_risk_within_limit");
+  expect(csv).toContain("true");
 });
 
 test("MT5 HTML import shows closed deals and entry activity", async ({ page }) => {
