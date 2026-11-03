@@ -1351,6 +1351,11 @@
 
   function importJSONFile(file) {
     if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      showToast("File backup terlalu besar. Batas impor JSON adalah 15 MB.");
+      $("#import-file").value = "";
+      return;
+    }
     const reader = new FileReader();
     reader.onload = function () {
       const previousTrades = trades.slice();
@@ -1376,6 +1381,7 @@
           settings = previousSettings;
           showToast("Pemulihan dibatalkan karena data tidak berhasil disimpan. Data di layar dikembalikan; periksa ruang penyimpanan browser.");
           renderPage();
+          $("#import-file").value = "";
           return;
         }
         renderPage();
