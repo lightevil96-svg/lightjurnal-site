@@ -127,12 +127,13 @@
     const reader=new FileReader();
     reader.onload=()=>{
       try {
+        const previousRows=rows.slice();
         const text=String(reader.result||"");
         let incoming=/\.csv$/i.test(file.name)?parseCSVFile(text,file.name):parseHTML(text,file.name);
         if(!incoming.length) throw new Error("Tidak ditemukan tabel transaksi yang dikenali. Pilih laporan History/Account Statement dari MT5 dalam HTML, atau CSV berheader.");
         const seen=new Set(rows.map(dedupeKey)); let added=0;
         incoming.forEach(r=>{const k=dedupeKey(r);if(seen.has(k))return;seen.add(k);r.id=(crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random());rows.push(r);added++;});
-        if(!save())return;
+        if(!save()){rows=previousRows;render();const input=$("#mt5-journal-file");if(input)input.value="";return;}
         render();
         alert("Impor selesai. "+added+" baris baru ditambahkan; "+(incoming.length-added)+" duplikat dilewati. Periksa tab dan total sebelum dipakai untuk evaluasi.");
       }catch(e){alert(e.message||"File tidak dapat dibaca.");}
@@ -141,7 +142,11 @@
     reader.onerror=()=>alert("Browser gagal membaca file ini.");
     reader.readAsText(file);
   }
-  function filtered(tab) { return rows.filter(r=>tab==="closed"?r.section==="closed":tab==="open"?r.section==="open":r.section==="orders"); }
+  function filtered(tab) {
+    return rows.filter(r => tab === "closed" ? r.section === "closed" :
+      tab === "open" ? r.section === "open" :
+      tab === "orders" ? r.section === "orders" : r.section === "deal-entry");
+  }
   function table(tab) {
     const list=filtered(tab).slice().reverse();
     if(!list.length)return '<div class="mt5j-empty">Belum ada data pada kategori ini. Impor laporan HTML dari MT5 untuk memulai.</div>';
@@ -149,11 +154,14 @@
       ? '<th>Waktu</th><th>Ticket / Deal</th><th>Simbol</th><th>Jenis</th><th>Entry</th><th>Volume</th><th>Profit</th><th>Komisi</th><th>Swap</th><th>Net estimasi</th>'
       : tab==="open"
       ? '<th>Waktu</th><th>Ticket</th><th>Simbol</th><th>Jenis</th><th>Volume</th><th>Harga buka</th><th>Harga sekarang</th><th>SL</th><th>TP</th><th>Floating P/L</th>'
+      : tab==="entry"
+      ? '<th>Waktu</th><th>Ticket / Deal</th><th>Simbol</th><th>Jenis</th><th>Arah deal</th><th>Volume</th><th>Harga</th><th>Komentar</th>'
       : '<th>Waktu</th><th>Ticket / Order</th><th>Simbol</th><th>Jenis</th><th>Volume</th><th>Harga</th><th>Status</th><th>Komentar</th>';
     const body=list.map(r=>{
       const base='<td>'+esc(r.time||"—")+'</td><td>'+esc(r.ticket||"—")+'</td><td><strong>'+esc(r.symbol||"—")+'</strong></td><td>'+esc(r.type||"—")+'</td>';
       if(tab==="closed") return '<tr>'+base+'<td>'+esc(r.direction||"—")+'</td><td>'+esc(r.volume==null?"—":r.volume)+'</td><td>'+esc(r.profit==null?"—":money(r.profit))+'</td><td>'+esc(r.commission==null?"—":money(r.commission))+'</td><td>'+esc(r.swap==null?"—":money(r.swap))+'</td><td><strong>'+esc(r.net==null?"—":money(r.net))+'</strong></td></tr>';
       if(tab==="open") return '<tr>'+base+'<td>'+esc(r.volume==null?"—":r.volume)+'</td><td>'+esc(r.price==null?"—":money(r.price))+'</td><td>'+esc(r.current==null?"—":money(r.current))+'</td><td>'+esc(r.sl==null?"—":money(r.sl))+'</td><td>'+esc(r.tp==null?"—":money(r.tp))+'</td><td><strong>'+esc(r.profit==null?"—":money(r.profit))+'</strong></td></tr>';
+      if(tab==="entry") return '<tr>'+base+'<td>'+esc(r.direction||"—")+'</td><td>'+esc(r.volume==null?"—":r.volume)+'</td><td>'+esc(r.price==null?"—":money(r.price))+'</td><td>'+esc(r.comment||"—")+'</td></tr>';
       return '<tr>'+base+'<td>'+esc(r.volume==null?"—":r.volume)+'</td><td>'+esc(r.price==null?"—":money(r.price))+'</td><td>'+esc(r.state||"—")+'</td><td>'+esc(r.comment||"—")+'</td></tr>';
     }).join("");
     return '<div class="mt5j-table-wrap"><table class="mt5j-table"><thead><tr>'+cells+'</tr></thead><tbody>'+body+'</tbody></table></div><p class="mt5j-footnote">Menampilkan '+list.length+' baris · Sumber file: laporan yang kamu impor. Periksa laporan asli karena nama kolom dapat berbeda antarbroker.</p>';
@@ -163,7 +171,7 @@
     const closed=filtered("closed"), open=filtered("open"), orders=filtered("orders");
     const closedNet=closed.reduce((s,r)=>s+(r.net==null?0:r.net),0);
     $("#mt5j-summary").innerHTML='<div class="mt5j-metric"><span>Deal / transaksi tertutup</span><strong>'+closed.length+'</strong><small>Termasuk deal entry yang ditandai terpisah</small></div><div class="mt5j-metric"><span>Net tercatat (estimasi)</span><strong>'+money(closedNet)+'</strong><small>Profit + komisi + swap jika tersedia</small></div><div class="mt5j-metric"><span>Posisi terbuka</span><strong>'+open.length+'</strong><small>Dari bagian Positions laporan</small></div><div class="mt5j-metric"><span>Order</span><strong>'+orders.length+'</strong><small>Order historis / working orders</small></div>';
-    $("#mt5j-tabs").innerHTML=[["closed","Deal / tertutup"],["open","Posisi terbuka"],["orders","Riwayat order"]].map(([k,label])=>'<button type="button" class="mt5j-tab '+(activeTab===k?"active":"")+'" data-mt5j-tab="'+k+'">'+label+' <span>'+filtered(k).length+'</span></button>').join("");
+    $("#mt5j-tabs").innerHTML=[["closed","Deal / tertutup"],["entry","Entry / aktivitas"],["open","Posisi terbuka"],["orders","Riwayat order"]].map(([k,label])=>'<button type="button" class="mt5j-tab '+(activeTab===k?"active":"")+'" data-mt5j-tab="'+k+'">'+label+' <span>'+filtered(k).length+'</span></button>').join("");
     $("#mt5j-table").innerHTML=table(activeTab);
     $("#mt5j-import-count").textContent=rows.length+" baris tersimpan di browser ini";
   }
@@ -178,8 +186,8 @@
   document.addEventListener("click",function(e){
     const tab=e.target.closest("[data-mt5j-tab]"); if(tab){activeTab=tab.dataset.mt5jTab;render();return;}
     if(e.target.closest("#mt5j-choose")||e.target.closest("#mt5j-choose-bottom")){$("#mt5-journal-file")?.click();return;}
-    if(e.target.closest("#mt5j-export")){const blob=new Blob([JSON.stringify({format:"LightJurnal MT5 import v1",exportedAt:new Date().toISOString(),rows},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="lightjurnal-mt5-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href);return;}
-    if(e.target.closest("#mt5j-clear")){if(confirm("Hapus semua data impor MT5 dari browser ini? Tindakan ini tidak menghapus jurnal trade manual.")){rows=[];save();render();}return;}
+    if(e.target.closest("#mt5j-export")){const blob=new Blob([JSON.stringify({format:"LightJurnal MT5 import v1",exportedAt:new Date().toISOString(),rows},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="lightjurnal-mt5-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);return;}
+    if(e.target.closest("#mt5j-clear")){if(confirm("Hapus semua data impor MT5 dari browser ini? Tindakan ini tidak menghapus jurnal trade manual.")){const previousRows=rows.slice();rows=[];if(!save()){rows=previousRows;render();return;}render();}return;}
     const nav=e.target.closest('[data-page="mt5journal"]'); if(nav){e.preventDefault();e.stopImmediatePropagation();showPage();document.body.classList.remove("sidebar-open");return;}
     if(e.target.closest('[data-page]') && !e.target.closest('[data-page="mt5journal"]')){const root=$("#mt5-journal-root");if(root){const b=e.target.closest("[data-page]");if(b&&b.dataset.page!=="mt5journal"){} }}
   },true);
