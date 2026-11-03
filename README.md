@@ -48,3 +48,27 @@ TradeLog adalah jurnal trading pribadi berbasis HTML, CSS, dan JavaScript murni.
 - Homepage memiliki canonical URL dan metadata Open Graph/Twitter.
 - Jangan menambahkan jumlah followers, klaim verifikasi, profesi, lokasi, atau biodata Light V ke markup tanpa data yang benar dan dapat dikonfirmasi.
 - Setelah deployment, verifikasi domain di Google Search Console, kirim sitemap, lalu lakukan inspeksi URL untuk homepage dan halaman profil. Pengindeksan dan tampilan hasil penelusuran tetap ditentukan oleh Google.
+
+
+## Pengembangan dan pemeriksaan kualitas
+
+Aplikasi ini tetap menggunakan HTML/CSS/JavaScript tanpa proses build frontend. Pemeriksaan browser otomatis memakai Playwright:
+
+```bash
+npm install
+npx playwright install chromium
+npm test
+```
+
+GitHub Actions menjalankan pemeriksaan sintaks JavaScript, kompilasi sintaks Python bridge, dan pengujian browser pada setiap push ke `main` serta pull request.
+
+Cakupan pengujian browser meliputi navigasi, pembuatan/edit/penghapusan trade, pencarian dan filter, kalkulator risiko, penyimpanan pengaturan, backup/restore JSON, ekspor CSV, impor laporan MT5, chart, analisis pasar, prompt multi-timeframe, koneksi bridge, dan navigasi mobile.
+
+## Batasan integrasi eksternal
+
+- Chart dan ringkasan indikator memakai widget TradingView; tampilan widget bergantung pada ketersediaan layanan pihak ketiga dan koneksi pengguna.
+- Analisis candle dan prompt multi-timeframe mengambil data Yahoo Finance GC=F sebagai proksi futures emas, bukan kuotasi spot atau feed broker. Data dapat tertunda, dibatasi, atau tidak tersedia.
+- Panel akun MT5 hanya berfungsi setelah pengguna menjalankan bridge Python pada PC/VPS Windows yang terhubung ke terminal MT5, lalu menyediakan endpoint HTTPS reverse proxy dan API key. Tanpa backend tersebut, status offline adalah perilaku yang benar, bukan data akun palsu.
+- Bridge hanya membaca snapshot akun dan posisi terbuka. Bridge tidak mengirim, mengubah, atau menutup order.
+- Data jurnal manual dan hasil impor MT5 tersimpan pada browser/perangkat lokal masing-masing. Tidak ada sinkronisasi akun atau cloud backup otomatis.
+- Aplikasi tidak memberikan rekomendasi investasi dan tidak menjamin hasil trading.
