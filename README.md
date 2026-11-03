@@ -36,3 +36,15 @@ TradeLog adalah jurnal trading pribadi berbasis HTML, CSS, dan JavaScript murni.
 - Checklist adalah catatan mandiri per trade, bukan validasi otomatis terhadap pasar atau jaminan bahwa aturan benar-benar dipatuhi. Data checklist lama yang belum ada akan tampil tidak dicentang.
 - Aplikasi ini merupakan alat pencatatan dan edukasi, bukan rekomendasi transaksi atau nasihat keuangan.
 - File CNAME dipertahankan untuk domain lightjurnal.my.id. Pastikan konfigurasi GitHub Pages/DNS di akun pemilik tetap sesuai setelah perubahan situs.
+
+
+## Profil Light V dan pengindeksan
+
+- Halaman profil: https://lightjurnal.my.id/light-v/
+- Username TikTok yang dihubungkan: @lightvstore (https://www.tiktok.com/@lightvstore)
+- Data terstruktur halaman profil menggunakan Schema.org `ProfilePage` dengan entitas `Person` dan tautan profil eksternal `sameAs`.
+- Sitemap XML: https://lightjurnal.my.id/sitemap.xml
+- Robots: https://lightjurnal.my.id/robots.txt
+- Homepage memiliki canonical URL dan metadata Open Graph/Twitter.
+- Jangan menambahkan jumlah followers, klaim verifikasi, profesi, lokasi, atau biodata Light V ke markup tanpa data yang benar dan dapat dikonfirmasi.
+- Setelah deployment, verifikasi domain di Google Search Console, kirim sitemap, lalu lakukan inspeksi URL untuk homepage dan halaman profil. Pengindeksan dan tampilan hasil penelusuran tetap ditentukan oleh Google.
