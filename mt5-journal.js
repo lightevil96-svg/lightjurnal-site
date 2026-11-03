@@ -151,7 +151,7 @@
     const list=filtered(tab).slice().reverse();
     if(!list.length)return '<div class="mt5j-empty">Belum ada data pada kategori ini. Impor laporan HTML dari MT5 untuk memulai.</div>';
     const cells=tab==="closed"
-      ? '<th>Waktu</th><th>Ticket / Deal</th><th>Simbol</th><th>Jenis</th><th>Entry</th><th>Volume</th><th>Profit</th><th>Komisi</th><th>Swap</th><th>Net estimasi</th>'
+      ? '<th>Waktu</th><th>Ticket / Deal</th><th>Simbol</th><th>Jenis</th><th>Entry</th><th>Volume</th><th>Profit</th><th>Komisi</th><th>Swap</th><th>Net estimasi</th><th>Komentar</th>'
       : tab==="open"
       ? '<th>Waktu</th><th>Ticket</th><th>Simbol</th><th>Jenis</th><th>Volume</th><th>Harga buka</th><th>Harga sekarang</th><th>SL</th><th>TP</th><th>Floating P/L</th>'
       : tab==="entry"
@@ -159,7 +159,7 @@
       : '<th>Waktu</th><th>Ticket / Order</th><th>Simbol</th><th>Jenis</th><th>Volume</th><th>Harga</th><th>Status</th><th>Komentar</th>';
     const body=list.map(r=>{
       const base='<td>'+esc(r.time||"—")+'</td><td>'+esc(r.ticket||"—")+'</td><td><strong>'+esc(r.symbol||"—")+'</strong></td><td>'+esc(r.type||"—")+'</td>';
-      if(tab==="closed") return '<tr>'+base+'<td>'+esc(r.direction||"—")+'</td><td>'+esc(r.volume==null?"—":r.volume)+'</td><td>'+esc(r.profit==null?"—":money(r.profit))+'</td><td>'+esc(r.commission==null?"—":money(r.commission))+'</td><td>'+esc(r.swap==null?"—":money(r.swap))+'</td><td><strong>'+esc(r.net==null?"—":money(r.net))+'</strong></td></tr>';
+      if(tab==="closed") return '<tr>'+base+'<td>'+esc(r.direction||"—")+'</td><td>'+esc(r.volume==null?"—":r.volume)+'</td><td>'+esc(r.profit==null?"—":money(r.profit))+'</td><td>'+esc(r.commission==null?"—":money(r.commission))+'</td><td>'+esc(r.swap==null?"—":money(r.swap))+'</td><td><strong>'+esc(r.net==null?"—":money(r.net))+'</strong></td><td>'+esc(r.comment||"—")+'</td></tr>';
       if(tab==="open") return '<tr>'+base+'<td>'+esc(r.volume==null?"—":r.volume)+'</td><td>'+esc(r.price==null?"—":money(r.price))+'</td><td>'+esc(r.current==null?"—":money(r.current))+'</td><td>'+esc(r.sl==null?"—":money(r.sl))+'</td><td>'+esc(r.tp==null?"—":money(r.tp))+'</td><td><strong>'+esc(r.profit==null?"—":money(r.profit))+'</strong></td></tr>';
       if(tab==="entry") return '<tr>'+base+'<td>'+esc(r.direction||"—")+'</td><td>'+esc(r.volume==null?"—":r.volume)+'</td><td>'+esc(r.price==null?"—":money(r.price))+'</td><td>'+esc(r.comment||"—")+'</td></tr>';
       return '<tr>'+base+'<td>'+esc(r.volume==null?"—":r.volume)+'</td><td>'+esc(r.price==null?"—":money(r.price))+'</td><td>'+esc(r.state||"—")+'</td><td>'+esc(r.comment||"—")+'</td></tr>';
