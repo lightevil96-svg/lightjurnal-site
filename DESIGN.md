@@ -50,3 +50,10 @@ A calm, precise trading workspace: high information density without visual noise
 Run the browser regression suite with `npm install`, `npx playwright install chromium`, and `npm test`. GitHub Actions also runs `node --check` on the application and test scripts plus `python3 -m py_compile mt5-bridge.py`.
 
 The automated browser suite exercises real UI flows rather than checking only whether controls exist. External market and bridge services are mocked in tests so calculations, parsing, state changes, and error handling can be tested deterministically.
+
+
+## Typography and visual restraint
+
+- Interface and reading text use IBM Plex Sans; financial figures use IBM Plex Mono with tabular numerals so columns and balances align.
+- Keep the sidebar and risk panel surfaces flat and quiet. Reserve green/red/amber for semantic trading states, not decoration.
+- Prefer action feedback and state transitions over ambient animations. The reduced-motion preference remains authoritative.
