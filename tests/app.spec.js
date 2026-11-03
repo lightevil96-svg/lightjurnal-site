@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const fs = require("node:fs/promises");
 
 const TODAY = "2026-11-04";
 
@@ -152,34 +153,30 @@ test("JSON backup export and restore preserve trade data", async ({ page }) => {
   const downloadPromise = page.waitForEvent("download");
   await page.locator('[data-action="export-json"]').click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toMatch(/tradelog-backup-.*\.json$/);
+  expect(download.suggestedFilename()).toMatch(/tradelog-backup-.*\\.json$/);
+  const backupBuffer = await fs.readFile(await download.path());
+  const backup = JSON.parse(backupBuffer.toString("utf8"));
+  expect(backup.trades[0].symbol).toBe("GBPUSD");
 
   page.once("dialog", dialog => dialog.accept());
   await page.locator('[data-action="clear-trades"]').click();
   await expect(page.locator("#page-content")).toContainText("0 trade tersimpan");
   await page.locator('[data-action="import-json"]').click();
   await page.locator("#import-file").setInputFiles({
-    name: "backup.json",
+    name: download.suggestedFilename(),
     mimeType: "application/json",
-    buffer: Buffer.from(JSON.stringify({
-      version: 1,
-      settings: { currency: "USD", startingBalance: 10000, dailyLossLimitPercent: 3, maxTradesPerDay: 5 },
-      trades: [{
-        id: "restored-trade",
-        date: TODAY,
-        symbol: "GBPUSD",
-        market: "Forex",
-        side: "Long",
-        entry: 1.2,
-        exit: 1.25,
-        size: 1,
-        multiplier: 100,
-        fees: 0
-      }]
-    }))
+    buffer: backupBuffer
   });
   await page.locator('[data-page="trades"]').click();
   await expect(page.locator("#page-content")).toContainText("GBPUSD");
+});
+
+test("CSV export produces a downloadable trade report", async ({ page }) => {
+  await addTrade(page, { symbol: "USDJPY", market: "Forex", entry: 150, exit: 151, size: 1, multiplier: 10 });
+  const downloadPromise = page.waitForEvent("download");
+  await page.locator('[data-action="export-csv"]').first().click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/tradelog-trades-.*\\.csv$/);
 });
 
 test("MT5 HTML import shows closed deals and entry activity", async ({ page }) => {
