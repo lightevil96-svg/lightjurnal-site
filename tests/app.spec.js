@@ -348,7 +348,7 @@ test("MT5 bridge connects to a valid read-only snapshot and displays positions",
   await expect(page.locator("#mt5-positions-list")).toContainText("EURUSD");
   await expect(page.locator("#mt5-positions-list")).toContainText("1.09");
   await expect(page.locator("#mt5-positions-list")).toContainText("1.12");
-  await expect(page.locator("#mt5-positions-list")).toContainText("4.8");
+  await expect(page.locator("#mt5-positions-list")).toContainText("4,8");
 });
 
 test("mobile navigation opens and closes without leaving the overlay stuck", async ({ page }) => {
