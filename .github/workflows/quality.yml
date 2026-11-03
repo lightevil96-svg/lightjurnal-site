@@ -27,6 +27,8 @@ jobs:
         run: node --check app.js && node --check mt5-journal.js && node --check playwright.config.js && node --check tests/app.spec.js
       - name: Compile Python MT5 bridge
         run: python3 -m py_compile mt5-bridge.py
+      - name: Test MT5 bridge API with a mocked terminal
+        run: python3 -m pip install Flask && python3 -m unittest discover -s tests -p "test_*.py"
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Run browser tests
