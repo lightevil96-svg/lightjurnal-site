@@ -167,6 +167,7 @@ test("JSON backup export and restore preserve trade data", async ({ page }) => {
     mimeType: "application/json",
     buffer: backupBuffer
   });
+  await expect(page.locator("#toast-root")).toContainText("Backup berhasil dipulihkan");
   await page.locator('[data-page="trades"]').click();
   await expect(page.locator("#page-content")).toContainText("GBPUSD");
 });
