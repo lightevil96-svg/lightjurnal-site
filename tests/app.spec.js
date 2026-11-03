@@ -153,7 +153,7 @@ test("JSON backup export and restore preserve trade data", async ({ page }) => {
   const downloadPromise = page.waitForEvent("download");
   await page.locator('[data-action="export-json"]').click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toMatch(/tradelog-backup-.*\\.json$/);
+  expect(download.suggestedFilename()).toMatch(/tradelog-backup-.*\.json$/);
   const backupBuffer = await fs.readFile(await download.path());
   const backup = JSON.parse(backupBuffer.toString("utf8"));
   expect(backup.trades[0].symbol).toBe("GBPUSD");
@@ -176,7 +176,7 @@ test("CSV export produces a downloadable trade report", async ({ page }) => {
   const downloadPromise = page.waitForEvent("download");
   await page.locator('[data-action="export-csv"]').first().click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toMatch(/tradelog-trades-.*\\.csv$/);
+  expect(download.suggestedFilename()).toMatch(/tradelog-trades-.*\.csv$/);
 });
 
 test("MT5 HTML import shows closed deals and entry activity", async ({ page }) => {
