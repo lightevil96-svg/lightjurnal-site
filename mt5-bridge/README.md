@@ -64,6 +64,8 @@ Contoh response:
       "volume": 0.01,
       "priceOpen": 1.08,
       "priceCurrent": 1.081,
+      "sl": 1.075,
+      "tp": 1.09,
       "profit": 1.0,
       "swap": 0.0
     }
