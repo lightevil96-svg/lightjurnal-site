@@ -123,7 +123,7 @@
   function dedupeKey(r) { return [r.section,r.ticket,r.time,r.symbol,r.type,r.volume,r.price].join("|").toLowerCase(); }
   function importFile(file) {
     if(!file)return;
-    if(file.size>15*1024*1024){alert("File terlalu besar. Maksimal 15 MB.");return;}
+    if(file.size>15*1024*1024){alert("File terlalu besar. Maksimal 15 MB.");const input=$("#mt5-journal-file");if(input)input.value="";return;}
     const reader=new FileReader();
     reader.onload=()=>{
       try {
