@@ -290,7 +290,10 @@ test("MT5 bridge connects to a valid read-only snapshot and displays positions",
           volume: 0.1,
           priceOpen: 1.1,
           priceCurrent: 1.105,
-          profit: 5
+          sl: 1.09,
+          tp: 1.12,
+          profit: 5,
+          swap: -0.2
         }]
       })
     });
@@ -302,6 +305,9 @@ test("MT5 bridge connects to a valid read-only snapshot and displays positions",
   await expect(page.locator("#mt5-status-pill")).toHaveText("TERHUBUNG");
   await expect(page.locator("#mt5-account-panel")).toContainText("Demo-Server");
   await expect(page.locator("#mt5-positions-list")).toContainText("EURUSD");
+  await expect(page.locator("#mt5-positions-list")).toContainText("1.09");
+  await expect(page.locator("#mt5-positions-list")).toContainText("1.12");
+  await expect(page.locator("#mt5-positions-list")).toContainText("4.8");
 });
 
 test("mobile navigation opens and closes without leaving the overlay stuck", async ({ page }) => {
