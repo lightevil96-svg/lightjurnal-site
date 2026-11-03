@@ -60,6 +60,8 @@ function yahooPayload(interval, count = 100) {
 }
 
 test.beforeEach(async ({ page }) => {
+  await page.route("https://fonts.googleapis.com/**", route => route.abort());
+  await page.route("https://fonts.gstatic.com/**", route => route.abort());
   await page.route("https://s3.tradingview.com/**", route => route.abort());
   await page.route("https://s.tradingview.com/**", route => route.abort());
   await page.goto("/");
