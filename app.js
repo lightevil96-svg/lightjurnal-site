@@ -117,12 +117,28 @@
   }
 
   function saveData() {
+    let previousTrades = null;
+    let previousSettings = null;
+    let snapshotTaken = false;
     try {
+      previousTrades = localStorage.getItem(STORAGE_TRADES);
+      previousSettings = localStorage.getItem(STORAGE_SETTINGS);
+      snapshotTaken = true;
       localStorage.setItem(STORAGE_TRADES, JSON.stringify(trades));
       localStorage.setItem(STORAGE_SETTINGS, JSON.stringify(settings));
       return true;
     } catch (error) {
-      showToast("Penyimpanan gagal. Periksa ruang browser atau ekspor backup.");
+      if (snapshotTaken) {
+        try {
+          if (previousTrades === null) localStorage.removeItem(STORAGE_TRADES);
+          else localStorage.setItem(STORAGE_TRADES, previousTrades);
+          if (previousSettings === null) localStorage.removeItem(STORAGE_SETTINGS);
+          else localStorage.setItem(STORAGE_SETTINGS, previousSettings);
+        } catch (rollbackError) {
+          console.error("TradeLog storage rollback error:", rollbackError);
+        }
+      }
+      showToast("Penyimpanan gagal. Perubahan dibatalkan; periksa ruang browser atau ekspor backup.");
       console.error("TradeLog save error:", error);
       return false;
     }
