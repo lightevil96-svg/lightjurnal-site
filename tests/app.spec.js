@@ -154,9 +154,9 @@ test("JSON backup export and restore preserve trade data", async ({ page }) => {
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/tradelog-backup-.*\.json$/);
 
-  await page.locator('[data-action="clear-trades"]').click();
   page.once("dialog", dialog => dialog.accept());
-  // The clear confirmation is handled above only if it appears before the click; this click is repeated safely below.
+  await page.locator('[data-action="clear-trades"]').click();
+  await expect(page.locator("#page-content")).toContainText("0 trade tersimpan");
   await page.locator('[data-action="import-json"]').click();
   await page.locator("#import-file").setInputFiles({
     name: "backup.json",
@@ -178,6 +178,7 @@ test("JSON backup export and restore preserve trade data", async ({ page }) => {
       }]
     }))
   });
+  await page.locator('[data-page="trades"]').click();
   await expect(page.locator("#page-content")).toContainText("GBPUSD");
 });
 
