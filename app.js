@@ -473,11 +473,11 @@
       encodeURIComponent(range) + "&interval=" + encodeURIComponent(interval);
     let data;
     try {
-      const response = await fetch(endpoint, { cache: "no-store" });
+      const response = await fetchWithTimeout(endpoint, { cache: "no-store" }, 10000);
       if (!response.ok) throw new Error("Sumber langsung HTTP " + response.status);
       data = await response.json();
     } catch (directError) {
-      const proxy = await fetch("https://proxy.cors.dev/" + endpoint, { cache: "no-store" });
+      const proxy = await fetchWithTimeout("https://proxy.cors.dev/" + endpoint, { cache: "no-store" }, 10000);
       if (!proxy.ok) throw new Error("Sumber langsung dan proxy gagal (HTTP " + proxy.status + ")");
       data = await proxy.json();
     }
