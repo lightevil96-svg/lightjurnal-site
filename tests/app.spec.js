@@ -18,7 +18,7 @@ async function addTrade(page, trade) {
   await page.locator("#trade-size").fill(String(trade.size == null ? 1 : trade.size));
   await page.locator("#trade-multiplier").fill(String(trade.multiplier == null ? 1 : trade.multiplier));
   await page.locator("#trade-fees").fill(String(trade.fees == null ? 0 : trade.fees));
-  await page.locator("#trade-form button[type='submit']").click();
+  await page.locator('button[form="trade-form"][type="submit"]').click();
   await expect(page.locator("#modal-root")).toBeEmpty();
 }
 
@@ -95,7 +95,7 @@ test("trade create, calculation, edit, delete and persistence work", async ({ pa
 
   await page.locator('[data-action="edit-trade"]').first().click();
   await page.locator("#trade-strategy").fill("London breakout");
-  await page.locator("#trade-form button[type='submit']").click();
+  await page.locator('button[form="trade-form"][type="submit"]').click();
   await expect(page.locator("#page-content")).toContainText("London breakout");
 
   await page.reload();
