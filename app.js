@@ -815,8 +815,11 @@
     if (count) count.textContent = list.length + " posisi";
     if (positions) {
       if (!list.length) positions.innerHTML = '<div class="mt5-empty-positions">Tidak ada posisi terbuka saat ini.</div>';
-      else positions.innerHTML = '<div class="table-scroll"><table><thead><tr><th>Simbol</th><th>Tipe</th><th>Volume</th><th>Harga buka</th><th>Harga saat ini</th><th>Floating P/L</th></tr></thead><tbody>' + list.map(function (position) {
-        return '<tr><td><strong>' + escapeHtml(position.symbol || "—") + '</strong></td><td>' + escapeHtml(position.type || "—") + '</td><td>' + escapeHtml(position.volume == null ? "—" : position.volume) + '</td><td>' + escapeHtml(position.priceOpen == null ? "—" : position.priceOpen) + '</td><td>' + escapeHtml(position.priceCurrent == null ? "—" : position.priceCurrent) + '</td><td class="' + (Number(position.profit) >= 0 ? "positive" : "negative") + '">' + money(position.profit) + '</td></tr>';
+      else positions.innerHTML = '<div class="table-scroll"><table><thead><tr><th>Ticket</th><th>Simbol</th><th>Tipe</th><th>Volume</th><th>Harga buka</th><th>Harga saat ini</th><th>SL</th><th>TP</th><th>Swap</th><th>Net floating P/L</th></tr></thead><tbody>' + list.map(function (position) {
+        const profit = Number(position.profit);
+        const swap = Number(position.swap) || 0;
+        const netFloating = Number.isFinite(profit) ? profit + swap : null;
+        return '<tr><td>' + escapeHtml(position.ticket == null ? "—" : position.ticket) + '</td><td><strong>' + escapeHtml(position.symbol || "—") + '</strong></td><td>' + escapeHtml(position.type || "—") + '</td><td>' + escapeHtml(position.volume == null ? "—" : position.volume) + '</td><td>' + escapeHtml(position.priceOpen == null ? "—" : position.priceOpen) + '</td><td>' + escapeHtml(position.priceCurrent == null ? "—" : position.priceCurrent) + '</td><td>' + escapeHtml(position.sl == null || Number(position.sl) === 0 ? "—" : position.sl) + '</td><td>' + escapeHtml(position.tp == null || Number(position.tp) === 0 ? "—" : position.tp) + '</td><td>' + money(position.swap) + '</td><td class="' + (netFloating == null ? "neutral" : netFloating >= 0 ? "positive" : "negative") + '">' + money(netFloating) + '</td></tr>';
       }).join("") + '</tbody></table></div>';
     }
   }
@@ -1335,10 +1338,11 @@
   }
 
   function exportCSV() {
-    const header = ["id", "tanggal", "simbol", "pasar", "arah", "strategi", "entry", "exit", "stop_loss", "ukuran", "pengali_kontrak", "biaya", "risiko", "hasil_bersih_manual", "pnl_bersih", "r_multiple", "status", "catatan"];
+    const header = ["id", "tanggal", "simbol", "pasar", "arah", "strategi", "entry", "exit", "stop_loss", "ukuran", "pengali_kontrak", "biaya", "risiko", "hasil_bersih_manual", "pnl_bersih", "r_multiple", "status", "catatan", "checklist_setup_valid", "checklist_stop_planned", "checklist_risk_within_limit", "checklist_news_checked", "checklist_emotion_stable"];
     const rows = trades.slice().sort(function (a, b) { return a.date.localeCompare(b.date); }).map(function (trade) {
       const calc = calcTrade(trade);
-      const values = [trade.id, trade.date, trade.symbol, trade.market, trade.side, trade.strategy, trade.entry, trade.exit, trade.stop, trade.size, trade.multiplier, trade.fees, trade.riskAmount, trade.manualNet, calc.isClosed ? calc.pnl : "", calc.rMultiple, calc.outcome, trade.notes];
+      const checklist = trade.checklist || {};
+      const values = [trade.id, trade.date, trade.symbol, trade.market, trade.side, trade.strategy, trade.entry, trade.exit, trade.stop, trade.size, trade.multiplier, trade.fees, trade.riskAmount, trade.manualNet, calc.isClosed ? calc.pnl : "", calc.rMultiple, calc.outcome, trade.notes, checklist.setupValid === true, checklist.stopPlanned === true, checklist.riskWithinLimit === true, checklist.newsChecked === true, checklist.emotionStable === true];
       return values.map(csvCell).join(",");
     });
     downloadFile("tradelog-trades-" + todayISO() + ".csv", "\uFEFF" + [header.map(csvCell).join(",")].concat(rows).join("\r\n"), "text/csv;charset=utf-8");
