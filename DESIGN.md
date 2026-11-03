@@ -27,8 +27,10 @@ A calm, precise trading workspace: high information density without visual noise
 
 ## Skills and references used
 - Anthropic `frontend-design`: product-specific visual direction, typography and hierarchy.
-- Vercel `web-interface-guidelines`: responsive, accessible, consistent interface behavior.
-- UI UX Pro Max: design-system and UI-pattern reference.
+- Impeccable: critique, hardening, polish, responsive and accessibility audit; anti-generic design checks.
+- UI UX Pro Max: industry-aware design-system and UI-pattern reference for financial dashboards.
+- Emil Kowalski Skills: motion restraint, interaction feedback, animation review and worst-case UI testing.
+- Vercel `web-design-guidelines`: responsive, accessible and consistent interface behavior.
 - Better Web UI: critique, simplification, edge cases and finishing pass.
 
 ## Verification checklist
@@ -41,3 +43,10 @@ A calm, precise trading workspace: high information density without visual noise
 - [ ] Risk calculator and generated XAUUSD analysis prompt unchanged.
 - [ ] Test with empty data, long numbers, and long table content.
 - [ ] Verify deployed GitHub Pages site after merge; repository edits alone do not prove deployment success.
+
+
+## Automated quality checks
+
+Run the browser regression suite with `npm install`, `npx playwright install chromium`, and `npm test`. GitHub Actions also runs `node --check` on the application and test scripts plus `python3 -m py_compile mt5-bridge.py`.
+
+The automated browser suite exercises real UI flows rather than checking only whether controls exist. External market and bridge services are mocked in tests so calculations, parsing, state changes, and error handling can be tested deterministically.
