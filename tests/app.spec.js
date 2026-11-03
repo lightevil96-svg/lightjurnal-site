@@ -169,6 +169,65 @@ test("risk calculator validates direction and calculates position size", async (
   await expect(page.locator("#risk-size-result")).toContainText("Entry harus positif; stop di atas entry");
 });
 
+test("failed storage write rolls back both journal keys without losing old trades", async ({ page }) => {
+  const today = await page.evaluate(() => {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  });
+  const oldTrade = {
+    id: "old-preserved-trade",
+    date: today,
+    symbol: "OLDPAIR",
+    market: "Forex",
+    side: "Long",
+    entry: 1,
+    exit: 1.1,
+    size: 1,
+    multiplier: 1,
+    fees: 0
+  };
+  await page.evaluate(({ trade }) => {
+    localStorage.setItem("tradelog.trades.v1", JSON.stringify([trade]));
+    localStorage.setItem("tradelog.settings.v1", JSON.stringify({
+      currency: "USD",
+      startingBalance: 10000,
+      dailyLossLimitPercent: 3,
+      maxTradesPerDay: 5
+    }));
+  }, { trade: oldTrade });
+  await page.reload();
+  await page.evaluate(() => {
+    const originalSetItem = Storage.prototype.setItem;
+    let failOnce = true;
+    Storage.prototype.setItem = function (key, value) {
+      if (key === "tradelog.settings.v1" && failOnce) {
+        failOnce = false;
+        throw new DOMException("Quota exceeded", "QuotaExceededError");
+      }
+      return originalSetItem.call(this, key, value);
+    };
+  });
+
+  await page.locator('[data-action="new-trade"]').first().click();
+  await page.locator("#trade-date").fill(today);
+  await page.locator("#trade-symbol").fill("NEWPAIR");
+  await page.locator("#trade-entry").fill("1");
+  await page.locator("#trade-exit").fill("1.2");
+  await page.locator("#trade-size").fill("1");
+  await page.locator("#trade-multiplier").fill("1");
+  await page.locator('button[form="trade-form"][type="submit"]').click();
+
+  await expect(page.locator("#toast-root")).toContainText("Perubahan dibatalkan");
+  await expect(page.locator("#modal-root")).not.toBeEmpty();
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("tradelog.trades.v1")));
+  expect(stored).toHaveLength(1);
+  expect(stored[0].symbol).toBe("OLDPAIR");
+
+  await page.reload();
+  await expect(page.locator("#page-content")).toContainText("OLDPAIR");
+  await expect(page.locator("#page-content")).not.toContainText("NEWPAIR");
+});
+
 test("settings persist after reload", async ({ page }) => {
   await page.locator('.sidebar-bottom [data-page="settings"]').click();
   await page.locator("#setting-currency").selectOption("IDR");
