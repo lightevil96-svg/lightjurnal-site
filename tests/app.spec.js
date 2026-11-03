@@ -70,7 +70,8 @@ test("all primary sections open and render", async ({ page }) => {
     ["settings", "Pengaturan jurnal"]
   ];
   for (const [key, heading] of sections) {
-    await page.locator('[data-page="' + key + '"]').click();
+    const selector = key === "settings" ? '.sidebar-bottom [data-page="settings"]' : '.nav-list [data-page="' + key + '"]';
+    await page.locator(selector).click();
     await expect(page.locator("#page-title")).not.toBeEmpty();
     await expect(page.locator("#page-content")).toContainText(heading);
   }
@@ -132,7 +133,7 @@ test("risk calculator validates direction and calculates position size", async (
 });
 
 test("settings persist after reload", async ({ page }) => {
-  await page.locator('.nav-list [data-page="settings"]').click();
+  await page.locator('.sidebar-bottom [data-page="settings"]').click();
   await page.locator("#setting-currency").selectOption("IDR");
   await page.locator("#setting-balance").fill("2500000");
   await page.locator("#setting-daily-loss-limit").fill("2");
@@ -140,7 +141,7 @@ test("settings persist after reload", async ({ page }) => {
   await page.locator("#settings-form button[type='submit']").click();
   await expect(page.locator("#toast-root")).toContainText("berhasil disimpan");
   await page.reload();
-  await page.locator('.nav-list [data-page="settings"]').click();
+  await page.locator('.sidebar-bottom [data-page="settings"]').click();
   await expect(page.locator("#setting-currency")).toHaveValue("IDR");
   await expect(page.locator("#setting-balance")).toHaveValue("2500000");
   await expect(page.locator("#setting-daily-loss-limit")).toHaveValue("2");
@@ -149,7 +150,7 @@ test("settings persist after reload", async ({ page }) => {
 
 test("JSON backup export and restore preserve trade data", async ({ page }) => {
   await addTrade(page, { symbol: "GBPUSD", market: "Forex", entry: 1.2, exit: 1.25, size: 1, multiplier: 100 });
-  await page.locator('.nav-list [data-page="settings"]').click();
+  await page.locator('.sidebar-bottom [data-page="settings"]').click();
   const downloadPromise = page.waitForEvent("download");
   await page.locator('[data-action="export-json"]').click();
   const download = await downloadPromise;
