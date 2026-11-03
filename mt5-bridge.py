@@ -49,6 +49,8 @@ def snapshot():
                 "volume": float(item.volume),
                 "priceOpen": float(item.price_open),
                 "priceCurrent": float(item.price_current),
+                "sl": float(item.sl),
+                "tp": float(item.tp),
                 "profit": float(item.profit),
                 "swap": float(item.swap),
             })
