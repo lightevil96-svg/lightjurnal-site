@@ -26,7 +26,7 @@ Bridge ini membuat snapshot akun MT5 dan posisi terbuka untuk halaman **MT5 Live
    $env:MT5_BRIDGE_API_KEY = "GANTI_DENGAN_SECRET_ACAK_PANJANG"
    $env:MT5_BRIDGE_ALLOWED_ORIGIN = "https://lightjurnal.my.id"
    $env:MT5_BRIDGE_PORT = "8765"
-   python ..\\mt5-bridge.py
+   python ..\mt5-bridge.py
    ```
 
    File server yang benar berada di folder utama repository sebagai `mt5-bridge.py`; tidak ada file `server.py` di folder ini. Server sengaja hanya bind ke `127.0.0.1` dan harus diakses melalui reverse proxy HTTPS yang aman.
