@@ -246,8 +246,8 @@ test("multi-timeframe prompt builder returns grounded candle data", async ({ pag
   await page.locator('.nav-list [data-page="mt5"]').click();
   await page.locator("#mt5-generate-prompt").click();
   await expect(page.locator("#mt5-prompt-status")).toContainText("Prompt multi-timeframe berhasil dibuat", { timeout: 30000 });
-  await expect(page.locator("#mt5-prompt-output")).toContainText("KONFIRMASI SELURUH TIMEFRAME", { timeout: 5000 });
-  await expect(page.locator("#mt5-prompt-output")).toContainText("GC=F");
+  await expect(page.locator("#mt5-prompt-output")).toHaveValue(/KONFIRMASI SELURUH TIMEFRAME/, { timeout: 5000 });
+  await expect(page.locator("#mt5-prompt-output")).toHaveValue(/GC=F/);
   await expect(page.locator("#mt5-copy-prompt")).toBeEnabled();
 });
 
