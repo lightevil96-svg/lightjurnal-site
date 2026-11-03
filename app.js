@@ -24,6 +24,7 @@
   let mt5PollTimer = null;
   let mt5LastSnapshot = null;
   let mt5RequestInFlight = false;
+  let mt5RequestSequence = 0;
 
   const $ = function (selector, root) { return (root || document).querySelector(selector); };
   const $$ = function (selector, root) { return Array.from((root || document).querySelectorAll(selector)); };
@@ -746,6 +747,7 @@
       return;
     }
     mt5RequestInFlight = true;
+    const requestSequence = ++mt5RequestSequence;
     try {
       const endpoint = config.endpoint.replace(/\/+$/, "");
       const parsedEndpoint = new URL(endpoint);
@@ -764,16 +766,19 @@
       if (!data || data.connected !== true || !data.account || !Array.isArray(data.positions)) {
         throw new Error("Format snapshot bridge tidak sesuai kontrak API.");
       }
-      if (currentPage !== "mt5") return;
+      if (currentPage !== "mt5" || requestSequence !== mt5RequestSequence) return;
       mt5LastSnapshot = data;
       renderMT5Snapshot(data);
     } catch (error) {
-      if (currentPage === "mt5") {
+      if (currentPage === "mt5" && requestSequence === mt5RequestSequence) {
         const message = error && error.message ? error.message : "Tidak dapat menjangkau bridge MT5.";
         setMT5Offline("Koneksi belum tersedia", message + " Periksa URL, HTTPS, CORS, dan status bridge.");
       }
     } finally {
       mt5RequestInFlight = false;
+      if (currentPage === "mt5" && requestSequence !== mt5RequestSequence) {
+        window.setTimeout(refreshMT5Snapshot, 0);
+      }
     }
   }
 
@@ -835,6 +840,7 @@
       }
       window.localStorage.setItem("tradelog.mt5.endpoint", endpoint);
       window.sessionStorage.setItem("tradelog.mt5.key", key);
+      mt5RequestSequence += 1;
       showToast("Konfigurasi bridge disimpan; API key hanya berlaku untuk sesi browser ini.");
       refreshMT5Snapshot();
       return true;
@@ -845,6 +851,7 @@
   }
 
   function disconnectMT5() {
+    mt5RequestSequence += 1;
     try { window.sessionStorage.removeItem("tradelog.mt5.key"); } catch (error) {}
     mt5LastSnapshot = null;
     setMT5Offline("Koneksi diputuskan", "API key dihapus dari sesi browser. URL bridge tetap tersimpan.");
