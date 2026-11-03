@@ -233,3 +233,27 @@ tbody tr:hover{background:#f6fbf9}
 .daily-risk-card .daily-risk-message{color:#34465b;font-weight:650}
 .daily-risk-card .daily-risk-footnote{color:#8490a1;font-size:10px}
 @media(max-width:620px){.daily-risk-card{padding:15px}.daily-risk-heading{align-items:flex-start}.daily-risk-heading h3{font-size:14px}.daily-risk-metrics{grid-template-columns:1fr;gap:8px;margin:13px 0}.daily-risk-metrics>div{padding:10px}.daily-risk-metrics strong{font-size:14px}}
+
+
+/* Product-specific typography and restrained terminal treatment.
+   IBM Plex Sans keeps prose/UI legible; IBM Plex Mono aligns financial values. */
+:root{font-family:"IBM Plex Sans","Segoe UI",ui-sans-serif,system-ui,sans-serif}
+body{font-family:"IBM Plex Sans","Segoe UI",ui-sans-serif,system-ui,sans-serif}
+.metric-value,
+.risk-number,
+.mt5-current-price strong,
+.mt5-analysis-metric strong,
+.mt5j-metric strong,
+.daily-risk-metrics strong,
+.stat-item .value,
+.insight-row strong,
+.mt5-account-meta strong{
+  font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-.045em;
+}
+.sidebar{background:#111f34}
+.risk-result-panel{background:#172a42}
+.risk-result-panel:after{display:none}
+.daily-risk-card{background:#f7fbf8}
+.daily-risk-card.warning{background:#fffaf0}
