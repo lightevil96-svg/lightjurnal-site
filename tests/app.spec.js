@@ -18,6 +18,10 @@ async function addTrade(page, trade) {
   await page.locator("#trade-size").fill(String(trade.size == null ? 1 : trade.size));
   await page.locator("#trade-multiplier").fill(String(trade.multiplier == null ? 1 : trade.multiplier));
   await page.locator("#trade-fees").fill(String(trade.fees == null ? 0 : trade.fees));
+  if (trade.manualNet !== undefined && trade.manualNet !== null) {
+    await page.locator("#trade-manualNet").fill(String(trade.manualNet));
+  }
+  if (trade.notes) await page.locator("#trade-notes").fill(trade.notes);
   if (trade.checklist) {
     for (const [key, checked] of Object.entries(trade.checklist)) {
       if (checked) await page.locator('input[name="checklist_' + key + '"]').check();
@@ -127,6 +131,29 @@ test("trade search and market/outcome filters work", async ({ page }) => {
   await page.locator("#outcome-filter").selectOption("Loss");
   await expect(page.locator("#trade-list-wrap")).toContainText("BTCUSDT");
   await expect(page.locator("#trade-list-wrap")).not.toContainText("EURUSD");
+});
+
+test("open positions remain open and manual net P/L overrides the automatic result", async ({ page }) => {
+  await addTrade(page, { symbol: "USDCHF", market: "Forex", entry: 0.9, size: 1, multiplier: 100 });
+  await page.locator(".nav-list [data-page=\"trades\"]").click();
+  await page.locator("#outcome-filter").selectOption("Open");
+  await expect(page.locator("#trade-list-wrap")).toContainText("USDCHF");
+  await expect(page.locator("#trade-list-wrap")).toContainText("Terbuka");
+
+  await addTrade(page, { symbol: "AUDUSD", market: "Forex", entry: 0.65, exit: 0.66, size: 1, multiplier: 100, fees: 10, manualNet: 7 });
+  await expect(page.locator("#page-content")).toContainText("AUDUSD");
+  await expect(page.locator("#page-content")).toContainText("7");
+});
+
+test("daily risk guardrail flags a breached loss limit", async ({ page }) => {
+  const today = await page.evaluate(() => {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  });
+  await addTrade(page, { date: today, symbol: "XAUUSD", market: "Komoditas", entry: 100, exit: 90, size: 40, multiplier: 1 });
+  await page.locator(".nav-list [data-page=\"risk\"]").click();
+  await expect(page.locator(".daily-risk-card")).toContainText("Batas disiplin harian tercapai");
+  await expect(page.locator(".daily-risk-card")).toContainText("tidak menghentikan order di broker");
 });
 
 test("risk calculator validates direction and calculates position size", async ({ page }) => {
