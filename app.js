@@ -23,6 +23,7 @@
   let editingId = null;
   let mt5PollTimer = null;
   let mt5LastSnapshot = null;
+  let mt5RequestInFlight = false;
 
   const $ = function (selector, root) { return (root || document).querySelector(selector); };
   const $$ = function (selector, root) { return Array.from((root || document).querySelectorAll(selector)); };
@@ -273,7 +274,7 @@
     let endpoint = window.location.origin + "/api/mt5";
     let apiKey = "";
     try {
-      endpoint = (window.localStorage.getItem("tradelog.mt5.endpoint") || endpoint).trim();
+      endpoint = (window.localStorage.getItem("tradelog.mt5.endpoint") || endpoint).trim().replace(/\/+$/, "").replace(/\/snapshot$/i, "");
       apiKey = window.sessionStorage.getItem("tradelog.mt5.key") || "";
     } catch (error) {}
     return { endpoint: endpoint.replace(/\/+$/, ""), apiKey: apiKey };
@@ -335,6 +336,9 @@
       locale: "id",
       colorTheme: "light"
     });
+    script.onerror = function () {
+      host.innerHTML = '<div class="mt5-state-card"><strong>Widget TradingView tidak berhasil dimuat</strong><p>Periksa koneksi internet atau buka chart langsung di TradingView.</p><a href="https://www.tradingview.com/chart/?symbol=' + encodeURIComponent(ticker) + '" target="_blank" rel="noopener noreferrer">Buka TradingView ↗</a></div>';
+    };
     container.appendChild(script);
     host.appendChild(container);
   }
@@ -352,11 +356,26 @@
     for (let i = 1; i <= period; i++) { const change = closes[i] - closes[i - 1]; if (change > 0) gains += change; else losses -= change; }
     let avgGain = gains / period, avgLoss = losses / period;
     for (let i = period + 1; i < closes.length; i++) { const change = closes[i] - closes[i - 1]; avgGain = (avgGain * (period - 1) + Math.max(0, change)) / period; avgLoss = (avgLoss * (period - 1) + Math.max(0, -change)) / period; }
+    if (avgLoss === 0 && avgGain === 0) return 50;
     if (avgLoss === 0) return 100;
+    if (avgGain === 0) return 0;
     return 100 - (100 / (1 + avgGain / avgLoss));
   }
   function formatGoldPrice(value) { return Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   function analysisMetric(label, value, note) { return '<div class="mt5-analysis-metric"><span>' + label + '</span><strong>' + value + '</strong><small>' + note + '</small></div>'; }
+
+  async function fetchWithTimeout(url, options, timeoutMs) {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(function () { controller.abort(); }, timeoutMs || 10000);
+    try {
+      return await fetch(url, Object.assign({}, options || {}, { signal: controller.signal }));
+    } catch (error) {
+      if (error && error.name === "AbortError") throw new Error("Permintaan data melewati batas waktu.");
+      throw error;
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }
 
   async function runMT5MarketAnalysis(button) {
     const output = $("#mt5-analysis-result");
@@ -370,12 +389,12 @@
       const endpoint = "https://query1.finance.yahoo.com/v8/finance/chart/GC%3DF?range=" + encodeURIComponent(rangeMap[interval] || "5d") + "&interval=" + encodeURIComponent(intervalMap[interval] || "15m");
       let data;
       try {
-        const direct = await fetch(endpoint, { cache: "no-store" });
+        const direct = await fetchWithTimeout(endpoint, { cache: "no-store" }, 10000);
         if (!direct.ok) throw new Error("Sumber langsung tidak tersedia");
         data = await direct.json();
         if (!data || !data.chart) throw new Error("Format sumber langsung tidak sesuai");
       } catch (directError) {
-        const proxy = await fetch("https://proxy.cors.dev/" + endpoint, { cache: "no-store" });
+        const proxy = await fetchWithTimeout("https://proxy.cors.dev/" + endpoint, { cache: "no-store" }, 10000);
         if (!proxy.ok) throw new Error("Sumber harga tidak merespons (HTTP " + proxy.status + ")");
         data = await proxy.json();
       }
@@ -392,9 +411,19 @@
     if (!result) throw new Error("Data candle kosong atau tidak tersedia.");
     const quote = result.indicators && result.indicators.quote && result.indicators.quote[0], timestamps = result.timestamp || [];
     if (!quote || !quote.close) throw new Error("Data candle tidak lengkap.");
-    const bars = timestamps.map(function (timestamp, i) { return { time: timestamp, open: quote.open && quote.open[i], high: quote.high && quote.high[i], low: quote.low && quote.low[i], close: quote.close[i] }; })
-      .filter(function (bar) { return Number.isFinite(bar.open) && Number.isFinite(bar.high) && Number.isFinite(bar.low) && Number.isFinite(bar.close); });
-    if (bars.length < 30) throw new Error("Jumlah candle belum cukup untuk analisis yang layak.");
+    const rawBars = timestamps.map(function (timestamp, i) { return { time: timestamp, open: quote.open && quote.open[i], high: quote.high && quote.high[i], low: quote.low && quote.low[i], close: quote.close[i] }; })
+      .filter(function (bar) { return Number.isFinite(bar.time) && Number.isFinite(bar.open) && Number.isFinite(bar.high) && Number.isFinite(bar.low) && Number.isFinite(bar.close); })
+      .sort(function (a, b) { return a.time - b.time; });
+    const nowMs = Date.now();
+    const intervalSeconds = ({ "5": 300, "15": 900, "60": 3600, "240": 14400, "D": 86400 })[String(interval)] || 900;
+    let bars;
+    if (String(interval) === "240") {
+      const closedHourly = onlyClosedPromptBars(rawBars, 3600, nowMs);
+      bars = onlyClosedPromptBars(aggregatePromptH4(closedHourly), intervalSeconds, nowMs);
+    } else {
+      bars = onlyClosedPromptBars(rawBars, intervalSeconds, nowMs);
+    }
+    if (bars.length < 30) throw new Error("Candle tertutup belum cukup untuk analisis. Tunggu data tambahan atau pilih timeframe lebih rendah.");
     const closes = bars.map(function (bar) { return bar.close; }), last = bars[bars.length - 1];
     const ema9 = emaSeries(closes, 9), ema21 = emaSeries(closes, 21), ema12 = emaSeries(closes, 12), ema26 = emaSeries(closes, 26);
     const macd = ema12.map(function (value, i) { return value - ema26[i]; }), macdSignal = emaSeries(macd, 9), rsi = calculateRSI(closes, 14);
@@ -409,7 +438,7 @@
     else if (isBear && macdBear && rsi <= 48 && rsi > 30) { bias = "BIAS BEARISH"; tone = "red"; explanation = "EMA pendek di bawah EMA panjang, momentum MACD negatif, dan RSI mendukung pelemahan. Tunggu konfirmasi; waspadai pantulan."; }
     else if (rsi >= 70) explanation = "RSI berada di area tinggi; risiko koreksi meningkat. Overbought bukan sinyal jual otomatis.";
     else if (rsi <= 30) explanation = "RSI berada di area rendah; pantulan mungkin terjadi, tetapi belum menjadi sinyal beli tanpa konfirmasi.";
-    const stamp = new Date(last.time * 1000), timeframeLabel = ({ "5": "M5", "15": "M15", "60": "H1", "240": "H4 (data H1)", "D": "D1" })[interval] || "M15";
+    const stamp = new Date(last.time * 1000), timeframeLabel = ({ "5": "M5", "15": "M15", "60": "H1", "240": "H4 (agregasi H1)", "D": "D1" })[interval] || "M15";
     const scenario = tone === "green"
       ? '<div class="mt5-scenario"><strong>Referensi skenario bullish (bukan sinyal entry)</strong><span>Invalidasi ilustratif: ' + formatGoldPrice(last.close - atr * 1.5) + '</span><span>Target ATR 1,5×: ' + formatGoldPrice(last.close + atr * 1.5) + '</span><span>Target ATR 2,5×: ' + formatGoldPrice(last.close + atr * 2.5) + '</span></div>'
       : tone === "red"
@@ -710,12 +739,13 @@
   }
 
   async function refreshMT5Snapshot() {
-    if (currentPage !== "mt5") return;
+    if (currentPage !== "mt5" || mt5RequestInFlight) return;
     const config = getMT5Config();
     if (!config.apiKey || !config.endpoint) {
       setMT5Offline("Bridge belum dikonfigurasi", "Masukkan URL dan API key bridge. Jangan masukkan password investor MT5 di sini.");
       return;
     }
+    mt5RequestInFlight = true;
     try {
       const endpoint = config.endpoint.replace(/\/+$/, "");
       const parsedEndpoint = new URL(endpoint);
@@ -723,21 +753,27 @@
       if (parsedEndpoint.protocol !== "https:" && !isLocal) {
         throw new Error("Gunakan URL HTTPS untuk koneksi bridge, atau localhost untuk pengujian lokal.");
       }
-      const response = await fetch(endpoint + "/snapshot", {
+      const response = await fetchWithTimeout(endpoint + "/snapshot", {
         method: "GET",
         headers: { "Authorization": "Bearer " + config.apiKey, "Accept": "application/json" },
         credentials: "omit",
         cache: "no-store"
-      });
+      }, 8000);
       if (!response.ok) throw new Error(response.status === 401 ? "API key ditolak." : "Bridge merespons HTTP " + response.status + ".");
       const data = await response.json();
       if (!data || data.connected !== true || !data.account || !Array.isArray(data.positions)) {
         throw new Error("Format snapshot bridge tidak sesuai kontrak API.");
       }
+      if (currentPage !== "mt5") return;
       mt5LastSnapshot = data;
       renderMT5Snapshot(data);
     } catch (error) {
-      setMT5Offline("Koneksi belum tersedia", error && error.message ? error.message : "Tidak dapat menjangkau bridge MT5.");
+      if (currentPage === "mt5") {
+        const message = error && error.message ? error.message : "Tidak dapat menjangkau bridge MT5.";
+        setMT5Offline("Koneksi belum tersedia", message + " Periksa URL, HTTPS, CORS, dan status bridge.");
+      }
+    } finally {
+      mt5RequestInFlight = false;
     }
   }
 
@@ -784,7 +820,7 @@
     const endpointInput = $("#mt5-endpoint");
     const keyInput = $("#mt5-api-key");
     if (!endpointInput || !keyInput) return false;
-    const endpoint = endpointInput.value.trim().replace(/\/+$/, "");
+    const endpoint = endpointInput.value.trim().replace(/\/+$/, "").replace(/\/snapshot$/i, "");
     const key = keyInput.value.trim();
     if (!endpoint || !key) {
       showToast("Isi URL API bridge dan API key. Password MT5 tidak diperlukan.");
@@ -1097,7 +1133,7 @@
     const entry = numberOrNull($("#risk-entry") && $("#risk-entry").value);
     const stop = numberOrNull($("#risk-stop") && $("#risk-stop").value);
     const multiplier = numberOrNull($("#risk-multiplier") && $("#risk-multiplier").value) || 0;
-    const balance = settings.startingBalance + sumPnl(closedTrades());
+    const balance = Math.max(0, settings.startingBalance + sumPnl(closedTrades()));
     const amount = balance * percent / 100;
     const distance = entry !== null && stop !== null ? Math.abs(entry - stop) : 0;
     const side = $("#risk-side") ? $("#risk-side").value : "Long";
@@ -1106,8 +1142,10 @@
     $("#risk-amount-result").textContent = formatMoney(amount);
     $("#risk-percent-result").textContent = formatNumber(percent, 2) + "%";
     $("#risk-distance-result").textContent = distance > 0 ? formatNumber(distance, 6) : "—";
-    if (entry !== null && stop !== null && !directionValid) {
-      $("#risk-size-result").textContent = side === "Long" ? "Stop harus di bawah entry" : "Stop harus di atas entry";
+    if (balance <= 0) {
+      $("#risk-size-result").textContent = "Saldo tidak tersedia";
+    } else if (entry !== null && stop !== null && (!directionValid || entry <= 0 || stop <= 0)) {
+      $("#risk-size-result").textContent = side === "Long" ? "Entry harus positif; stop di bawah entry" : "Entry harus positif; stop di atas entry";
     } else {
       $("#risk-size-result").textContent = directionValid && distance > 0 && multiplier > 0
         ? formatNumber(amount / (distance * multiplier), 6)
@@ -1201,7 +1239,9 @@
     const entry = numberOrNull(data.get("entry"));
     const size = numberOrNull(data.get("size"));
     const multiplier = numberOrNull(data.get("multiplier"));
-    if (!symbol || entry === null || size === null || size <= 0 || multiplier === null || multiplier <= 0) {
+    const exit = numberOrNull(data.get("exit"));
+    const stop = numberOrNull(data.get("stop"));
+    if (!symbol || entry === null || entry <= 0 || size === null || size <= 0 || multiplier === null || multiplier <= 0 || (exit !== null && exit <= 0) || (stop !== null && stop <= 0)) {
       showToast("Periksa simbol, entry, ukuran posisi, dan pengali kontrak.");
       return;
     }
@@ -1213,8 +1253,8 @@
       side: data.get("side"),
       strategy: String(data.get("strategy") || "").trim(),
       entry: entry,
-      exit: numberOrNull(data.get("exit")),
-      stop: numberOrNull(data.get("stop")),
+      exit: exit,
+      stop: stop,
       size: size,
       multiplier: multiplier,
       fees: Math.max(0, numberOrNull(data.get("fees")) || 0),
