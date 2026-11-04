@@ -86,7 +86,9 @@
     } catch (error) { status(error.message, 'error'); }
   }
   async function submitRender() {
-    const duration = document.querySelector('#vs-scene-duration') ? Number(document.querySelector('#vs-scene-duration').value) : 4;\n    const background = document.querySelector('#vs-scene-background')?.value || '#14243a';\n    const scenes = lines().map(text => ({ text, duration, background }));
+    const duration = document.querySelector('#vs-scene-duration') ? Number(document.querySelector('#vs-scene-duration').value) : 4;
+    const background = document.querySelector('#vs-scene-background')?.value || '#14243a';
+    const scenes = lines().map(text => ({ text, duration, background }));
     if (!scenes.length) return status('Masukkan minimal satu scene.', 'error');
     const project = {
       title: document.querySelector('#vs-title').value.trim() || 'Video LightJurnal',
