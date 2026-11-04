@@ -47,7 +47,8 @@
       const data = await request('/jobs');
       renderJobs(data.jobs || []);
       const hasActive = (data.jobs || []).some(job => job.status === 'queued' || job.status === 'rendering');
-      if (!hasActive && pollTimer) { clearInterval(pollTimer); pollTimer = null; }\n      if (hasActive && !pollTimer) pollTimer = setInterval(refreshJobs, 2500);
+      if (!hasActive && pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      if (hasActive && !pollTimer) pollTimer = setInterval(refreshJobs, 2500);
     } catch (error) { if (pollTimer) clearInterval(pollTimer); pollTimer = null; status(error.message, 'error'); }
   }
   async function getVideo(id, preview) {
