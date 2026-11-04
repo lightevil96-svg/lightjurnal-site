@@ -72,6 +72,11 @@ test.beforeEach(async ({ page }) => {
   await page.reload();
 });
 
+test("upgrades any legacy insecure subresource requests to HTTPS", async ({ page }) => {
+  const policy = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute("content");
+  expect(policy).toContain("upgrade-insecure-requests");
+});
+
 test("all primary sections open and render", async ({ page }) => {
   const sections = [
     ["trades", "Semua transaksi"],
