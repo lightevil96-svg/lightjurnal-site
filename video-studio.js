@@ -83,7 +83,7 @@
     } catch (error) { status(error.message, 'error'); }
   }
   async function submitRender() {
-    const scenes = lines().map(text => ({ text, duration: 4, background: '#14243a' }));
+    const duration = document.querySelector('#vs-scene-duration') ? Number(document.querySelector('#vs-scene-duration').value) : 4;\n    const background = document.querySelector('#vs-scene-background')?.value || '#14243a';\n    const scenes = lines().map(text => ({ text, duration, background }));
     if (!scenes.length) return status('Masukkan minimal satu scene.', 'error');
     const project = {
       title: document.querySelector('#vs-title').value.trim() || 'Video LightJurnal',
@@ -109,14 +109,22 @@
       <div class="vs-workspace"><section class="card vs-editor"><div class="vs-section-heading"><div><h3>Buat proyek video</h3><p>Pilih mode cepat atau mode penyusunan scene.</p></div><span class="vs-pill">REMOTION</span></div>
       <div class="vs-mode-picker"><label><input type="radio" name="vs-mode" value="simple" checked><span><b>Simple</b><small>Template cepat</small></span></label><label><input type="radio" name="vs-mode" value="professional"><span><b>Professional</b><small>Scene & timeline</small></span></label></div>
       <label class="vs-field">Nama proyek<input id="vs-title" maxlength="100" value="Video Baru"></label><div class="vs-fields-two"><label class="vs-field">Rasio<select id="vs-ratio"><option value="9:16">9:16 · Reels/TikTok</option><option value="16:9">16:9 · YouTube</option><option value="1:1">1:1 · Square</option></select></label><label class="vs-field">FPS<select id="vs-fps"><option value="30">30 FPS</option><option value="25">25 FPS</option><option value="24">24 FPS</option></select></label></div>
-      <label class="vs-field">Teks scene <small>Satu baris menjadi satu scene. 4 detik per scene.</small><textarea id="vs-scenes" rows="6">Mulai dengan ide terbaikmu
+      <label class="vs-field">Teks scene <small>Satu baris menjadi satu scene.</small><textarea id="vs-scenes" rows="6">Mulai dengan ide terbaikmu
 Bangun cerita melalui visual
 Buat video langsung dari LightJurnal</textarea></label>
+      <div id="vs-pro-options" class="vs-pro-options" hidden><label class="vs-field">Durasi setiap scene<select id="vs-scene-duration"><option value="3">3 detik</option><option value="4" selected>4 detik</option><option value="5">5 detik</option><option value="6">6 detik</option><option value="8">8 detik</option><option value="10">10 detik</option></select></label><label class="vs-field">Warna latar<input id="vs-scene-background" type="color" value="#14243a"></label><p>Pengaturan ini diterapkan ke setiap scene. Total durasi maksimum 90 detik.</p></div>
       <div class="vs-timeline-heading"><b>Timeline scene</b><span>Media upload dan drag-and-drop menyusul.</span></div><div id="vs-timeline" class="vs-timeline"></div><div class="vs-render-actions"><div><b>Estimasi durasi</b><small id="vs-duration">12 detik · 3 scene</small></div><button class="button button-primary" id="vs-render">▶ Render Video</button></div>
       <p class="vs-disclaimer">Rilis awal merender teks animasi. Foto/video, audio, keyframe, dan timeline drag-and-drop belum tersedia.</p></section>
       <aside class="vs-side-column"><section class="card vs-preview-card"><div class="vs-section-heading"><div><h3>Preview hasil</h3><p>Hasil render MP4 dari server bot.</p></div></div><div id="vs-preview-wrap" class="vs-preview-wrap" hidden><video id="vs-video" controls playsinline></video></div><div id="vs-preview-placeholder" class="vs-preview-placeholder"><span>▶</span><b>Belum ada video</b><small>Preview muncul setelah render selesai.</small></div></section>
       <section class="card vs-jobs-card"><div class="vs-section-heading"><div><h3>Render queue</h3><p>Progress pekerjaan video.</p></div><button class="button button-secondary" id="vs-refresh">↻</button></div><div id="vs-jobs" class="vs-jobs"><div class="vs-empty">Hubungkan mesin render terlebih dahulu.</div></div></section></aside></div>`;
     root.querySelector('#vs-scenes').addEventListener('input', timeline);
+    const updateMode = () => {
+      const professional = root.querySelector('[name="vs-mode"]:checked')?.value === 'professional';
+      root.querySelector('#vs-pro-options').hidden = !professional;
+      timeline();
+    };
+    root.querySelectorAll('[name="vs-mode"]').forEach(input => input.addEventListener('change', updateMode));
+    root.querySelector('#vs-scene-duration').addEventListener('change', timeline);
     root.querySelector('#vs-connect').addEventListener('click', connect);
     root.querySelector('#vs-render').addEventListener('click', submitRender);
     root.querySelector('#vs-refresh').addEventListener('click', refreshJobs);
