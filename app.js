@@ -11,7 +11,8 @@
     analytics: "Analisis Performa",
     risk: "Kalkulator Risiko",
     mt5: "Analisis",
-    settings: "Pengaturan & Cadangan"
+    settings: "Pengaturan & Cadangan",
+    "video-studio": "Video Studio"
   };
 
   let trades = [];
@@ -271,6 +272,8 @@
 
   function renderPage() {
     $("#page-title").textContent = TITLES[currentPage] || TITLES.overview;
+    const tradeAction = $('[data-action="new-trade"]');
+    if (tradeAction) tradeAction.hidden = currentPage === "video-studio";
     $$(".nav-item[data-page]").forEach(function (button) {
       button.classList.toggle("is-active", button.dataset.page === currentPage);
     });
@@ -283,6 +286,7 @@
     else if (currentPage === "analytics") renderAnalytics();
     else if (currentPage === "risk") renderRisk();
     else if (currentPage === "mt5") { renderMT5(); startMT5Polling(); }
+    else if (currentPage === "video-studio") window.LightJurnalVideoStudio.render(content);
     else renderSettings();
   }
 
