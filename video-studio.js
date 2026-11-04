@@ -6,7 +6,7 @@
   let pollTimer = null;
   let videoUrl = null;
   const esc = value => String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  const cfg = () => ({ url: (localStorage.getItem(URL_KEY) || '').trim().replace(/\/+$/, ''), token: sessionStorage.getItem(TOKEN_KEY) || '' });
+  const cfg = () => ({ url: (localStorage.getItem(URL_KEY) || DEFAULT_API_URL).trim().replace(/\/+$/, ''), token: sessionStorage.getItem(TOKEN_KEY) || '' });
   const status = (message, tone = 'neutral') => {
     const el = document.querySelector('#vs-status');
     if (el) { el.textContent = message; el.className = 'vs-status ' + tone; }
