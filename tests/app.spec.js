@@ -77,7 +77,7 @@ test("all primary sections open and render", async ({ page }) => {
     ["trades", "Semua transaksi"],
     ["analytics", "Lihat pola"],
     ["risk", "Rencanakan risiko"],
-    ["mt5", "Akun MetaTrader 5"],
+    ["mt5", "Analisis Trading"],
     ["settings", "Pengaturan jurnal"]
   ];
   for (const [key, heading] of sections) {
@@ -86,8 +86,9 @@ test("all primary sections open and render", async ({ page }) => {
     await expect(page.locator("#page-title")).not.toBeEmpty();
     await expect(page.locator("#page-content")).toContainText(heading);
   }
-  await page.locator('.nav-list [data-page="mt5journal"]').click();
-  await expect(page.locator("#page-title")).toHaveText("Jurnal Transaksi MT5");
+  await page.locator('.nav-list [data-page="mt5"]').click();
+  await expect(page.locator("#page-title")).toHaveText("Analisis");
+  await expect(page.locator("#mt5-import-panel")).toBeVisible();
   await expect(page.locator("#mt5-journal-root")).toBeVisible();
 });
 
@@ -284,7 +285,8 @@ test("CSV export produces a downloadable trade report", async ({ page }) => {
 });
 
 test("MT5 HTML import shows closed deals and entry activity", async ({ page }) => {
-  await page.locator('.nav-list [data-page="mt5journal"]').click();
+  await page.locator('.nav-list [data-page="mt5"]').click();
+  await expect(page.locator("#mt5-import-panel")).toBeVisible();
   page.on("dialog", dialog => dialog.accept());
   const html = `<!doctype html><html><body>
     <h2>Deals</h2>

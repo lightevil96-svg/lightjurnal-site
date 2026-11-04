@@ -167,19 +167,34 @@
     return '<div class="mt5j-table-wrap"><table class="mt5j-table"><thead><tr>'+cells+'</tr></thead><tbody>'+body+'</tbody></table></div><p class="mt5j-footnote">Menampilkan '+list.length+' baris · Sumber file: laporan yang kamu impor. Periksa laporan asli karena nama kolom dapat berbeda antarbroker.</p>';
   }
   function render() {
-    const page=$("#page-content"); if(!page||!page.querySelector("#mt5-journal-root"))return;
-    const closed=filtered("closed"), open=filtered("open"), orders=filtered("orders");
-    const closedNet=closed.reduce((s,r)=>s+(r.net==null?0:r.net),0);
-    $("#mt5j-summary").innerHTML='<div class="mt5j-metric"><span>Deal / transaksi tertutup</span><strong>'+closed.length+'</strong><small>Termasuk deal entry yang ditandai terpisah</small></div><div class="mt5j-metric"><span>Net tercatat (estimasi)</span><strong>'+money(closedNet)+'</strong><small>Profit + komisi + swap jika tersedia</small></div><div class="mt5j-metric"><span>Posisi terbuka</span><strong>'+open.length+'</strong><small>Dari bagian Positions laporan</small></div><div class="mt5j-metric"><span>Order</span><strong>'+orders.length+'</strong><small>Order historis / working orders</small></div>';
+    const page=$("#page-content");if(!page||!page.querySelector("#mt5-journal-root"))return;
+    const closed=filtered("closed"),open=filtered("open"),orders=filtered("orders");
+    const wins=closed.filter(r=>Number(r.net)>0),losses=closed.filter(r=>Number(r.net)<0);
+    const grossWin=wins.reduce((sum,r)=>sum+Number(r.net),0),grossLoss=Math.abs(losses.reduce((sum,r)=>sum+Number(r.net),0));
+    const net=closed.reduce((sum,r)=>sum+(Number.isFinite(r.net)?Number(r.net):0),0);
+    const factor=grossLoss>0?grossWin/grossLoss:(grossWin>0?Infinity:null);
+    const expectancy=closed.length?net/closed.length:null;
+    let curve=0,peak=0,maxDD=0;
+    closed.slice().reverse().forEach(r=>{curve+=Number(r.net)||0;peak=Math.max(peak,curve);maxDD=Math.max(maxDD,peak-curve);});
+    const winRate=closed.length?wins.length/closed.length*100:null;
+    const metric=(label,value,detail,tone)=>'<div class="mt5j-metric"><span>'+label+'</span><strong class="'+(tone||'')+'">'+value+'</strong><small>'+detail+'</small></div>';
+    $("#mt5j-summary").innerHTML=
+      metric("Net P/L tercatat",money(net),"Profit + komisi + swap terdeteksi",net>0?"positive":net<0?"negative":"")+
+      metric("Win rate",winRate==null?"—":winRate.toFixed(1)+"%",wins.length+" menang · "+losses.length+" rugi")+
+      metric("Profit factor",factor===Infinity?"∞":factor==null?"—":factor.toFixed(2),"Gross profit ÷ gross loss")+
+      metric("Expectancy / deal",money(expectancy),"Rata-rata net per deal")+
+      metric("Max drawdown",money(maxDD),"Estimasi dari urutan statement")+
+      metric("Deal terukur",String(closed.length),"Deal tertutup dengan net valid")+
+      metric("Posisi terbuka",String(open.length),"Dari bagian Positions")+
+      metric("Order",String(orders.length),"Order historis / working orders");
     $("#mt5j-tabs").innerHTML=[["closed","Deal / tertutup"],["entry","Entry / aktivitas"],["open","Posisi terbuka"],["orders","Riwayat order"]].map(([k,label])=>'<button type="button" class="mt5j-tab '+(activeTab===k?"active":"")+'" data-mt5j-tab="'+k+'">'+label+' <span>'+filtered(k).length+'</span></button>').join("");
     $("#mt5j-table").innerHTML=table(activeTab);
     $("#mt5j-import-count").textContent=rows.length+" baris tersimpan di browser ini";
   }
   function showPage() {
-    const page=$("#page-content"); if(!page)return;
-    $("#page-title").textContent="Jurnal Transaksi MT5";
-    document.querySelectorAll(".nav-item[data-page]").forEach(b=>b.classList.toggle("is-active",b.dataset.page==="mt5journal"));
-    page.innerHTML='<div id="mt5-journal-root"><div class="page-intro"><div><h2>Jurnal transaksi MT5</h2><p>Impor laporan langsung dari MT5. Tidak perlu VPS, koneksi akun, atau password investor.</p></div><div class="mt5j-actions"><button type="button" class="button button-primary" id="mt5j-choose">↑ Impor laporan MT5</button><button type="button" class="button button-secondary" id="mt5j-export">↓ Ekspor data JSON</button></div></div><div class="mt5j-security"><strong>Privasi & keamanan</strong><p>File dibaca di browser perangkat ini dan data disimpan di localStorage. Tidak ada password MT5 yang diminta atau dikirim. Jangan mengunggah laporan yang ingin kamu rahasiakan ke perangkat bersama; laporan bisa memuat nomor akun/nama pemilik. Simpan backup di tempat aman.</p></div><div class="mt5j-how"><strong>Cara mengambil laporan di MT5 desktop</strong><ol><li>Buka <b>Toolbox → History</b> dan pilih rentang waktu yang dibutuhkan.</li><li>Klik kanan pada tabel → <b>Report</b> → pilih HTML, lalu simpan file.</li><li>Impor file HTML di sini. Untuk data terbaru posisi terbuka, buat laporan baru dan impor kembali.</li></ol><small>MT5 report dapat berisi bagian Orders, Deals, Positions, dan Working Orders. Hasil parser tetap perlu dibandingkan dengan laporan asli.</small></div><div id="mt5j-summary" class="mt5j-summary"></div><section class="card mt5j-card"><div class="mt5j-cardhead"><div><h3>Data impor</h3><p id="mt5j-import-count">0 baris tersimpan di browser ini</p></div><div class="mt5j-actions"><button type="button" class="button button-secondary" id="mt5j-clear">Hapus data impor</button></div></div><div id="mt5j-tabs" class="mt5j-tabs"></div><div id="mt5j-table"></div></section><div class="mt5j-bottom"><button type="button" class="button button-secondary" id="mt5j-choose-bottom">Pilih file laporan</button><span>Format yang didukung: HTML/HTM dan CSV. Maksimum 15 MB per file.</span></div></div>';
+    const page=$("#mt5-import-panel"); if(!page)return;
+    document.querySelectorAll(".nav-item[data-page]").forEach(b=>b.classList.toggle("is-active",b.dataset.page==="mt5"));
+    page.innerHTML='<div id="mt5-journal-root"><div class="page-intro"><div><h2>Impor & evaluasi statement</h2><p>Ukur kualitas hasil trading dari riwayat transaksi yang diekspor langsung dari MT5.</p></div><div class="mt5j-actions"><button type="button" class="button button-primary" id="mt5j-choose">↑ Impor laporan MT5</button><button type="button" class="button button-secondary" id="mt5j-export">↓ Ekspor data JSON</button></div></div><div class="mt5j-security"><strong>Privasi & keamanan</strong><p>File dibaca di browser perangkat ini dan data disimpan di localStorage. Tidak ada password MT5 yang diminta atau dikirim. Jangan mengunggah laporan yang ingin kamu rahasiakan ke perangkat bersama; laporan bisa memuat nomor akun/nama pemilik. Simpan backup di tempat aman.</p></div><div class="mt5j-how"><strong>Cara mengambil laporan di MT5 desktop</strong><ol><li>Buka <b>Toolbox → History</b> dan pilih rentang waktu yang dibutuhkan.</li><li>Klik kanan pada tabel → <b>Report</b> → pilih HTML, lalu simpan file.</li><li>Impor file HTML di sini. Untuk data terbaru posisi terbuka, buat laporan baru dan impor kembali.</li></ol><small>MT5 report dapat berisi bagian Orders, Deals, Positions, dan Working Orders. Hasil parser tetap perlu dibandingkan dengan laporan asli.</small></div><div id="mt5j-summary" class="mt5j-summary"></div><section class="card mt5j-card"><div class="mt5j-cardhead"><div><h3>Data impor</h3><p id="mt5j-import-count">0 baris tersimpan di browser ini</p></div><div class="mt5j-actions"><button type="button" class="button button-secondary" id="mt5j-clear">Hapus data impor</button></div></div><div id="mt5j-tabs" class="mt5j-tabs"></div><div id="mt5j-table"></div></section><div class="mt5j-bottom"><button type="button" class="button button-secondary" id="mt5j-choose-bottom">Pilih file laporan</button><span>Format yang didukung: HTML/HTM dan CSV. Maksimum 15 MB per file.</span></div></div>';
     const input=document.createElement("input"); input.type="file"; input.id="mt5-journal-file"; input.accept=".html,.htm,.csv,text/html,text/csv"; input.hidden=true; page.appendChild(input);
     render();
   }
@@ -188,12 +203,7 @@
     if(e.target.closest("#mt5j-choose")||e.target.closest("#mt5j-choose-bottom")){$("#mt5-journal-file")?.click();return;}
     if(e.target.closest("#mt5j-export")){const blob=new Blob([JSON.stringify({format:"LightJurnal MT5 import v1",exportedAt:new Date().toISOString(),rows},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="lightjurnal-mt5-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);return;}
     if(e.target.closest("#mt5j-clear")){if(confirm("Hapus semua data impor MT5 dari browser ini? Tindakan ini tidak menghapus jurnal trade manual.")){const previousRows=rows.slice();rows=[];if(!save()){rows=previousRows;render();return;}render();}return;}
-    const nav=e.target.closest('[data-page="mt5journal"]'); if(nav){e.preventDefault();e.stopImmediatePropagation();showPage();document.body.classList.remove("sidebar-open");return;}
-    if(e.target.closest('[data-page]') && !e.target.closest('[data-page="mt5journal"]')){const root=$("#mt5-journal-root");if(root){const b=e.target.closest("[data-page]");if(b&&b.dataset.page!=="mt5journal"){} }}
   },true);
   document.addEventListener("change",e=>{if(e.target.id==="mt5-journal-file")importFile(e.target.files&&e.target.files[0]);},true);
-  // If another app page renders, keep the normal application in control.
-  document.addEventListener("click",e=>{const b=e.target.closest("[data-page]");if(b&&b.dataset.page!=="mt5journal"){const title=$("#page-title");if(title&&title.textContent==="Jurnal Transaksi MT5"){setTimeout(()=>{const active=document.querySelector(".nav-item.is-active");if(active)$("#page-title").textContent=active.textContent.trim();},0);}}},false);
-  const nav=$(".nav-list");
-  if(nav&&!nav.querySelector('[data-page="mt5journal"]')){const btn=document.createElement("button");btn.type="button";btn.className="nav-item";btn.dataset.page="mt5journal";btn.innerHTML='<span class="nav-icon">⇅</span><span>Jurnal Transaksi MT5</span>';const mt5=nav.querySelector('[data-page="mt5"]');if(mt5)mt5.insertAdjacentElement("afterend",btn);else nav.appendChild(btn);}
+  window.addEventListener("lightjurnal:analysis-rendered",showPage);
 })();

@@ -337,3 +337,12 @@ tbody tr:hover{background:#f7faf9}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
+
+
+/* Analysis workspace: clear hierarchy, compact controls and report review */
+.analysis-hero{display:flex;justify-content:space-between;align-items:center;gap:24px;padding:26px 28px;margin:0 0 18px;border:1px solid #dfe7ef;border-radius:18px;background:linear-gradient(125deg,#fff 0%,#f4f8fc 62%,#edf5f4 100%);box-shadow:0 8px 24px rgba(20,39,65,.045)}
+.analysis-hero-copy{min-width:0}.analysis-overline,.analysis-status-label{display:block;font-size:9px;font-weight:800;letter-spacing:1.15px;color:#8290a4}.analysis-hero h2{margin:8px 0 7px;font-size:25px;letter-spacing:-.8px;color:#1c2c43}.analysis-hero p{max-width:650px;margin:0;color:#6e7d91;font-size:12px;line-height:1.7}.analysis-hero-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}.analysis-hero-tags span{padding:6px 9px;border:1px solid #e0e8ef;border-radius:99px;background:#fff;color:#607087;font-size:9px;font-weight:700}.analysis-hero-status{display:flex;flex-direction:column;align-items:flex-end;gap:8px;min-width:150px}.analysis-hero-status small{font-size:9px;color:#8794a5;text-align:right}
+.mt5-connection-card,.mt5-chart-card,.mt5-analysis-card,.mt5-ai-analysis-card,.mt5-prompt-card,.mt5-positions-card{border-radius:15px}.mt5-chart-frame{height:510px}
+.mt5j-security,.mt5j-how{margin-left:20px;margin-right:20px}.mt5j-summary{grid-template-columns:repeat(4,minmax(0,1fr));padding:0 20px}.mt5j-metric strong{font-variant-numeric:tabular-nums}.mt5j-card{overflow:hidden}.mt5j-cardhead{padding:18px 20px 13px}
+@media(max-width:760px){.analysis-hero{align-items:flex-start;flex-direction:column;padding:20px}.analysis-hero-status{align-items:flex-start;min-width:0}.analysis-hero-status small{text-align:left}.analysis-hero h2{font-size:22px}.mt5-chart-frame{height:420px}.mt5j-summary{grid-template-columns:repeat(2,minmax(0,1fr));padding:0 12px}.mt5j-security,.mt5j-how{margin-left:12px;margin-right:12px}}
+@media(prefers-reduced-motion:reduce){.analysis-hero{scroll-behavior:auto;transition:none}}
