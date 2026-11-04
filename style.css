@@ -440,3 +440,26 @@ tbody tr:hover{background:#f7faf9}
 .vs-connection-toolbar .button{font-size:10px;padding:7px 10px}
 @media(max-width:900px){.vs-hero-side{align-items:flex-start}.vs-scene-list{grid-template-columns:1fr}}
 @media(max-width:620px){.vs-prompt-card{padding:16px}.vs-prompt-footer{align-items:stretch;flex-direction:column}.vs-prompt-footer .button{width:100%}.vs-plan-head{flex-direction:column}.vs-plan-meta{align-items:flex-start}.vs-scene-list{grid-template-columns:1fr}.vs-hero-side{width:100%}}
+
+
+.vs-prompt-footer{display:flex;justify-content:space-between;gap:12px;margin:-5px 0 14px;color:#8793a3;font-size:9px;line-height:1.5}
+.vs-prompt-footer span{white-space:nowrap;font-variant-numeric:tabular-nums}
+.vs-render-actions .button:disabled{opacity:.65;cursor:wait}
+.vs-storyboard{margin-top:20px;padding-top:17px;border-top:1px solid #e8edf2}
+.vs-story-summary{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:8px;margin:12px 0}
+.vs-story-summary>div{min-width:0;padding:10px;border:1px solid #e5ebf0;border-radius:8px;background:#f8fafb}
+.vs-story-summary small,.vs-story-summary b{display:block}
+.vs-story-summary small{font-size:8px;font-weight:800;letter-spacing:.6px;color:#8995a4}
+.vs-story-summary b{margin-top:5px;overflow-wrap:anywhere;color:#2d4054;font-size:11px}
+.vs-core-message{margin:10px 0 13px;padding:11px 13px;border-left:3px solid #168b68;border-radius:0 7px 7px 0;background:#f1f8f4;color:#536579;font-size:10px;line-height:1.6}
+.vs-storyboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.vs-scene-card{min-width:0;padding:12px;border:1px solid #e4eaf0;border-radius:9px;background:#fff}
+.vs-scene-meta{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px;color:#168b68;font-size:8px;font-weight:800;letter-spacing:.5px}
+.vs-scene-meta span:last-child{color:#8290a3}
+.vs-scene-kicker{display:block;margin-bottom:5px;color:#168b68;font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.vs-scene-card>strong{display:block;color:#293b50;font-size:12px;line-height:1.4}
+.vs-scene-card>p{margin:7px 0 0;color:#758397;font-size:9px;line-height:1.55}
+.vs-narration{margin-top:10px;padding-top:8px;border-top:1px solid #edf0f3;color:#64748b;font-size:9px;line-height:1.55}
+.vs-narration span{display:block;margin-bottom:4px;color:#9aa5b3;font-size:7px;font-weight:800;letter-spacing:.8px}
+.vs-job-summary{margin:5px 0 0;color:#718096;font-size:9px;line-height:1.5}
+@media(max-width:620px){.vs-story-summary{grid-template-columns:1fr 1fr}.vs-story-summary>div:first-child{grid-column:1/-1}.vs-storyboard-grid{grid-template-columns:1fr}.vs-prompt-footer{flex-direction:column}}
