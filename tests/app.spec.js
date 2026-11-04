@@ -426,3 +426,15 @@ test("mobile navigation opens and closes without leaving the overlay stuck", asy
   await page.locator("#sidebar-scrim").click({ position: { x: 380, y: 400 } });
   await expect(page.locator("body")).not.toHaveClass(/sidebar-open/);
 });
+
+
+test("homepage exposes clear LightJurnal search metadata and structured data", async ({ page }) => {
+  await expect(page).toHaveTitle(/LightJurnal.*Trading Journal/);
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", /jurnal trading online|trading journal/i);
+  await expect(page.locator("#seo-summary-title")).toContainText("LightJurnal");
+  const structuredData = await page.locator('script[type="application/ld+json"]').textContent();
+  const schema = JSON.parse(structuredData);
+  expect(schema["@type"]).toBe("SoftwareApplication");
+  expect(schema.name).toBe("LightJurnal");
+  expect(schema.url).toBe("https://lightjurnal.my.id/");
+});
