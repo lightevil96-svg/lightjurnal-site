@@ -346,3 +346,10 @@ tbody tr:hover{background:#f7faf9}
 .mt5j-security,.mt5j-how{margin-left:20px;margin-right:20px}.mt5j-summary{grid-template-columns:repeat(4,minmax(0,1fr));padding:0 20px}.mt5j-metric strong{font-variant-numeric:tabular-nums}.mt5j-card{overflow:hidden}.mt5j-cardhead{padding:18px 20px 13px}
 @media(max-width:760px){.analysis-hero{align-items:flex-start;flex-direction:column;padding:20px}.analysis-hero-status{align-items:flex-start;min-width:0}.analysis-hero-status small{text-align:left}.analysis-hero h2{font-size:22px}.mt5-chart-frame{height:420px}.mt5j-summary{grid-template-columns:repeat(2,minmax(0,1fr));padding:0 12px}.mt5j-security,.mt5j-how{margin-left:12px;margin-right:12px}}
 @media(prefers-reduced-motion:reduce){.analysis-hero{scroll-behavior:auto;transition:none}}
+
+
+/* Search-friendly, user-visible product summary */
+.seo-summary{max-width:1120px;margin:28px auto 0;padding:20px 24px;border:1px solid #e2e9f0;border-radius:14px;background:#f8fafc;color:#64748b}
+.seo-summary h2{margin:0 0 8px;color:#26364b;font-size:14px;font-weight:700;letter-spacing:-.2px}
+.seo-summary p{max-width:920px;margin:6px 0;font-size:11px;line-height:1.75}
+@media(max-width:760px){.seo-summary{margin:20px 14px 0;padding:16px}.seo-summary p{font-size:10px}}
