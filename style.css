@@ -463,3 +463,11 @@ tbody tr:hover{background:#f7faf9}
 .vs-narration span{display:block;margin-bottom:4px;color:#9aa5b3;font-size:7px;font-weight:800;letter-spacing:.8px}
 .vs-job-summary{margin:5px 0 0;color:#718096;font-size:9px;line-height:1.5}
 @media(max-width:620px){.vs-story-summary{grid-template-columns:1fr 1fr}.vs-story-summary>div:first-child{grid-column:1/-1}.vs-storyboard-grid{grid-template-columns:1fr}.vs-prompt-footer{flex-direction:column}}
+
+
+/* Keep infrastructure settings out of the creative workspace after connection. */
+.vs-connection[hidden],.vs-connection-toggle[hidden]{display:none!important}
+.vs-hero-side{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.vs-hero-controls{display:flex;align-items:center;gap:9px}
+.vs-connection-toggle{padding:7px 11px;font-size:10px;white-space:nowrap}
+@media(max-width:760px){.vs-hero-side{align-items:flex-start}.vs-hero-controls{flex-wrap:wrap}}

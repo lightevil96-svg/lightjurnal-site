@@ -93,8 +93,16 @@
       if (!health.configured) throw new Error('VIDEO_STUDIO_API_KEY belum diatur di server bot.');
       await request('/limits');
       status('Terhubung ke Alvareth-Bot. AI Creative Director siap.', 'success');
+      const panel = document.querySelector('#vs-connection');
+      if (panel) panel.hidden = true;
+      const toggle = document.querySelector('#vs-connection-toggle');
+      if (toggle) toggle.hidden = false;
       refreshJobs();
-    } catch (error) { status(error.message, 'error'); }
+    } catch (error) {
+      const panel = document.querySelector('#vs-connection');
+      if (panel) panel.hidden = false;
+      status(error.message, 'error');
+    }
   }
   function showStoryboard(plan) {
     const panel = document.querySelector('#vs-storyboard');
@@ -148,8 +156,8 @@
     if (videoUrl) { URL.revokeObjectURL(videoUrl); videoUrl = null; }
     const c = cfg();
     root.innerHTML = [
-      '<section class="vs-hero"><div><span class="vs-overline">LIGHTJURNAL / CREATIVE STUDIO</span><h2>AI Video Studio</h2><p>Satu prompt. AI mengarahkan cerita, tempo, visual, warna, gerak, dan transisi. Remotion mengerjakan render.</p></div><div class="vs-engine"><span class="vs-engine-dot"></span><div><b>AI CREATIVE DIRECTOR</b><small>Remotion 4.0 · Remote rendering</small></div></div></section>',
-      '<section class="vs-connection card"><div class="vs-section-heading"><div><h3>Koneksi mesin render</h3><p>Pengaturan koneksi teknis. API key hanya disimpan di sesi browser.</p></div><span id="vs-status" class="vs-status">Belum terhubung</span></div><div class="vs-connect-grid"><label>URL API Alvareth-Bot<input id="vs-api-url" type="url" value="' + esc(c.url) + '" placeholder="https://bot-api.domainkamu.com"></label><label>API key<input id="vs-api-key" type="password" autocomplete="off" placeholder="VIDEO_STUDIO_API_KEY"></label><button class="button button-primary" id="vs-connect">Hubungkan</button></div></section>',
+      '<section class="vs-hero"><div><span class="vs-overline">LIGHTJURNAL / CREATIVE STUDIO</span><h2>AI Video Studio</h2><p>Satu prompt. AI mengarahkan cerita, tempo, visual, warna, gerak, dan transisi. Remotion mengerjakan render.</p></div><div class="vs-hero-side"><div class="vs-engine"><span class="vs-engine-dot"></span><div><b>AI CREATIVE DIRECTOR</b><small>Remotion 4.0 · Remote rendering</small></div></div><div class="vs-hero-controls"><span id="vs-status" class="vs-status">Belum terhubung</span><button class="button button-secondary vs-connection-toggle" id="vs-connection-toggle" ' + (c.url && c.token ? '' : 'hidden') + '>Koneksi</button></div></div></section>',
+      '<section class="vs-connection card" ' + (c.url && c.token ? 'hidden' : '') + '><div class="vs-section-heading"><div><h3>Koneksi mesin render</h3><p>Pengaturan koneksi teknis. API key hanya disimpan di sesi browser.</p></div></div><div class="vs-connect-grid"><label>URL API Alvareth-Bot<input id="vs-api-url" type="url" value="' + esc(c.url) + '" placeholder="https://bot-api.domainkamu.com"></label><label>API key<input id="vs-api-key" type="password" autocomplete="off" placeholder="VIDEO_STUDIO_API_KEY"></label><button class="button button-primary" id="vs-connect">Hubungkan</button></div></section>',
       '<div class="vs-workspace"><section class="card vs-editor"><div class="vs-section-heading"><div><h3>Ceritakan video yang kamu inginkan</h3><p>Tulis ide secara natural. Tidak perlu menentukan scene, warna, durasi per scene, FPS, rasio, musik, atau transisi.</p></div><span class="vs-pill">PROMPT ONLY</span></div>',
       '<label class="vs-field">Prompt kreatif<textarea id="vs-prompt" rows="8" maxlength="6000" placeholder="Contoh: Buat video edukasi yang menarik tentang kebiasaan kecil yang membuat seseorang lebih produktif. Buka dengan hook yang kuat, gunakan visual yang dinamis, narasi yang natural, dan akhiri dengan pesan yang mudah diingat."></textarea></label>',
       '<div class="vs-prompt-footer"><small>AI akan menentukan pendekatan visual dan durasi yang paling sesuai dengan isi cerita.</small><span id="vs-char-count">0 / 6.000</span></div>',
@@ -165,6 +173,10 @@
       if (counter) counter.textContent = event.target.value.length.toLocaleString('id-ID') + ' / 6.000';
     });
     root.querySelector('#vs-connect').addEventListener('click', connect);
+    root.querySelector('#vs-connection-toggle').addEventListener('click', () => {
+      const panel = root.querySelector('#vs-connection');
+      if (panel) panel.hidden = !panel.hidden;
+    });
     root.querySelector('#vs-refresh').addEventListener('click', refreshJobs);
     root.querySelector('#vs-jobs').addEventListener('click', event => {
       const download = event.target.closest('[data-vs-download]');
