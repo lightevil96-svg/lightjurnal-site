@@ -203,7 +203,6 @@
     if(e.target.closest("#mt5j-choose")||e.target.closest("#mt5j-choose-bottom")){$("#mt5-journal-file")?.click();return;}
     if(e.target.closest("#mt5j-export")){const blob=new Blob([JSON.stringify({format:"LightJurnal MT5 import v1",exportedAt:new Date().toISOString(),rows},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="lightjurnal-mt5-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);return;}
     if(e.target.closest("#mt5j-clear")){if(confirm("Hapus semua data impor MT5 dari browser ini? Tindakan ini tidak menghapus jurnal trade manual.")){const previousRows=rows.slice();rows=[];if(!save()){rows=previousRows;render();return;}render();}return;}
-    if(e.target.closest('[data-page]') && !e.target.closest('[data-page="mt5journal"]')){const root=$("#mt5-journal-root");if(root){const b=e.target.closest("[data-page]");if(b&&b.dataset.page!=="mt5journal"){} }}
   },true);
   document.addEventListener("change",e=>{if(e.target.id==="mt5-journal-file")importFile(e.target.files&&e.target.files[0]);},true);
   window.addEventListener("lightjurnal:analysis-rendered",showPage);
