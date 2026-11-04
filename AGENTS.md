@@ -54,3 +54,11 @@ Before declaring a feature complete:
 5. Verify data persistence after reload and safe rollback after a failed save.
 6. Verify errors and offline states; do not hide failures behind a success toast.
 7. Do not claim full production verification while the public site's SSL certificate is invalid or an external integration is unavailable.
+
+
+## Video Studio UX rule
+
+- The Video Studio creative workflow is prompt-only: one natural-language prompt drives the AI storyboard and Remotion render.
+- Do not add manual controls for scene duration, background color, palette, aspect ratio, FPS, music, transitions, or individual scene content. These are inferred from the story and may vary from scene to scene.
+- The generated storyboard is read-only feedback about the AI's decisions, not a settings form.
+- API URL and API key are infrastructure connection details only. Keep them separate from creative controls and never expose model-provider credentials in this frontend.
