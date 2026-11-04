@@ -478,3 +478,7 @@ tbody tr:hover{background:#f7faf9}
 .vs-job-warnings{margin:7px 0 2px;padding:7px 9px;border-left:2px solid #d49b42;border-radius:0 6px 6px 0;background:#fff8eb}
 .vs-job-warnings p{margin:0;color:#8b6429;font-size:8px;line-height:1.55}
 .vs-job-warnings p+p{margin-top:3px}
+
+
+.vs-job-credits{margin:6px 0 2px;color:#8592a2;font-size:8px;line-height:1.5}
+.vs-job-credits a{color:#24785e;text-decoration:underline;text-underline-offset:2px}
