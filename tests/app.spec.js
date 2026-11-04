@@ -86,8 +86,9 @@ test("all primary sections open and render", async ({ page }) => {
     await expect(page.locator("#page-title")).not.toBeEmpty();
     await expect(page.locator("#page-content")).toContainText(heading);
   }
-  await page.locator('.nav-list [data-page="mt5journal"]').click();
-  await expect(page.locator("#page-title")).toHaveText("Jurnal Transaksi MT5");
+  await page.locator('.nav-list [data-page="mt5"]').click();
+  await expect(page.locator("#page-title")).toHaveText("Analisis");
+  await expect(page.locator("#mt5-import-panel")).toBeVisible();
   await expect(page.locator("#mt5-journal-root")).toBeVisible();
 });
 
