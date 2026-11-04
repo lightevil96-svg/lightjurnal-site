@@ -95,6 +95,8 @@
       mode: document.querySelector('[name="vs-mode"]:checked')?.value || 'simple',
       ratio: document.querySelector('#vs-ratio').value,
       fps: Number(document.querySelector('#vs-fps').value),
+      musicStyle: document.querySelector('#vs-music-style').value,
+      soundEffects: document.querySelector('#vs-sound-effects').checked,
       scenes
     };
     try {
@@ -114,12 +116,13 @@
       <div class="vs-workspace"><section class="card vs-editor"><div class="vs-section-heading"><div><h3>Buat proyek video</h3><p>Pilih mode cepat atau mode penyusunan scene.</p></div><span class="vs-pill">REMOTION</span></div>
       <div class="vs-mode-picker"><label><input type="radio" name="vs-mode" value="simple" checked><span><b>Simple</b><small>Template cepat</small></span></label><label><input type="radio" name="vs-mode" value="professional"><span><b>Professional</b><small>Scene & timeline</small></span></label></div>
       <label class="vs-field">Nama proyek<input id="vs-title" maxlength="100" value="Video Baru"></label><div class="vs-fields-two"><label class="vs-field">Rasio<select id="vs-ratio"><option value="9:16">9:16 · Reels/TikTok</option><option value="16:9">16:9 · YouTube</option><option value="1:1">1:1 · Square</option></select></label><label class="vs-field">FPS<select id="vs-fps"><option value="30">30 FPS</option><option value="25">25 FPS</option><option value="24">24 FPS</option></select></label></div>
+      <div class="vs-fields-two"><label class="vs-field">Backsound<select id="vs-music-style"><option value="cinematic">Cinematic · dramatis & inspiratif</option><option value="upbeat">Energetic · ceria & promosi</option><option value="calm">Calm · edukasi & penjelasan</option><option value="none">Tanpa backsound</option></select></label><label class="vs-field">Sound effect scene <span><input id="vs-sound-effects" type="checkbox" checked> Aktifkan efek transisi</span></label></div>
       <label class="vs-field">Teks scene <small>Satu baris menjadi satu scene.</small><textarea id="vs-scenes" rows="6">Mulai dengan ide terbaikmu
 Bangun cerita melalui visual
 Buat video langsung dari LightJurnal</textarea></label>
       <div id="vs-pro-options" class="vs-pro-options" hidden><label class="vs-field">Durasi setiap scene<select id="vs-scene-duration"><option value="3">3 detik</option><option value="4" selected>4 detik</option><option value="5">5 detik</option><option value="6">6 detik</option><option value="8">8 detik</option><option value="10">10 detik</option></select></label><label class="vs-field">Warna latar<input id="vs-scene-background" type="color" value="#14243a"></label><p>Pengaturan ini diterapkan ke setiap scene. Total durasi maksimum 90 detik.</p></div>
       <div class="vs-timeline-heading"><b>Timeline scene</b><span>Media upload dan drag-and-drop menyusul.</span></div><div id="vs-timeline" class="vs-timeline"></div><div class="vs-render-actions"><div><b>Estimasi durasi</b><small id="vs-duration">12 detik · 3 scene</small></div><button class="button button-primary" id="vs-render">▶ Render Video</button></div>
-      <p class="vs-disclaimer">Rilis awal merender teks animasi. Foto/video, audio, keyframe, dan timeline drag-and-drop belum tersedia.</p></section>
+      <p class="vs-disclaimer">Audio bawaan: backsound original dan efek suara transisi per scene. Voice-over, foto/video, keyframe, dan timeline drag-and-drop dikembangkan pada tahap berikutnya.</p></section>
       <aside class="vs-side-column"><section class="card vs-preview-card"><div class="vs-section-heading"><div><h3>Preview hasil</h3><p>Hasil render MP4 dari server bot.</p></div></div><div id="vs-preview-wrap" class="vs-preview-wrap" hidden><video id="vs-video" controls playsinline></video></div><div id="vs-preview-placeholder" class="vs-preview-placeholder"><span>▶</span><b>Belum ada video</b><small>Preview muncul setelah render selesai.</small></div></section>
       <section class="card vs-jobs-card"><div class="vs-section-heading"><div><h3>Render queue</h3><p>Progress pekerjaan video.</p></div><button class="button button-secondary" id="vs-refresh">↻</button></div><div id="vs-jobs" class="vs-jobs"><div class="vs-empty">Hubungkan mesin render terlebih dahulu.</div></div></section></aside></div>`;
     root.querySelector('#vs-scenes').addEventListener('input', timeline);
