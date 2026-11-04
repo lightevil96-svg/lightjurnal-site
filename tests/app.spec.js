@@ -77,7 +77,7 @@ test("all primary sections open and render", async ({ page }) => {
     ["trades", "Semua transaksi"],
     ["analytics", "Lihat pola"],
     ["risk", "Rencanakan risiko"],
-    ["mt5", "Akun MetaTrader 5"],
+    ["mt5", "Analisis Trading"],
     ["settings", "Pengaturan jurnal"]
   ];
   for (const [key, heading] of sections) {
