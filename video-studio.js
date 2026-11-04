@@ -111,9 +111,9 @@
         ? 'Terhubung. Motion graphics aktif; lengkapi konfigurasi server untuk ' + missing.join(' dan ') + '.'
         : 'Terhubung. AI voice-over, subtitle sinkron, footage, dan Remotion siap.', missing.length ? 'neutral' : 'success');
       const panel = document.querySelector('#vs-connection');
-      if (panel) panel.hidden = true;
+      if (panel) panel.hidden = missing.length === 0;
       const toggle = document.querySelector('#vs-connection-toggle');
-      if (toggle) toggle.hidden = false;
+      if (toggle) toggle.hidden = missing.length > 0;
       refreshJobs();
     } catch (error) {
       const panel = document.querySelector('#vs-connection');
@@ -180,7 +180,7 @@
       '<div class="vs-prompt-footer"><small>AI akan menentukan pendekatan visual dan durasi yang paling sesuai dengan isi cerita.</small><span id="vs-char-count">0 / 6.000</span></div>',
       '<div class="vs-render-actions"><div><b>AI Creative Director</b><small>Storyboard otomatis → Remotion render</small></div><button class="button button-primary" id="vs-render">✦ Buat video otomatis</button></div>',
       '<section id="vs-storyboard" class="vs-storyboard" hidden></section>',
-      '<p class="vs-disclaimer">Sistem saat ini menghasilkan motion graphics dan tipografi animasi dari storyboard AI. Footage nyata, aset gambar eksternal, dan voice-over TTS hanya akan digunakan jika integrasinya tersedia dan sudah dikonfigurasi.</p></section>',
+      '<p class="vs-disclaimer">AI voice-over, subtitle sinkron per kata, dan footage Pexels aktif jika provider dikonfigurasi di server. Jika belum, video tetap dirender dengan motion graphics. AI-generated footage dan aset 3D belum tersedia.</p></section>',
       '<aside class="vs-side-column"><section class="card vs-preview-card"><div class="vs-section-heading"><div><h3>Preview hasil</h3><p>Video MP4 dari mesin Remotion.</p></div></div><div id="vs-preview-wrap" class="vs-preview-wrap" hidden><video id="vs-video" controls playsinline></video></div><div id="vs-preview-placeholder" class="vs-preview-placeholder"><span>▶</span><b>Belum ada video</b><small>Preview muncul setelah render selesai.</small></div></section>',
       '<section class="card vs-jobs-card"><div class="vs-section-heading"><div><h3>Render queue</h3><p>Status dan progress pekerjaan video.</p></div><button class="button button-secondary" id="vs-refresh">↻</button></div><div id="vs-jobs" class="vs-jobs"><div class="vs-empty">Hubungkan mesin render terlebih dahulu.</div></div></section></aside></div>'
     ].join('');
