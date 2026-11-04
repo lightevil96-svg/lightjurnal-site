@@ -284,7 +284,8 @@ test("CSV export produces a downloadable trade report", async ({ page }) => {
 });
 
 test("MT5 HTML import shows closed deals and entry activity", async ({ page }) => {
-  await page.locator('.nav-list [data-page="mt5journal"]').click();
+  await page.locator('.nav-list [data-page="mt5"]').click();
+  await expect(page.locator("#mt5-import-panel")).toBeVisible();
   page.on("dialog", dialog => dialog.accept());
   const html = `<!doctype html><html><body>
     <h2>Deals</h2>
