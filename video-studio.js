@@ -28,7 +28,8 @@
     const target = document.querySelector('#vs-timeline');
     if (!target) return;
     const scenes = lines();
-    const seconds = Number(document.querySelector('#vs-scene-duration')?.value || 4);\n    target.innerHTML = scenes.length ? scenes.map((line, i) => '<div class="vs-track-scene"><small>SCENE ' + (i + 1) + '</small><strong>' + esc(line) + '</strong><span>' + seconds + ' sec</span></div>').join('') : '<div class="vs-track-empty">Tambahkan scene untuk melihat timeline.</div>';
+    const seconds = Number(document.querySelector('#vs-scene-duration')?.value || 4);
+    target.innerHTML = scenes.length ? scenes.map((line, i) => '<div class="vs-track-scene"><small>SCENE ' + (i + 1) + '</small><strong>' + esc(line) + '</strong><span>' + seconds + ' sec</span></div>').join('') : '<div class="vs-track-empty">Tambahkan scene untuk melihat timeline.</div>';
     const duration = document.querySelector('#vs-duration');
     if (duration) duration.textContent = (scenes.length * seconds) + ' detik · ' + scenes.length + ' scene';
   }
@@ -45,7 +46,8 @@
     try {
       const data = await request('/jobs');
       renderJobs(data.jobs || []);
-      const hasActive = (data.jobs || []).some(job => job.status === 'queued' || job.status === 'rendering');\n      if (!hasActive && pollTimer) { clearInterval(pollTimer); pollTimer = null; }\n      if (hasActive && !pollTimer) pollTimer = setInterval(refreshJobs, 2500);
+      const hasActive = (data.jobs || []).some(job => job.status === 'queued' || job.status === 'rendering');
+      if (!hasActive && pollTimer) { clearInterval(pollTimer); pollTimer = null; }\n      if (hasActive && !pollTimer) pollTimer = setInterval(refreshJobs, 2500);
     } catch (error) { if (pollTimer) clearInterval(pollTimer); pollTimer = null; status(error.message, 'error'); }
   }
   async function getVideo(id, preview) {
