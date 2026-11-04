@@ -396,3 +396,7 @@ tbody tr:hover{background:#f7faf9}
 .vs-error{margin:6px 0 0;color:#bd4554;font-size:9px;line-height:1.5}
 @media(max-width:900px){.vs-workspace{grid-template-columns:1fr}.vs-side-column{grid-template-columns:1fr 1fr}}
 @media(max-width:620px){.vs-hero{align-items:flex-start;flex-direction:column;padding:18px}.vs-hero h2{font-size:21px}.vs-engine{white-space:normal}.vs-connect-grid{grid-template-columns:1fr}.vs-connection,.vs-editor,.vs-preview-card,.vs-jobs-card{padding:15px}.vs-section-heading{flex-direction:column}.vs-side-column{grid-template-columns:1fr}.vs-fields-two{grid-template-columns:1fr 1fr}.vs-timeline-heading{flex-direction:column}.vs-timeline-heading span{text-align:left}.vs-job{align-items:flex-start;flex-direction:column}.vs-job-side{justify-content:flex-start}}
+
+.vs-pro-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;margin:0 0 14px;border:1px solid #dce9e3;border-radius:9px;background:#f5faf7}
+.vs-pro-options[hidden]{display:none}.vs-pro-options .vs-field{margin:0}.vs-pro-options input[type=color]{height:39px;padding:4px}.vs-pro-options p{grid-column:1/-1;margin:0;color:#8290a3;font-size:9px;line-height:1.5}
+@media(max-width:620px){.vs-pro-options{grid-template-columns:1fr}}
