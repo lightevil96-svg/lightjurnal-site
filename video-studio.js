@@ -35,11 +35,13 @@
       if (job.captionsEnabled) features.push('Subtitle sinkron');
       if (job.footageCount) features.push(job.footageCount + ' footage');
       const featureMarkup = features.length ? '<div class="vs-job-features">' + features.map(item => '<span>' + esc(item) + '</span>').join('') + '</div>' : '';
+      const credits = Array.isArray(job.mediaCredits) ? job.mediaCredits.slice(0, 3) : [];
+      const creditMarkup = credits.length ? '<div class="vs-job-credits"><a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer">Footage provided by Pexels</a><span> · </span>' + credits.map(item => '<a href="' + esc(item.photographerUrl || item.videoUrl || 'https://www.pexels.com') + '" target="_blank" rel="noopener noreferrer">' + esc(item.photographer) + '</a>').join(' · ') + '</div>' : '';
       const warnings = Array.isArray(job.mediaWarnings) ? job.mediaWarnings.slice(0, 2) : [];
       const warningMarkup = warnings.length ? '<div class="vs-job-warnings">' + warnings.map(item => '<p>' + esc(item) + '</p>').join('') + '</div>' : '';
       return '<article class="vs-job"><div class="vs-job-main"><strong>' + esc(job.title) + '</strong><small>' + esc(metadata) + '</small>' +
         (job.planSummary ? '<p class="vs-job-summary">' + esc(job.planSummary) + '</p>' : '') +
-        featureMarkup + warningMarkup +
+        featureMarkup + creditMarkup + warningMarkup +
         (job.error ? '<p class="vs-error">' + esc(job.error) + '</p>' : '') +
         '<div class="vs-progress"><span style="width:' + Math.max(0, Math.min(100, Number(job.progress) || 0)) + '%"></span></div></div>' +
         '<div class="vs-job-side"><b>' + Number(job.progress || 0) + '%</b>' +
