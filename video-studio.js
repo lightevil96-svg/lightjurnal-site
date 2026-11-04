@@ -28,9 +28,18 @@
     if (!jobs.length) { target.innerHTML = '<div class="vs-empty">Belum ada pekerjaan render.</div>'; return; }
     target.innerHTML = jobs.map(job => {
       const label = ({ queued: 'Menunggu', rendering: 'Merender', completed: 'Selesai', failed: 'Gagal' })[job.status] || job.status;
-      const metadata = [label, job.sceneCount ? job.sceneCount + ' scene' : '', job.durationSeconds ? job.durationSeconds + ' detik' : '', job.ratio || ''].filter(Boolean).join(' · ');
+      const stageLabel = ({ queued: 'Dalam antrean', 'preparing-media': 'Menyiapkan aset', 'preparing-voiceover': 'Membuat voice-over & subtitle', 'searching-footage': 'Mencari footage', rendering: 'Merender MP4', completed: 'Selesai', failed: 'Gagal' })[job.stage] || label;
+      const metadata = [stageLabel, job.sceneCount ? job.sceneCount + ' scene' : '', job.durationSeconds ? job.durationSeconds + ' detik' : '', job.ratio || ''].filter(Boolean).join(' · ');
+      const features = [];
+      if (job.voiceoverEnabled) features.push('AI voice-over');
+      if (job.captionsEnabled) features.push('Subtitle sinkron');
+      if (job.footageCount) features.push(job.footageCount + ' footage');
+      const featureMarkup = features.length ? '<div class="vs-job-features">' + features.map(item => '<span>' + esc(item) + '</span>').join('') + '</div>' : '';
+      const warnings = Array.isArray(job.mediaWarnings) ? job.mediaWarnings.slice(0, 2) : [];
+      const warningMarkup = warnings.length ? '<div class="vs-job-warnings">' + warnings.map(item => '<p>' + esc(item) + '</p>').join('') + '</div>' : '';
       return '<article class="vs-job"><div class="vs-job-main"><strong>' + esc(job.title) + '</strong><small>' + esc(metadata) + '</small>' +
         (job.planSummary ? '<p class="vs-job-summary">' + esc(job.planSummary) + '</p>' : '') +
+        featureMarkup + warningMarkup +
         (job.error ? '<p class="vs-error">' + esc(job.error) + '</p>' : '') +
         '<div class="vs-progress"><span style="width:' + Math.max(0, Math.min(100, Number(job.progress) || 0)) + '%"></span></div></div>' +
         '<div class="vs-job-side"><b>' + Number(job.progress || 0) + '%</b>' +
@@ -92,7 +101,13 @@
       if (!response.ok || health.status !== 'ok') throw new Error('API Alvareth-Bot tidak merespons.');
       if (!health.configured) throw new Error('VIDEO_STUDIO_API_KEY belum diatur di server bot.');
       await request('/limits');
-      status('Terhubung ke Alvareth-Bot. AI Creative Director siap.', 'success');
+      const media = health.media || {};
+      const missing = [];
+      if (!media.voiceover) missing.push('ElevenLabs untuk voice-over dan subtitle');
+      if (!media.stockFootage) missing.push('Pexels untuk footage nyata');
+      status(missing.length
+        ? 'Terhubung. Motion graphics aktif; lengkapi konfigurasi server untuk ' + missing.join(' dan ') + '.'
+        : 'Terhubung. AI voice-over, subtitle sinkron, footage, dan Remotion siap.', missing.length ? 'neutral' : 'success');
       const panel = document.querySelector('#vs-connection');
       if (panel) panel.hidden = true;
       const toggle = document.querySelector('#vs-connection-toggle');
