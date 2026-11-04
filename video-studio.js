@@ -6,7 +6,7 @@
   let videoUrl = null;
 
   const esc = value => String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  const cfg = () => ({ url: (localStorage.getItem(URL_KEY) || '').trim().replace(/\\/+$/, ''), token: sessionStorage.getItem(TOKEN_KEY) || '' });
+  const cfg = () => ({ url: (localStorage.getItem(URL_KEY) || '').trim().replace(/\/+$/, ''), token: sessionStorage.getItem(TOKEN_KEY) || '' });
   const status = (message, tone = 'neutral') => {
     const el = document.querySelector('#vs-status');
     if (el) { el.textContent = message; el.className = 'vs-status ' + tone; }
@@ -23,7 +23,7 @@
     if (!response.ok) throw new Error(data?.error || 'Permintaan gagal (' + response.status + ').');
     return data;
   }
-  const lines = () => (document.querySelector('#vs-scenes')?.value || '').split('\\n').map(x => x.trim()).filter(Boolean);
+  const lines = () => (document.querySelector('#vs-scenes')?.value || '').split('\n').map(x => x.trim()).filter(Boolean);
   function timeline() {
     const target = document.querySelector('#vs-timeline');
     if (!target) return;
@@ -68,9 +68,9 @@
     } catch (error) { status(error.message, 'error'); }
   }
   async function connect() {
-    const url = document.querySelector('#vs-api-url').value.trim().replace(/\\/+$/, '');
+    const url = document.querySelector('#vs-api-url').value.trim().replace(/\/+$/, '');
     const token = document.querySelector('#vs-api-key').value.trim();
-    if (!/^https:\\/\\//i.test(url) && !/^http:\\/\\/localhost(?::\\d+)?$/i.test(url)) return status('Gunakan HTTPS (HTTP hanya untuk localhost).', 'error');
+    if (!/^https:\/\//i.test(url) && !/^http:\/\/localhost(?::\d+)?$/i.test(url)) return status('Gunakan HTTPS (HTTP hanya untuk localhost).', 'error');
     localStorage.setItem(URL_KEY, url); sessionStorage.setItem(TOKEN_KEY, token);
     try {
       const response = await fetch(url + '/api/video-studio/health');
