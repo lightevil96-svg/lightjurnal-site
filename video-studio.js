@@ -2,6 +2,7 @@
   'use strict';
   const URL_KEY = 'lightjurnal.video.api-url.v1';
   const TOKEN_KEY = 'lightjurnal.video.api-token.session';
+  const DEFAULT_API_URL = 'https://video.lightjurnal.my.id';
   let pollTimer = null;
   let videoUrl = null;
   const esc = value => String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
