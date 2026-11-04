@@ -28,9 +28,9 @@
     const target = document.querySelector('#vs-timeline');
     if (!target) return;
     const scenes = lines();
-    target.innerHTML = scenes.length ? scenes.map((line, i) => '<div class="vs-track-scene"><small>SCENE ' + (i + 1) + '</small><strong>' + esc(line) + '</strong><span>4 sec</span></div>').join('') : '<div class="vs-track-empty">Tambahkan scene untuk melihat timeline.</div>';
+    const seconds = Number(document.querySelector('#vs-scene-duration')?.value || 4);\n    target.innerHTML = scenes.length ? scenes.map((line, i) => '<div class="vs-track-scene"><small>SCENE ' + (i + 1) + '</small><strong>' + esc(line) + '</strong><span>' + seconds + ' sec</span></div>').join('') : '<div class="vs-track-empty">Tambahkan scene untuk melihat timeline.</div>';
     const duration = document.querySelector('#vs-duration');
-    if (duration) duration.textContent = (scenes.length * 4) + ' detik · ' + scenes.length + ' scene';
+    if (duration) duration.textContent = (scenes.length * seconds) + ' detik · ' + scenes.length + ' scene';
   }
   function renderJobs(jobs) {
     const target = document.querySelector('#vs-jobs');
@@ -45,7 +45,7 @@
     try {
       const data = await request('/jobs');
       renderJobs(data.jobs || []);
-      if (!(data.jobs || []).some(job => job.status === 'queued' || job.status === 'rendering') && pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      const hasActive = (data.jobs || []).some(job => job.status === 'queued' || job.status === 'rendering');\n      if (!hasActive && pollTimer) { clearInterval(pollTimer); pollTimer = null; }\n      if (hasActive && !pollTimer) pollTimer = setInterval(refreshJobs, 2500);
     } catch (error) { if (pollTimer) clearInterval(pollTimer); pollTimer = null; status(error.message, 'error'); }
   }
   async function getVideo(id, preview) {
@@ -69,7 +69,7 @@
   }
   async function connect() {
     const url = document.querySelector('#vs-api-url').value.trim().replace(/\/+$/, '');
-    const token = document.querySelector('#vs-api-key').value.trim();
+    const token = document.querySelector('#vs-api-key').value.trim() || cfg().token;
     if (!/^https:\/\//i.test(url) && !/^http:\/\/localhost(?::\d+)?$/i.test(url)) return status('Gunakan HTTPS (HTTP hanya untuk localhost).', 'error');
     localStorage.setItem(URL_KEY, url); sessionStorage.setItem(TOKEN_KEY, token);
     try {
