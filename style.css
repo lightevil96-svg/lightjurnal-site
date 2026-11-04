@@ -257,3 +257,83 @@ body{font-family:"IBM Plex Sans","Segoe UI",ui-sans-serif,system-ui,sans-serif}
 .risk-result-panel:after{display:none}
 .daily-risk-card{background:#f7fbf8}
 .daily-risk-card.warning{background:#fffaf0}
+
+
+
+/* LightJurnal identity refinement — product-first, quiet and data-led. */
+:root{
+  --navy:#101d31;
+  --navy-2:#182a43;
+  --ink:#1b2a40;
+  --muted:#718096;
+  --line:#e4eaf1;
+  --canvas:#f4f6f9;
+  --green:#168b68;
+  --green-2:#e9f5ef;
+  --red:#c94d5b;
+  --blue:#4567bd;
+  --radius:12px;
+  --shadow:0 2px 10px rgba(25,42,66,.035);
+}
+body{background:var(--canvas);color:var(--ink)}
+.sidebar{background:#101d31}
+.brand{padding-left:9px;gap:12px}
+.brand-mark{width:38px;height:38px;border-radius:10px;background:#168b68;box-shadow:none}
+.brand-copy strong{font-size:19px;letter-spacing:-.65px;font-weight:700}
+.brand-copy small{font-size:9px;letter-spacing:1.45px}
+.workspace-label{letter-spacing:1.25px}
+.nav-item{border-radius:8px;font-weight:550}
+.nav-item.is-active{background:#1b3448;box-shadow:inset 2px 0 #53c49a}
+.nav-item.is-active .nav-icon{color:#75d5b1}
+.sidebar-note{border-radius:10px;background:#172a40;border-color:#263b53}
+.sidebar-note p{max-width:165px}
+.profile-mini{border-top-color:#2a3a50}
+.topbar{height:86px;padding-left:clamp(20px,3vw,42px);padding-right:clamp(20px,3vw,42px);background:#fff}
+.topbar-heading .eyebrow{font-size:9px;letter-spacing:1.15px;color:#8290a3}
+.topbar-heading h1{font-size:22px;letter-spacing:-.6px}
+.today-chip{border-color:#e7ebf0;border-radius:7px;background:#fbfcfd}
+.button{border-radius:7px;font-weight:650}
+.button-primary{background:#168b68;box-shadow:none}
+.button-primary:hover{background:#117555;box-shadow:none}
+#page-content{padding-top:27px}
+.page-intro{margin-bottom:20px}
+.page-intro h2{font-size:19px;letter-spacing:-.45px}
+.card{border:1px solid #e6ebf1;border-radius:12px;box-shadow:0 2px 9px rgba(25,42,66,.028)}
+.metric-grid{gap:12px}
+.metric-card{padding:17px 17px 15px;border-radius:11px}
+.metric-card:first-child{border-top:2px solid #168b68}
+.metric-value{font-size:24px;letter-spacing:-.8px}
+.metric-icon{width:29px;height:29px;border-radius:8px}
+.dashboard-grid{gap:14px}
+.card-header{padding:19px 20px 0}
+.card-body{padding:17px 20px 20px}
+.section-title{font-size:13px;letter-spacing:-.15px}
+.section-subtitle{font-size:10px;line-height:1.55}
+thead th{background:#f8fafb;color:#77869a;letter-spacing:.4px}
+tbody td{font-variant-numeric:tabular-nums}
+tbody tr:hover{background:#f7faf9}
+.field-control,.search-input{border-radius:7px}
+.table-toolbar{padding:15px 18px}
+.app-footer{color:#8995a5;font-size:10px}
+.app-footer a{color:#426c91;text-decoration:underline;text-decoration-color:#c5d4df;text-underline-offset:3px}
+.app-footer a:hover{color:#168b68;text-decoration-color:#168b68}
+.metric-value,.risk-number,.mt5-current-price strong,.mt5-analysis-metric strong,.mt5j-metric strong,.daily-risk-metrics strong,.stat-item .value,.insight-row strong,.mt5-account-meta strong{font-variant-numeric:tabular-nums lining-nums}
+@media(max-width:940px){
+  .topbar{backdrop-filter:none}
+}
+@media(max-width:620px){
+  .topbar{height:70px;padding:0 12px}
+  .topbar-heading .eyebrow{font-size:8px;letter-spacing:.8px}
+  .topbar-heading h1{font-size:18px}
+  #page-content{padding:17px 13px 15px}
+  .page-intro{align-items:flex-start;flex-direction:column;gap:10px}
+  .metric-grid{gap:8px}
+  .metric-card{padding:12px 11px}
+  .metric-value{font-size:clamp(16px,5vw,21px)}
+  .dashboard-grid{gap:11px}
+  .card-header{padding:15px 14px 0}
+  .card-body{padding:14px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
